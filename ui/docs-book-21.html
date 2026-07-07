@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>!function(){try{var k="membrane_nav_session",s=sessionStorage.getItem(k);document.documentElement.classList.add(s?"nav-session":"cold-load");if(!s)sessionStorage.setItem(k,"1")}catch(e){}}();</script>
+<title>21 · What each actor sees · The Book · Audit Cell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css?v=5">
+</head>
+<body class="page-prose">
+<div class="layout layout-docs">
+
+  <nav>
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink" href="quickstart.html">Quickstart</a>
+    <a class="navlink on" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+
+  <main>
+    <div class="inner">
+
+      <div class="doc-layer-row">
+        <a href="docs-book.html" class="doc-layer doc-layer-story">The Book · VI</a>
+        <span class="doc-layer doc-layer-story">Story · chapter 21</span>
+      </div>
+      <h1>What each actor sees</h1>
+      <p class="doc-q">For each role, <strong>where is this line</strong> — and <strong>what is the next permitted move</strong>?</p>
+      
+      <div class="doc-bridge">
+        <p class="doc-bridge-lbl">Go deeper — notebook spec</p>
+        <ul>
+          <li><a href="docs-participants-roles.html">Roles</a></li>
+          <li><a href="docs-participants-assignment.html">Assignment (CRD)</a></li>
+          <li><a href="docs-participants-participant-phases.html">Participant phases (O3)</a></li>
+          <li><a href="docs-flows-lifecycle.html">Audit lifecycle</a></li>
+          <li><a href="docs-flows-vulnerability.html">Vulnerability disclosure</a></li>
+          <li><a href="docs-integration-protocol-ui-spec.html">Protocol UI spec</a></li>
+        </ul>
+      </div>
+      <h2 id="the-wedge-is-clarity">The wedge is clarity</h2>
+      <p><a href="docs-book-20.html">Chapter 20</a> drew honest mechanism boundaries. This chapter draws <strong>experience</strong> boundaries: public state, no private “severity TBD.”</p>
+      <p>Protocol, auditor, and discoverer anchor on the <strong>same audit id</strong> — each with a small state machine of its own.</p>
+      <p><strong>Not here:</strong> Bob card pipeline, event indexes — <a href="docs-book-22.html">Chapter 22</a>. Shipped UI — <a href="docs-book-23.html">Chapter 23</a>.</p>
+      <table class="doc-table"><thead><tr><th>Layer</th><th>Question</th><th>Read</th></tr></thead><tbody><tr><td><strong>This chapter</strong></td><td>State + next move per role</td><td>Below</td></tr><tr><td><a href="docs-book-22.html">Chapter 22</a></td><td>How indexers compose cards</td><td>Reading the chain</td></tr><tr><td><a href="docs-book-23.html">Chapter 23</a></td><td>Stranger-facing UI</td><td>The membrane</td></tr></tbody></table>
+      <h2 id="boundary-experience-trilogy-21-22-23">Boundary — Experience trilogy (21 / 22 / 23)</h2>
+      <table class="doc-table"><thead><tr><th>Layer</th><th><strong>Ch 21</strong></th><th><a href="docs-book-22.html">Ch 22</a></th><th><a href="docs-book-23.html">Ch 23</a></th></tr></thead><tbody><tr><td><strong>Job</strong></td><td>State + next move per role</td><td>Indexes + Bob card pipeline</td><td>Shipped explorer + quickstarts</td></tr><tr><td><strong>Authority</strong></td><td>Mirrors on-chain states</td><td>Composes off-chain reads</td><td>Composes UI; no new rules</td></tr><tr><td><strong>Settlement</strong></td><td>Names seven states</td><td>Never writes back</td><td>Never writes back</td></tr><tr><td><strong>Builder depth</strong></td><td>Protocol UI MUSTs</td><td>Integration · Health</td><td>Membrane README</td></tr></tbody></table>
+      <p>Read in order: know your state → know how cards are built → know where to click.</p>
+      <h2 id="one-row-not-a-brand-badge">One row, not a brand badge</h2>
+      <p>The network certifies <strong>one pinned audit case</strong> per audit id: deployment address, bytecode hash at submit, spec binding at <strong>the door (Gate A)</strong>.</p>
+      <p>“Acme Protocol ✅ audited” without the row is marketing. Honest copy: “Audit #47 on <code>0xBBB</code> — PASS finalized — for bytecode pinned at submit.”</p>
+      <p><strong>Supersedes</strong> links = navigation only — no inherited pass across deployments.</p>
+      <p>Proxy upgrades: compare live bytecode to pin; show staleness when they diverge.</p>
+      <h2 id="seven-states-strangers-share">Seven states strangers share</h2>
+      <table class="doc-table"><thead><tr><th>State</th><th>Plain meaning</th><th>Trust deployment?</th></tr></thead><tbody><tr><td><strong>Submitted</strong></td><td><strong>Bounty</strong> locked; spec declared; pinned</td><td>No</td></tr><tr><td><strong>Assigned</strong></td><td>Auditor drawn; protocol window open</td><td>No</td></tr><tr><td><strong>In audit</strong></td><td>Verdict in progress</td><td>No</td></tr><tr><td><strong>Awaiting window</strong></td><td>PASS provisional; <strong>challenge window</strong> running</td><td>Provisional only</td></tr><tr><td><strong>In block</strong></td><td>Confirmed; <strong>positive block</strong> minted</td><td><strong>Yes — pinned bytecode only</strong></td></tr><tr><td><strong>Claimed</strong></td><td><strong>Proof-bearing claim</strong> open; break path</td><td>No</td></tr><tr><td><strong>Exploited</strong></td><td>Miss reproduced</td><td><strong>No</strong></td></tr></tbody></table>
+      <p><strong>Invalidated</strong> — overlay voided pre-mint (Gate A or integrity review). Never reached <strong>positive block</strong>.</p>
+      <p>Timeouts = <strong>liveness</strong> — rotate or expire; not automatic guilt.</p>
+      <h2 id="what-the-protocol-sees">What the protocol sees</h2>
+      <p>Per-row machine: prepare → submitted → assigned → in audit → awaiting window → in block → (claimed → exploited if miss reproduces).</p>
+      <p><strong>Reject</strong> picks <strong>who</strong>, not truth. Wrong spec → <strong>Gate A</strong>. Wrong pass on code → <strong>Gate C</strong> (<a href="docs-book-11.html">ch. 11</a>).</p>
+      <h2 id="what-the-auditor-sees">What the auditor sees</h2>
+      <p>Registered → assigned → in audit → binary <strong>verdict</strong> → window → paid path (confirm) or lost path (exploited).</p>
+      <p>FAIL at <strong>Gate B</strong> still enters <strong>claimed</strong> with auditor as claimant — same break spine.</p>
+      <p>Pool silence → reassignment; <strong>register</strong> again open — liveness, not guilt verdict.</p>
+      <h2 id="what-the-discoverer-sees">What the discoverer sees</h2>
+      <p>Registered auditor, not protocol, not original auditor (<a href="docs-book-19.html">ch. 19</a>).</p>
+      <p>Investigate → file claim + <strong>claim stake</strong> → await re-run → win ( <strong>reserves</strong> + <strong>boost</strong>) or loss (stake slashed).</p>
+      <h2 id="what-everyone-else-sees">What everyone else sees</h2>
+      <p><strong>Observers</strong> — no wallet; re-run tool; compare <strong>`resultRoot`</strong>.</p>
+      <p><strong>Tool authors</strong> — register; accumulate uses; <strong>canonization</strong> path (<a href="docs-book-13.html">ch. 13</a>).</p>
+      <p><strong>Participant phases</strong> — off-chain paint (<a href="docs-book-16.html">ch. 16</a>); never replace the seven states.</p>
+      <h2 id="no-pdf-thread">No PDF thread</h2>
+      <p>No draft report loop, no re-grade call. At most one primary action — or wait with a visible clock.</p>
+      <p><a href="docs-book-23.html">Chapter 23</a> names the <strong>membrane</strong> built on these machines.</p>
+      <h2 id="before-you-turn-the-page">Before you turn the page</h2>
+      <p><strong>One row</strong> · <strong>Seven states</strong> · <strong>Protocol reject ≠ truth fight</strong> · <strong>Auditor paid at confirm</strong> · <strong>Discoverer stake + FAIL root</strong> · <strong>Phases suggest only</strong></p>
+      
+      <footer class="doc-page-foot"><a href="docs-book.html">← The Book</a> · <a href="docs.html">Docs</a></footer>
+    </div>
+  </main>
+
+  <aside id="docRail" aria-label="You are here" hidden></aside>
+
+</div>
+<script src="motion.js?v=1"></script>
+<script src="your-links.js?v=5"></script>
+<script src="docs-rail.js?v=5"></script>
+</body>
+</html>

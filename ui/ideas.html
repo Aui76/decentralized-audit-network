@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How ideas become real · Audit Cell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css?v=5">
+<style>
+  .op-fold { margin-top:26px; border:1px solid var(--bd,#30363d); border-radius:10px; padding:0 14px; }
+  .op-fold summary { cursor:pointer; padding:13px 0; font-weight:500; }
+  .op-fold .body { padding-bottom:14px; }
+  ol.steps { padding-left:20px; }
+  ol.steps li { margin:10px 0; line-height:1.55; }
+</style>
+</head>
+<body>
+<div class="layout layout-docs">
+  <nav>
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink" href="concern.html">Concern</a>
+    <a class="navlink" href="resources.html">Resources</a>
+    <a class="navlink on" href="ideas.html">Ideas</a>
+  </nav>
+
+  <main>
+    <div class="inner">
+      <p class="eyebrow">How this network works</p>
+      <h1>How ideas become real</h1>
+      <p class="lede">Nothing here is true just because someone says so. This page explains, in plain terms, how a
+        rough idea or a worry turns into a real, checkable fact on the network.</p>
+
+      <h2>The one rule</h2>
+      <p><strong>An idea is "real" only when a stranger can re-run it and get the same answer — with that result
+        recorded on-chain.</strong> Talk alone never ships. If it can't be reproduced, it doesn't count.</p>
+
+      <h2>From talk to real, in three steps</h2>
+      <ol class="steps">
+        <li><strong>Someone says it.</strong> A worry, an idea, a "this looks wrong." Free, and proves nothing on its
+          own — that's where almost everything starts.</li>
+        <li><strong>Someone does the work.</strong> They turn it into something anyone can re-run — a specific check on
+          a specific contract — and back it with a deposit, so they have skin in the game.</li>
+        <li><strong>The chain records it.</strong> The result is posted on-chain, where anyone can run the same check
+          and get the same answer. Now it's real — nobody has to take your word for it.</li>
+      </ol>
+      <p class="k">The whole philosophy in one line: opinions are cheap, reproduction is the currency.</p>
+
+      <h2>Your door in</h2>
+      <p>Worried about a specific audit? You don't need to understand any of the machinery — one page walks you through
+        it, no wallet needed:</p>
+      <p><a class="link" href="concern.html">Open "Something looks wrong?" &rarr;</a></p>
+
+      <h2>Where do I go for&hellip;</h2>
+      <ul>
+        <li>Something feels off about an audit &rarr; <a href="concern.html">Something looks wrong?</a></li>
+        <li>Just want to check a result yourself &rarr; <a href="explorer.html">Explorer</a></li>
+        <li>You found a real bug and want to file it &rarr; <a href="bughunter.html">Bug-hunter guide</a> &rarr; <a href="manage.html">Manage</a></li>
+        <li>Want a contract audited &rarr; <a href="post.html">Post a bounty</a></li>
+      </ul>
+
+      <details class="op-fold">
+        <summary>For builders &amp; operators &mdash; the full machinery</summary>
+        <div class="body">
+          <p class="k">Ideas climb a ladder: <b>talk &rarr; proposal &rarr; reproducible manifest &rarr; registered
+            flaw-ID &rarr; on-chain fact &rarr; canon</b>. Changes travel one of three channels &mdash;
+            <b>meta</b> (repo / tools / membrane, via proposal &rarr; apply), <b>settlement</b> (claim / gap / exploit,
+            stake + replay on chain), or <b>interpretation</b> (risk routing, Bob, the concern router &mdash; never
+            pays or slashes).</p>
+          <pre class="mono" style="white-space:pre-wrap;font-size:16px;line-height:1.5">Cell bytecode change?   &rarr; Genesis G-ID + freeze gate
+Body tool / membrane?   &rarr; L-ID + Life proposal &rarr; apply
+Network blind spot?     &rarr; structural / spec-gap / integrity
+One app bug?            &rarr; ordinary audit / claim
+            Vague but important?    &rarr; verify first, then binary root</pre>
+        </div>
+      </details>
+
+      <footer class="doc-page-foot">
+        <a href="concern.html">Something looks wrong?</a> · <a href="explorer.html">Explorer</a> · <a href="docs.html">Docs</a>
+      </footer>
+    </div>
+  </main>
+
+  <aside>
+    <div class="lbl">On this page</div>
+    <a href="#">The one rule</a>
+    <a href="concern.html">Something looks wrong?</a>
+    <a href="explorer.html">Explorer</a>
+  </aside>
+</div>
+
+<script src="your-links.js?v=5"></script>
+<script src="membrane-rail.js?v=2"></script>
+<script src="motion.js?v=1"></script>
+</body>
+</html>

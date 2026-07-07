@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>!function(){try{var k="membrane_nav_session",s=sessionStorage.getItem(k);document.documentElement.classList.add(s?"nav-session":"cold-load");if(!s)sessionStorage.setItem(k,"1")}catch(e){}}();</script>
+<title>Audit lifecycle · Flows · Audit Cell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css?v=5">
+</head>
+<body class="page-prose">
+<div class="layout layout-docs">
+
+  <nav>
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink" href="quickstart.html">Quickstart</a>
+    <a class="navlink on" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+
+  <main>
+    <div class="inner">
+
+      <div class="doc-layer-row">
+        <a href="docs-flows.html" class="doc-layer doc-layer-spec">Flows</a>
+        <span class="doc-layer doc-layer-spec">Spec · reader</span>
+      </div>
+      <h1>Audit lifecycle</h1>
+      <p class="doc-q">Where is this audit row right now, and <strong>what can happen next</strong>?</p>
+      
+      <div class="doc-bridge doc-bridge-story">
+        <p class="doc-bridge-lbl">Story context</p>
+        <ul>
+          <li><a href="docs-book-02.html">Book ch 2 · The idea</a></li>
+          <li><a href="docs-book-03.html">Book ch 3 · Toolkit as product</a></li>
+          <li><a href="docs-book-05.html">Book ch 5 · Definitions</a></li>
+          <li><a href="docs-book-06.html">Book ch 6 · Three checks</a></li>
+          <li><a href="docs-book-09.html">Book ch 9 · The audit cycle</a></li>
+          <li><a href="docs-book-10.html">Book ch 10 · Issuance &amp; positive blocks</a></li>
+          <li><a href="docs-book-21.html">Book ch 21 · What each actor sees</a></li>
+        </ul>
+      </div>
+      <p>Each <strong>audit row</strong> is one pinned case: bounty in escrow, bytecode hash frozen at submit, spec declared at Gate A. The cell stores <strong>state</strong> and <strong>commitments</strong> only — tools run off-chain. This doc is the <strong>state machine</strong>: legal positions and transitions for one <code>auditId</code>.</p>
+      <p>Narrative framing: <a href="docs-mechanism.html">mechanism</a>. Gate A detail: <a href="docs-flows-gate-a.html">The door (Gate A)</a>. Break path: <a href="docs-flows-vulnerability.html">Vulnerability disclosure</a>.</p>
+      <h2 id="three-ways-a-row-closes">Three ways a row closes</h2>
+      <p>Every audit ends in exactly one terminal posture:</p>
+      <table class="doc-table"><thead><tr><th>End state</th><th>Path</th><th>Meaning</th></tr></thead><tbody><tr><td><code>InBlock</code></td><td><strong>Positive</strong></td><td>Challenge window elapsed clean; <code>confirmAudit</code> minted a positive block.</td></tr><tr><td><code>Exploited</code></td><td><strong>Break</strong></td><td>A <a href="docs-flows-vulnerability.html">proof-bearing claim</a> reproduced FAIL on pinned bytecode; discoverer paid from escrow.</td></tr><tr><td><code>Invalidated</code></td><td><strong>Overlay</strong></td><td>Pre-mint void — <a href="docs-flows-spec-arbiter.html">Spec arbiter</a> or <a href="docs-flows-integrity-review.html">Integrity review</a>; <strong>no</strong> positive block minted.</td></tr></tbody></table>
+      <p>Until one of these, the row is <strong>open</strong>.</p>
+      <h2 id="happy-path-vs-break-path">Happy path vs break path</h2>
+      <pre class="mono doc-pre">HAPPY (positive block)
+  Submitted → Assigned → InAudit → AwaitingWindow → Audited → InBlock
+              │            │              │
+              │            │ proveFail    │ claimVulnerability (Gate C)
+              │            ▼              ▼
+              │         Claimed ──────────┘
+              │            │
+              │            ▼
+              │        Exploited (if FAIL reproduces)
+              │
+OVERLAY (pre-InBlock void)
+  Submitted … AwaitingWindow ──► Invalidated</pre>
+      <ul><li><strong>`provePass`</strong> during <code>InAudit</code> opens the challenge window — the <strong>success path</strong> can still fail if Gate C fires before confirm.</li><li><strong>`proveFail`</strong> during <code>InAudit</code> skips the window and enters <strong>`Claimed`</strong> immediately (assigned auditor as claimant).</li><li><strong>Overlays</strong> can void the line any time <strong>before</strong> <code>InBlock</code>.</li></ul>
+      <h2 id="where-the-three-gates-sit">Where the three gates sit</h2>
+      <table class="doc-table"><thead><tr><th>Gate</th><th>States (typical)</th><th>What moves</th></tr></thead><tbody><tr><td><strong>A — declare + re-run</strong></td><td><code>Submitted</code> → <code>InAudit</code> (via accept)</td><td>Spec filing declared at submit, re-run at accept</td></tr><tr><td><strong>B — verdict on code</strong></td><td><code>InAudit</code></td><td><code>provePass</code> or <code>proveFail</code> on pinned bytecode</td></tr><tr><td><strong>C — missed bug</strong></td><td><code>AwaitingWindow</code> · <code>Audited</code> · <code>InBlock</code></td><td><code>claimVulnerability</code> by eligible auditor</td></tr></tbody></table>
+      <p>Full gate specs: <a href="docs-flows-gate-a.html">Gate A</a> · Gate B (verdict during <code>InAudit</code>) · <a href="docs-flows-vulnerability.html">Gate C</a>.</p>
+      <h2 id="states">States</h2>
+      <table class="doc-table"><thead><tr><th>State</th><th>Meaning</th></tr></thead><tbody><tr><td><code>Submitted</code></td><td>Posted; bounty locked; spec declared (Gate A); bytecode pinned. Waiting for pool assignment.</td></tr><tr><td><code>Assigned</code></td><td>Auditor drawn from pool. Waiting for protocol accept + auditor <code>acceptAudit</code> (Gate A re-run).</td></tr><tr><td><code>InAudit</code></td><td>Both accepted; Gate A matched; verdict tools may run (Gate B).</td></tr><tr><td><code>AwaitingWindow</code></td><td>Provisional PASS recorded; challenge window open. Claim-eligible (Gate C).</td></tr><tr><td><code>Audited</code></td><td><strong>Transient:</strong> window elapsed; <code>confirmAudit</code> in flight — not a resting state for integrators.</td></tr><tr><td><code>InBlock</code></td><td>Confirmed; positive block minted. Still claim-eligible until claim window closes.</td></tr><tr><td><code>Claimed</code></td><td>Vulnerability claim open; dispute settlement pending.</td></tr><tr><td><code>Exploited</code></td><td>Claim reproduced; discoverer paid; original auditor <code>failed++</code>.</td></tr><tr><td><code>Invalidated</code></td><td>Voided pre-<code>InBlock</code> by overlay — spec challenge or integrity FAIL.</td></tr></tbody></table>
+      <h2 id="transitions">Transitions</h2>
+      <table class="doc-table"><thead><tr><th>From</th><th>To</th><th>Trigger</th><th>Actor</th></tr></thead><tbody><tr><td><code>Submitted</code></td><td><code>Assigned</code></td><td>assignment draw</td><td>network (FIFO seam / CRD policy)</td></tr><tr><td><code>Assigned</code></td><td><code>Assigned</code></td><td>reject · decline · decision timeout → redraw</td><td>protocol / auditor / <code>advanceAssignment</code></td></tr><tr><td><code>Assigned</code></td><td><code>InAudit</code></td><td>protocol accepts (or silence → auto-accept) <strong>and</strong> <code>acceptAudit</code> matches Gate A digest</td><td>protocol + auditor</td></tr><tr><td><code>InAudit</code></td><td><code>AwaitingWindow</code></td><td><code>provePass</code></td><td>auditor</td></tr><tr><td><code>InAudit</code></td><td><code>Claimed</code></td><td><code>proveFail</code> — FAIL at audit; <strong>no</strong> challenge window; claimant = assigned auditor</td><td>auditor</td></tr><tr><td><code>AwaitingWindow</code></td><td><code>Audited</code> → <code>InBlock</code></td><td><code>confirmAudit</code> after <code>auditWindow</code></td><td>anyone</td></tr><tr><td><code>AwaitingWindow</code> / <code>Audited</code> / <code>InBlock</code></td><td><code>Claimed</code></td><td><code>claimVulnerability</code> during claim window</td><td>eligible auditor (not protocol; not original auditor)</td></tr><tr><td><code>Claimed</code></td><td><code>Exploited</code></td><td>dispute re-audit reproduces filed FAIL on pin</td><td>settlement</td></tr><tr><td><code>Claimed</code></td><td>prior state</td><td>claim rejected or expired — e.g. dispute PASS restores provisional pass path</td><td><code>expireClaim</code> / dispute outcome</td></tr><tr><td>pre-<code>InBlock</code></td><td><code>Invalidated</code></td><td>sustained spec challenge or integrity FAIL</td><td>overlay void</td></tr></tbody></table>
+      <h2 id="liveness-timeouts">Liveness (timeouts)</h2>
+      <p>Permissionless <strong>advance</strong> calls unblock stuck rows. Timeout is <strong>liveness, not guilt</strong> — it does <strong>not</strong> increment auditor <code>failed</code>.</p>
+      <table class="doc-table"><thead><tr><th>Stuck at</th><th>Backstop</th><th>Effect</th></tr></thead><tbody><tr><td>Protocol decision on assignee</td><td><code>advanceProtocolDecision</code></td><td>Silence auto-accepts assigned auditor</td></tr><tr><td>Auditor accept / decline</td><td><code>advanceAssignment</code></td><td>Reassign; after <code>pushOutThreshold</code> timeouts → removed from queue</td></tr><tr><td><code>InAudit</code> (silent auditor)</td><td><code>advanceInAudit</code></td><td>Re-route off silent auditor</td></tr><tr><td><code>Claimed</code> (stuck dispute)</td><td><code>expireClaim</code> / <code>expireDispute</code></td><td>Abandoned claim or stuck contest cleared</td></tr></tbody></table>
+      <p><strong>Next:</strong> <a href="docs-flows-gate-a.html">The door (Gate A)</a></p>
+      
+      <footer class="doc-page-foot"><a href="docs-flows.html">← Flows</a> · <a href="docs-notebook.html">Notebook</a></footer>
+    </div>
+  </main>
+
+  <aside id="docRail" aria-label="You are here" hidden></aside>
+
+</div>
+<script src="motion.js?v=1"></script>
+<script src="your-links.js?v=5"></script>
+<script src="docs-rail.js?v=5"></script>
+</body>
+</html>

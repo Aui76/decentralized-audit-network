@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tool author · Quickstart · Audit Cell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="site.css?v=5"></head>
+<body>
+<div class="layout layout-docs">
+
+  <nav>
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink on" href="quickstart.html">Quickstart</a>
+    <a class="navlink" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+
+  <main>
+    <div class="inner">
+      <p class="eyebrow">Quickstart</p>
+      <h1>Tool author</h1>
+      <p class="lede">Register a checker so the whole network can use it. The growing toolkit is the network's real product — you build it.</p>
+
+      <div class="flow">
+
+        <div class="step" id="build">
+          <div class="num">1</div>
+          <div>
+            <p class="t">Build a checker</p>
+            <p class="d">A deterministic tool that runs against a contract's bytecode and produces an <span style="font-family:var(--mono)">AUDIT_RESULT_V1</span> fingerprint. Two honest runs on the same code must give the exact same result.</p>
+          </div>
+        </div>
+
+        <div class="step" id="toolid">
+          <div class="num">2</div>
+          <div>
+            <p class="t">Compute its tool id</p>
+            <p class="d">Hash the tool's identity — name, version, build artifact, entrypoint — into its <span style="font-family:var(--mono)">AUDIT_TOOL_V1</span> id. That id is how protocols name it and auditors run it.</p>
+          </div>
+        </div>
+
+        <div class="step" id="register">
+          <div class="num">3</div>
+          <div>
+            <p class="t">Register it</p>
+            <p class="d">Submit the tool id on-chain — as a <b>verdict tool</b> (the default), or a <b>spec-validation tool</b> for Gate A. One transaction, no stake, permissionless.</p>
+            <a class="link" href="manage.html#registertool">Open manage →</a>
+          </div>
+        </div>
+
+        <div class="step" id="canonical">
+          <div class="num">4</div>
+          <div>
+            <p class="t">It earns canonical standing</p>
+            <p class="d">Every audit that uses your tool and survives the challenge period builds its track record. Tools earn trust by surviving reality — not by a vote.</p>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="branch" id="risk">
+        <p class="bh">Your stake in the outcome</p>
+        <p class="t">A weak tool loses trust</p>
+        <p class="d">If your tool passes a contract that's later proven exploitable, that failure is recorded against the tool. A checker is only as valuable as its track record — reproducibly wrong is still wrong.</p>
+      </div>
+
+    </div>
+  </main>
+
+  <aside>
+    <div class="lbl">The flow</div>
+    <a href="#build">1 · Build a checker</a>
+    <a href="#toolid">2 · Compute tool id</a>
+    <a href="#register">3 · Register it</a>
+    <a href="#canonical">4 · Canonical standing</a>
+    <a href="#risk">Your stake</a>
+  </aside>
+
+</div>
+
+<script src="your-links.js?v=5"></script>
+<script src="membrane-rail.js?v=2"></script>
+<script src="motion.js?v=1"></script>
+</body>
+</html>

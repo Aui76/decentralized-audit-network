@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bug-hunter · Quickstart · Audit Cell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="site.css?v=5"></head>
+<body>
+<div class="layout layout-docs">
+
+  <nav>
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink on" href="quickstart.html">Quickstart</a>
+    <a class="navlink" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+
+  <main>
+    <div class="inner">
+      <p class="eyebrow">Quickstart</p>
+      <h1>Bug-hunter</h1>
+      <p class="lede">Find a bug the auditor missed during the challenge period, prove it, and claim its bounty.</p>
+
+      <div class="flow">
+
+        <div class="step" id="find">
+          <div class="num">1</div>
+          <div>
+            <p class="t">Find a bug <span class="tag">run the tool first</span></p>
+            <p class="d">Browse the audits and pick one still in its challenge period (use "Open to challenge" to filter). Run a tool that <b>fails</b> on the contract — that produces the result root your claim needs.</p>
+            <a class="link" href="explorer.html">Browse audits →</a>
+          </div>
+        </div>
+
+        <div class="step" id="file">
+          <div class="num">2</div>
+          <div>
+            <p class="t">File a claim</p>
+            <p class="d">Prove the bug with the tool and file. Filing escrows a stake and pauses the audit. You must be registered, and not the contract's protocol or its original auditor.</p>
+            <a class="link" href="manage.html">Open manage →</a>
+          </div>
+        </div>
+
+        <div class="step" id="recheck">
+          <div class="num">3</div>
+          <div>
+            <p class="t">Wait for the re-check</p>
+            <p class="d">The protocol opens a dispute; an independent auditor re-checks the original contract — re-running your tool on the same deployed code.</p>
+          </div>
+        </div>
+
+        <div class="step" id="paid">
+          <div class="num">4</div>
+          <div>
+            <p class="t">Get paid</p>
+            <p class="d">If the bug reproduces, you're paid from reserves — not new supply. Track the audit's status as it resolves.</p>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="branch" id="risk">
+        <p class="bh">Your stake in the outcome</p>
+        <p class="t">An unprovable claim costs you</p>
+        <p class="d">If the bug can't be reproduced on the original contract — or the claim is never taken up and its window runs out — you lose your stake. File only what you can prove.</p>
+      </div>
+
+      <footer class="doc-page-foot">
+        <a href="quickstart.html">← Quickstart</a> · <a href="manage.html">Manage</a>
+      </footer>
+
+    </div>
+  </main>
+
+  <aside>
+    <div class="lbl">The flow</div>
+    <a href="#find">1 · Find a bug</a>
+    <a href="#file">2 · File a claim</a>
+    <a href="#recheck">3 · Wait for the re-check</a>
+    <a href="#paid">4 · Get paid</a>
+    <a href="#risk">Your stake</a>
+  </aside>
+
+</div>
+
+<script src="your-links.js?v=5"></script>
+<script src="membrane-rail.js?v=2"></script>
+<script src="motion.js?v=1"></script>
+</body>
+</html>

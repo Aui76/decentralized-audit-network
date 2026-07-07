@@ -1,0 +1,13 @@
+{
+  "toolName": "withdraw-credits",
+  "toolVersion": "1.0.0",
+  "entrypoint": "encodeResult(address,uint256,uint256)",
+  "toolArtifactHash": "0xae235edbf435f367d6acad8fed1ec99d0418f2e35c7e4310aab363af588a5e3f",
+  "toolId": "0x71b8a10ad4becd5fb0f93e2cdcc4cdd47be26f8701d3d5a7bc1ac1db35159f79",
+  "specHash": "0x7fe57aec3c363ab9da26d8a45f6bd22f30a5f441b597136e9b8fbcdca38fbe77",
+  "contextRoot": "0x52c6c0ad349e991a23a9abf6f7e6400f1c1d85ae811e0657a2550b644103f74a",
+  "invariantId": "0x1e19e88e6bcd0405e3fd16df7d17a2fdde86054967b62152fd6d28c0b11c0397",
+  "implementation": "../cell/contracts/tools/WithdrawCreditsV1.sol",
+  "harness": "../cell/script/tools/RunWithdrawCreditsV1.s.sol",
+  "toolArtifactHashNote": "HISTORICAL v1.0.0 — label hash keccak256(\"WithdrawCreditsV1Lib@1.0.0\"). Superseded by tools/withdraw-credits-v1.1/ (L-02 content-bound). Organ 1.6 + §4b evidence used this toolId on-chain."
+}

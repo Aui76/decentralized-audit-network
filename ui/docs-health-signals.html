@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>!function(){try{var k="membrane_nav_session",s=sessionStorage.getItem(k);document.documentElement.classList.add(s?"nav-session":"cold-load");if(!s)sessionStorage.setItem(k,"1")}catch(e){}}();</script>
+<title>Signals · Network Health · Audit Cell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css?v=5">
+</head>
+<body class="page-prose">
+<div class="layout layout-docs">
+
+  <nav>
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink" href="quickstart.html">Quickstart</a>
+    <a class="navlink on" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+
+  <main>
+    <div class="inner">
+
+      <div class="doc-layer-row">
+        <a href="docs-health.html" class="doc-layer doc-layer-spec">Network Health</a>
+        <span class="doc-layer doc-layer-spec">Spec · reader</span>
+      </div>
+      <h1>Signals</h1>
+      <p class="doc-q">Which advisory flags exist** — and who must act before anything on-chain moves?</p>
+      
+      <div class="doc-bridge doc-bridge-story">
+        <p class="doc-bridge-lbl">Story context</p>
+        <ul>
+          <li><a href="docs-book-16.html">Book ch 16 · Reputation signals</a></li>
+          <li><a href="docs-book-22.html">Book ch 22 · Reading the chain</a></li>
+        </ul>
+      </div>
+      <p>Advisory flags the organs raise — and the rule that keeps them advisory. A signal makes a condition legible; it never acts.</p>
+      <p><strong>Not here:</strong> how <code>flow</code> computes magnitude, <code>bountyBand</code>, or Phase A <code>integrityReviewSuggested</code> — <a href="docs-health-thermodynamics-and-flow.html">Network flow</a>.</p>
+      <h2 id="signals">Boundary with Network flow</h2>
+      <table class="doc-table"><thead><tr><th>Layer</th><th>This chapter</th><th><a href="docs-health-thermodynamics-and-flow.html">Network flow</a></th></tr></thead><tbody><tr><td><strong>Rule</strong></td><td>Signal-to-action · why off-chain</td><td>Phase A trigger for one signal</td></tr><tr><td><strong>Catalog</strong></td><td>All advisory flags</td><td>Owns <code>integrityReviewSuggested</code> computation</td></tr><tr><td><strong>Settlement</strong></td><td>Never</td><td>Never</td></tr></tbody></table>
+      <h2 id="signal-to-action-rule">Signal-to-action rule</h2>
+      <p>An objective on-chain fact may gate pay or punish. A <strong>derived signal may only suggest</strong>. No off-chain signal — however confident — auto-slashes, auto-pays, or auto-voids.</p>
+      <p>The gap between &quot;an indexer thinks X&quot; and &quot;the mechanism does X&quot; is deliberate. Doctrine: <a href="docs-flows-mutex.html#triangle-alarm">Audit mutex § triangle-alarm</a>.</p>
+      <pre class="mono doc-pre">Indexer suggests  →  Human or integrator chooses  →  On-chain fact gates settlement</pre>
+      <h2 id="catalog">Catalog</h2>
+      <table class="doc-table"><thead><tr><th>Signal</th><th>Source</th><th>Suggests</th><th>Who acts</th></tr></thead><tbody><tr><td><code>integrityReviewSuggested</code></td><td><a href="docs-health-thermodynamics-and-flow.html">Network flow</a> (<code>flow</code> Phase A)</td><td>Hot, large audit may merit review</td><td>Opener calls <code>openIntegrityReview</code></td></tr><tr><td>spec-quality flags</td><td><a href="docs-integration-spec-scope-and-quality.html#quality">Scope, spec-quality &amp; fleet § quality</a></td><td>Declared spec may be thin</td><td>Market prices it</td></tr><tr><td>contagion exposure</td><td><a href="docs-health-portfolio-contagion.html">Portfolio contagion</a></td><td>Contracts share unfound weakness</td><td>Someone chooses what to audit next</td></tr><tr><td>protocol seriousness</td><td><a href="docs-integration-claim-scorecard.html">Claim-resolution scorecard</a></td><td>Bad conduct around claims</td><td>Market reads reputation</td></tr></tbody></table>
+      <h2 id="why-they-stay-off-chain">Why they stay off-chain</h2>
+      <p>Signals are derived and subjective. Gating settlement on them would let a biased or buggy indexer move money. <strong>A bad organ can mislead; it cannot mis-settle.</strong> The cell never reads a signal — only the facts it stores.</p>
+      <p>That is what makes the organ market permissionless and replaceable.</p>
+      <p>Surfaces: <a href="docs-integration-bob-card.html#integrator-surface">Bob card § integrator</a>.</p>
+      <p><strong>Previous:</strong> <a href="docs-health-thermodynamics-and-flow.html">Network flow</a> · <strong>Next:</strong> <a href="docs-health-portfolio-contagion.html">Portfolio contagion</a></p>
+      
+      <footer class="doc-page-foot"><a href="docs-health.html">← Network Health</a> · <a href="docs-notebook.html">Notebook</a></footer>
+    </div>
+  </main>
+
+  <aside id="docRail" aria-label="You are here" hidden></aside>
+
+</div>
+<script src="motion.js?v=1"></script>
+<script src="your-links.js?v=5"></script>
+<script src="docs-rail.js?v=5"></script>
+</body>
+</html>

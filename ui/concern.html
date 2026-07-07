@@ -1,0 +1,567 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>What's next? · Audit Cell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css?v=5">
+</head>
+<body>
+<div class="layout layout-docs">
+  <nav>
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink" href="quickstart.html">Quickstart</a>
+    <a class="navlink" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+
+  <main>
+    <div class="inner">
+      <p class="eyebrow">No wallet · guidance only</p>
+      <h1 id="pageTitle">What's next?</h1>
+      <p class="trust-line">Suggestions only — your clicks here are not sent to the chain.</p>
+
+      <div class="card" id="session">
+        <p class="wizard-loading" id="wizardLoading" hidden>Checking live chain state…</p>
+        <div class="session-head" id="auditHeader"></div>
+        <div id="gateOut"></div>
+      </div>
+
+      <div id="appendix">
+        <details class="router-appendix" id="appendVerify" open>
+          <summary><span class="append-num">1</span> Verify this audit</summary>
+          <div class="append-body" id="verifyAppendBody">
+            <p class="k">Loading…</p>
+          </div>
+        </details>
+
+        <details class="router-appendix" id="appendManage">
+          <summary><span class="append-num">2</span> Wallet actions — manage this audit</summary>
+          <div class="append-body" id="manageAppendBody">
+            <p class="k">Pick an audit in the explorer first.</p>
+          </div>
+        </details>
+
+        <details class="router-appendix router-appendix-newcomer" id="appendNewcomer" open>
+          <summary><span class="append-num">3</span> New here? Answer one question — find your next step</summary>
+          <div class="append-body">
+            <div class="theory-block">
+              <h3>What verifying means</h3>
+              <p class="k-read" style="margin:0 0 8px">An audit is a public on-chain claim: a named tool ran on a <strong>pinned contract</strong> and posted a pass/fail <strong>result root</strong>.</p>
+              <p class="k-read" style="margin:0 0 8px"><strong>Verify</strong> means you run the same tool on that same contract yourself — no wallet, no account. If your root matches what the chain recorded, the result <em>reproduces</em>. If not, something is worth a closer look.</p>
+              <p class="k-read" style="margin:0 0 12px">This page never decides anything — the network only settles on a result you can re-run and reproduce yourself. So verify in <strong>section 1</strong> above first, then answer the questions below.</p>
+              <p style="margin:0"><a href="docs-verify.html" class="link">Full verify guide →</a></p>
+            </div>
+
+            <p class="placement-intro">One plain question to start. Pick whichever is true for you — there's no wrong pick — and you'll get one suggested next step.</p>
+
+            <div class="wallet-steps" id="stepBar" hidden style="margin:0 0 14px"></div>
+
+            <div id="stepResult" class="wizard-step" hidden>
+              <fieldset class="concern-q">
+                <legend class="k-read" style="font-weight:500;margin-bottom:4px">Have you re-run this audit's check yourself — and what happened?</legend>
+                <label class="radio-row"><input type="radio" name="result" value="same"><span>I re-ran it — <strong>same</strong> result as the chain</span></label>
+                <label class="radio-row"><input type="radio" name="result" value="different"><span>I re-ran it — a <strong>different</strong> result (mismatch)</span></label>
+                <label class="radio-row"><input type="radio" name="result" value="not-run"><span>I haven't re-run it yet, or I'm not sure how</span></label>
+              </fieldset>
+              <div class="concern-actions"><button type="button" id="btnResultNext">Continue</button></div>
+            </div>
+
+            <div id="stepScope" class="wizard-step" hidden>
+              <p class="k-read" style="font-weight:500;margin-bottom:6px">Here's exactly what this audit promised to check:</p>
+              <div id="scopeList"></div>
+              <fieldset class="concern-q" style="margin-top:12px">
+                <legend class="k-read" style="font-weight:500;margin-bottom:4px">Is the thing you're worried about on that list?</legend>
+                <label class="radio-row"><input type="radio" name="worry" value="on-list"><span>Yes — on the list</span></label>
+                <label class="radio-row"><input type="radio" name="worry" value="off-list"><span>No — not on the list</span></label>
+                <label class="radio-row"><input type="radio" name="worry" value="unsure"><span>Not sure</span></label>
+              </fieldset>
+              <label id="fakedWrap" class="radio-row" style="display:none;margin-top:10px">
+                <input type="checkbox" id="suspectsFaked"><span>It matched, but I suspect the result was faked or gamed</span>
+              </label>
+              <div class="concern-actions"><button type="button" id="btnScopeNext">Show next step</button></div>
+            </div>
+
+            <div id="routerOut"></div>
+          </div>
+        </details>
+
+        <details class="router-appendix router-appendix-advanced" id="appendStructural">
+          <summary><span class="append-tag">Advanced</span> The network verify tool itself may be wrong</summary>
+          <div class="append-body">
+            <p class="k-read" style="margin:0 0 12px">This path is for when the problem is the <strong>network's shared verify tool</strong> — the registered harness everyone re-runs — not one mistaken result on a single audit row. You believe the tool itself is incomplete (it misses whole classes of bugs) or incorrect (it produces wrong roots against live bytecode), so any audit that depended on it may be untrustworthy.</p>
+
+            <p class="k-read" style="margin:0 0 8px;font-weight:500">If that is not what you mean, stay in the sections above:</p>
+            <ul class="k-read" style="margin:0 0 14px">
+              <li><strong>You re-ran verify on this audit and got a different result.</strong> That is a claim or integrity path — use <a href="#appendNewcomer">section 3</a>.</li>
+              <li><strong>Your worry sits outside what this audit declared it would check.</strong> That is spec-gap on this row's scope — still <a href="#appendNewcomer">section 3</a>, not a network-tool upgrade.</li>
+            </ul>
+
+            <p class="k-read" style="margin:0 0 12px"><strong>Structural upgrade</strong> is how the network repairs its own verify toolkit. You prove the canonical harness fails on <strong>O</strong> — the contract address locked in when the audit was posted — register a corrected tool <strong>F</strong>, and put that fix to jury adoption. Settled rows stay settled; what changes is which tool the network runs from here on.</p>
+
+            <p class="k-read" style="margin:0 0 14px">Re-run verify in <a href="#appendVerify">section 1</a> before you continue, unless you already have. Take this path only when the shared harness is the problem — not when you could challenge a single result through a normal claim in <a href="#appendNewcomer">section 3</a>.</p>
+            <div class="concern-actions">
+              <button type="button" id="btnStructuralRoute">This is my situation — show next step</button>
+            </div>
+            <div id="structuralOut"></div>
+          </div>
+        </details>
+      </div>
+
+      <div id="status" style="margin-top:16px"></div>
+    </div>
+  </main>
+
+  <aside>
+    <div class="lbl">On this page</div>
+    <a href="explorer.html" id="asideExplorer">Audit record</a>
+    <a href="#appendVerify">1 · Verify</a>
+    <a href="#appendManage">2 · Manage</a>
+    <a href="#appendNewcomer">3 · Walkthrough</a>
+    <a href="#appendStructural">Advanced · Network tool</a>
+    <a href="docs-verify.html">Verify guide</a>
+  </aside>
+</div>
+
+<script src="status-labels.js"></script>
+<script src="view-model.js"></script>
+<script src="concern-router.js"></script>
+<script type="module" src="verify-browser.mjs"></script>
+<script>
+(function(){
+  var M = window.__MODEL;
+  var routeFn = window.deriveConcernRouter;
+  var toChain = window.auditRowToChainFacts;
+  var present = window.presentConcernRoute;
+  var formatScope = window.formatScopeList;
+  var Lane = window.Lane;
+  var fetchStep0 = window.fetchStep0ChainFacts;
+  var mergeStep0 = window.mergeLiveStep0ChainFacts;
+  var patchAudit = window.patchAuditRowFromStep0;
+  var DEFAULT_RPC = "https://sepolia.base.org";
+
+  var params = new URLSearchParams(location.search);
+  var pageTitle = document.getElementById("pageTitle");
+  var status = document.getElementById("status");
+  var routerOut = document.getElementById("routerOut");
+  var gateOut = document.getElementById("gateOut");
+  var auditHeader = document.getElementById("auditHeader");
+  var stepBar = document.getElementById("stepBar");
+  var wizardLoading = document.getElementById("wizardLoading");
+  var appendVerify = document.getElementById("appendVerify");
+  var appendManage = document.getElementById("appendManage");
+  var appendNewcomer = document.getElementById("appendNewcomer");
+  var appendStructural = document.getElementById("appendStructural");
+  var structuralOut = document.getElementById("structuralOut");
+  var asideExplorer = document.getElementById("asideExplorer");
+  var S = window.MembraneStatus;
+  var currentAudit = null;
+  var chain = null;
+  function esc(s){
+    return String(s == null ? "" : s).replace(/&/g,"&amp;").replace(/</g,"&lt;");
+  }
+
+  function shorth(h){
+    if(!h) return "—";
+    return h.length > 14 ? h.slice(0, 8) + "…" + h.slice(-4) : h;
+  }
+
+  function verifyCmd(id, target){
+    return "cd membrane\nnode verify.mjs " + id + " --target " + target;
+  }
+
+  function copyBlock(text){
+    return '<pre class="cmd">' + esc(text) + '</pre><button type="button" class="copy" data-copy="' + encodeURIComponent(text) + '">Copy</button>';
+  }
+
+  document.addEventListener("click", function(e){
+    var b = e.target.closest(".copy");
+    if(!b || !b.dataset.copy) return;
+    var t = decodeURIComponent(b.getAttribute("data-copy") || "");
+    if(!t) return;
+    navigator.clipboard.writeText(t).then(function(){
+      var was = b.textContent;
+      b.textContent = "Copied";
+      b.classList.add("ok");
+      setTimeout(function(){ b.textContent = was; b.classList.remove("ok"); }, 1500);
+    });
+  });
+
+  function showStep(id){
+    ["stepResult","stepScope"].forEach(function(sid){
+      var el = document.getElementById(sid);
+      if(sid === id) el.removeAttribute("hidden");
+      else el.setAttribute("hidden", "");
+    });
+  }
+
+  function hideSteps(){
+    ["stepResult","stepScope"].forEach(function(id){
+      document.getElementById(id).setAttribute("hidden", "");
+    });
+    routerOut.innerHTML = "";
+    stepBar.setAttribute("hidden", "");
+    appendVerify.classList.remove("highlight");
+    appendManage.classList.remove("highlight");
+    appendNewcomer.classList.remove("highlight");
+    document.querySelectorAll('input[name="result"],input[name="worry"]').forEach(function(el){ el.checked = false; });
+    document.getElementById("suspectsFaked").checked = false;
+    document.getElementById("fakedWrap").style.display = "none";
+  }
+
+  var scopeSkipped = false;
+  function setStepBar(stage, opts){
+    // fill-the-sequence rail — same grammar as the wallet bar and explorer lifecycle
+    if(!stage){ stepBar.setAttribute("hidden", ""); scopeSkipped = false; return; }
+    if(opts && opts.skippedScope != null) scopeSkipped = opts.skippedScope;
+    function chip(label, cls){ return '<span class="wstep' + (cls ? ' ' + cls : '') + '">' + label + '</span>'; }
+    var arrow = '<span class="wstep-arrow">→</span>';
+    stepBar.innerHTML =
+      chip('Your re-run', stage === 1 ? 'on' : 'done') + arrow +
+      chip('Scope', stage === 2 ? 'on' : (stage > 2 && !scopeSkipped ? 'done' : '')) + arrow +
+      chip('Your step', stage === 3 ? 'on done' : '');
+    stepBar.removeAttribute("hidden");
+  }
+
+  function setWizardLoading(on){
+    if(on) wizardLoading.removeAttribute("hidden");
+    else wizardLoading.setAttribute("hidden", "");
+  }
+
+  function setPageTitle(a){
+    if(!a){
+      pageTitle.textContent = "What's next?";
+      document.title = "What's next? · Audit Cell";
+      return;
+    }
+    pageTitle.textContent = "Audit #" + a.id + " — what's next?";
+    document.title = "Audit #" + a.id + " — what's next? · Audit Cell";
+  }
+
+  function updateAuditHeader(a){
+    if(!a){ auditHeader.innerHTML = ""; return; }
+    var pill = S && S.humanPillHtml ? S.humanPillHtml(a.state) : esc(a.state);
+    var claim = a.claimable ? '<span class="pill" style="background:#10243a;color:#6cb0f5">claim filing open</span>' : "";
+    auditHeader.innerHTML = pill
+      + '<span class="k">' + esc(a.bounty) + ' AUDIT bounty</span>'
+      + claim
+      + '<a class="link session-back" href="explorer.html?id=' + a.id + '">← Audit record</a>';
+    asideExplorer.href = "explorer.html?id=" + a.id;
+  }
+
+  function renderVerifyAppendix(a){
+    var body = document.getElementById("verifyAppendBody");
+    var r = a.reproduce;
+    if(!r || !r.target){
+      body.innerHTML = '<p class="k">No verify recipe indexed for this audit yet. See <a href="docs-verify.html">Verify guide</a>.</p>';
+      return;
+    }
+    body.innerHTML = '<p class="k-read" style="margin:0 0 10px">Recompute the result root on the pinned contract — right here, or with <b>node</b> (v18+), any OS, no wallet either way.</p>'
+      + '<div class="row" style="gap:12px;margin:0 0 10px">'
+      + '<button type="button" class="copy" id="btnReproC" style="margin-top:0">Reproduce it now — in this tab</button>'
+      + '<span class="k" id="reproYouC">' + esc(cVerLine(a.id)) + '</span>'
+      + '</div>'
+      + '<div id="reproOutC" class="repro-out hide"></div>'
+      + '<div class="statgrid" style="margin:10px 0">'
+      + '<span class="k">expected root</span><span class="mono">' + esc(shorth(r.expectedRoot)) + '</span>'
+      + '<span class="k">target O</span><span class="mono">' + esc(shorth(r.target)) + '</span>'
+      + '<span class="k">toolId</span><span class="mono">' + esc(shorth(r.toolId)) + '</span>'
+      + '</div>'
+      + copyBlock(verifyCmd(a.id, r.target))
+      + '<p class="k-read" style="margin:10px 0 0">Expect <b>MATCH ✓</b> lines, then <b>VERIFIED ✓</b>. '
+      + '<a href="docs-verify.html">Full verify guide →</a></p>';
+    wireReproC(a, r);
+  }
+
+  var VKEY = "membraneYourVerifications";
+  function cVerLedger(){ try{ var v = JSON.parse(localStorage.getItem(VKEY) || "{}"); return v && typeof v === "object" ? v : {}; }catch(e){ return {}; } }
+  function cVerLine(id){ var v = cVerLedger()[String(id)]; return v ? ("reproduced by you · " + new Date(v.at).toLocaleDateString() + " · " + v.verdict + " ✓") : ""; }
+
+  function wireReproC(a, r){
+    var btn = document.getElementById("btnReproC");
+    if(!btn) return;
+    btn.onclick = async function(){
+      var out = document.getElementById("reproOutC");
+      out.classList.remove("hide");
+      if(!window.MembraneVerify){
+        out.innerHTML = '<span class="k">In-tab verify needs the site served (start.bat / npm run serve). The CLI command below works everywhere.</span>';
+        return;
+      }
+      btn.disabled = true; var was = btn.textContent; btn.textContent = "Reproducing…";
+      out.innerHTML = '<span class="k">self-test → live bytecode → recompute roots → compare…</span>';
+      try{
+        var res = await MembraneVerify.reproduce({ rpcUrl: (M && M.meta && M.meta.rpcUrl) || DEFAULT_RPC, cell: M.meta.cell, auditId: a.id, target: r.target });
+        var st = res.selfTest.map(function(t){ return '<div class="mono" style="font-size:13px">' + esc(t.name) + " " + (t.ok ? '<span class="good">MATCH ✓</span>' : '<span class="danger">MISMATCH ✗</span>') + "</div>"; }).join("");
+        var line = !res.ok
+          ? '<div class="danger">' + esc(res.error || ("failed at " + res.stage)) + "</div>"
+          : res.verdict
+            ? '<div class="good" style="font-weight:600">VERIFIED ✓ — the on-chain root is the honest ' + res.verdict + " encoding of the live bytecode under the canonical spec+tool.</div>"
+            : '<div class="danger" style="font-weight:600">MISMATCH ✗ — the on-chain root binds neither PASS nor FAIL of this bytecode/spec. Investigate.</div>';
+        out.innerHTML = '<div class="k" style="font-weight:500;margin-bottom:4px">Self-test (encoding correctness)</div>' + st
+          + (res.ok ? '<div class="statgrid" style="margin:10px 0"><span class="k">on-chain root</span><span class="mono">' + esc(shorth(res.onchain)) + "</span></div>" : "")
+          + line
+          + '<p class="k" style="margin:8px 0 0;font-size:13px">Level A: encoding + live-bytecode binding, read-only RPC. Tool re-execution (Level B) needs the harness.</p>';
+        if(res.ok && res.verdict){
+          try{ var l = cVerLedger(); l[String(a.id)] = { verdict: res.verdict, root: res.onchain, at: Date.now() }; localStorage.setItem(VKEY, JSON.stringify(l)); }catch(e){}
+          var y = document.getElementById("reproYouC"); if(y) y.textContent = cVerLine(a.id);
+        }
+      }catch(e){
+        out.innerHTML = '<span class="danger">RPC error: ' + esc(e.message) + "</span>";
+      }
+      btn.disabled = false; btn.textContent = was;
+    };
+  }
+
+  function renderManageAppendix(a){
+    var body = document.getElementById("manageAppendBody");
+    var stake = a.claimStakeEth ? esc(a.claimStakeEth) + " AUDIT" : "—";
+    body.innerHTML = '<p class="k-read" style="margin:0 0 10px">For auditors and bug-hunters who already know the path — wallet on <b>Base Sepolia</b>.</p>'
+      + '<ul class="k-read" style="margin:0 0 12px">'
+      + '<li><b>Claim filing:</b> ' + (a.claimable ? "open on this audit" : "not open (state or prior claim)") + '</li>'
+      + '<li><b>Claim stake:</b> ' + stake + '</li>'
+      + '<li><b>Target:</b> <span class="mono">' + esc(shorth(a.target)) + '</span></li>'
+      + '</ul>'
+      + '<p style="margin:0"><a class="link" href="manage.html?audit=' + a.id + '">Open manage for audit #' + a.id + ' →</a></p>'
+      + '<p class="k" style="margin:10px 0 0"><a href="bughunter.html">Bug-hunter guide</a> · <a href="auditor.html">Auditor guide</a></p>';
+  }
+
+  function focusAppendix(id){
+    [appendVerify, appendManage, appendNewcomer, appendStructural].forEach(function(el){
+      el.classList.remove("highlight");
+    });
+    var el = document.getElementById(id);
+    if(!el) return;
+    el.classList.add("highlight");
+    el.open = true;
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function openNewcomer(){
+    appendNewcomer.open = true;
+  }
+
+  function getAudit(id){
+    if(!M || !M.audits || isNaN(id)) return null;
+    for(var i = 0; i < M.audits.length; i++){
+      if(M.audits[i].id === id) return M.audits[i];
+    }
+    return null;
+  }
+
+  function setStatus(html){
+    status.innerHTML = html ? '<div class="card"><p class="k">' + html + '</p></div>' : "";
+  }
+
+  function renderOutcomeCard(r, targetEl, label){
+    var pf = "";
+    for(var i = 0; i < r.preflight.length; i++){
+      var p = r.preflight[i];
+      pf += "<li>" + (p.ok ? "✓" : "·") + " <b>" + esc(p.label) + "</b>: " + esc(p.detail) + "</li>";
+    }
+    var links = "";
+    for(var j = 0; j < r.links.length; j++){
+      links += '<a class="link" href="' + esc(r.links[j].href) + '">' + esc(r.links[j].label) + " →</a><br>";
+    }
+    var fmeaBlock = "";
+    if(r.fmeaContext && r.fmeaContext.note){
+      fmeaBlock = '<details class="k" style="margin:12px 0"><summary>Good to know (optional)</summary>'
+        + '<p style="margin:8px 0 0"><em>' + esc(r.fmeaContext.note) + '</em></p></details>';
+    }
+    var refreshed = chain && chain.step0RefreshedAt
+      ? '<p class="k outcome-note">Checked against the live chain just now.</p>'
+      : "";
+    targetEl.innerHTML = '<div class="outcome-card">'
+      + '<p class="k outcome-label">' + esc(label) + '</p>'
+      + '<h2>' + esc(r.title) + '</h2>'
+      + '<p class="k-read">' + esc(r.body) + '</p>'
+      + fmeaBlock
+      + (pf ? '<ul class="k-read" style="margin:12px 0">' + pf + '</ul>' : '')
+      + refreshed
+      + '<div style="margin:12px 0">' + links + '</div>'
+      + '<p class="k-read"><em>' + esc(r.disclaimer) + '</em></p>'
+      + (targetEl === routerOut
+        ? '<button type="button" class="ghost" id="btnStartOver" style="margin-top:10px">Start questions over</button>'
+        : '')
+      + '</div>';
+    if(targetEl === routerOut){
+      document.getElementById("btnStartOver").onclick = function(){
+        hideSteps();
+        beginQuestions();
+      };
+    }
+  }
+
+  function renderCard(r){
+    hideSteps();
+    if(r.lane === Lane.Structural){
+      focusAppendix("appendStructural");
+      renderOutcomeCard(r, structuralOut, "Your next step");
+      structuralOut.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      return;
+    }
+    if(r.lane === Lane.ReCheckFirst || r.lane === Lane.ReadTheList){
+      focusAppendix("appendVerify");
+    }
+    if(r.lane === Lane.PossibleMismatch || r.lane === Lane.Integrity){
+      focusAppendix("appendManage");
+    }
+    openNewcomer();
+    renderOutcomeCard(r, routerOut, "Your next step");
+    routerOut.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+
+  function runRoute(answers){
+    if(!currentAudit || !chain) return null;
+    try {
+      return present(currentAudit, routeFn({ chain: chain, answers: answers || {} }));
+    } catch(err) {
+      routerOut.innerHTML = '<div class="outcome-card"><p class="k">Could not route: ' + esc(err.message) + '</p></div>';
+      openNewcomer();
+      return null;
+    }
+  }
+  function runBootStep0(){
+    setWizardLoading(false);
+    gateOut.innerHTML = "";
+    var step0 = runRoute({});
+    var handled = step0 && step0.lane === Lane.AlreadyHandled;
+    if(handled){
+      renderOutcomeCard(step0, gateOut, "Automatic check");
+    }
+    appendVerify.open = !handled;
+    beginQuestions();
+  }
+
+  function beginQuestions(){
+    openNewcomer();
+    hideSteps();
+    setStepBar(1);
+    showStep("stepResult");
+    document.getElementById("stepResult").scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+
+  function refreshLiveStep0(a){
+    if(!M || !M.meta || !M.meta.cell || typeof fetchStep0 !== "function") return Promise.resolve();
+    return fetchStep0({
+      cell: M.meta.cell,
+      auditId: a.id,
+      rpcUrl: M.meta.rpcUrl || DEFAULT_RPC,
+      integrityModule: M.meta.integrityReviewModule || null,
+      specArbiterModule: M.meta.specArbiterModule || null,
+      auditKind: a.kind || "audit",
+    }).then(function(live){
+      currentAudit = patchAudit(a, live);
+      chain = mergeStep0(toChain(currentAudit), live);
+      updateAuditHeader(currentAudit);
+      renderVerifyAppendix(currentAudit);
+      renderManageAppendix(currentAudit);
+    });
+  }
+
+  function boot(id){
+    hideSteps();
+    gateOut.innerHTML = "";
+    currentAudit = null;
+    chain = null;
+    if(id === "" || id == null || isNaN(Number(id))){
+      location.replace("explorer.html");
+      return;
+    }
+    var a = getAudit(Number(id));
+    if(!a){
+      setPageTitle(null);
+      setStatus("Audit #" + esc(id) + " not found. Run <span class=\"mono\">npm run index</span> in membrane/, then reload.");
+      return;
+    }
+    if(typeof routeFn !== "function" || typeof toChain !== "function"){
+      setStatus('Missing <span class="mono">concern-router.js</span>. Run <span class="mono">npm run test:concern-router</span>, then reload.');
+      return;
+    }
+    currentAudit = a;
+    chain = toChain(a);
+    setPageTitle(a);
+    renderVerifyAppendix(a);
+    renderManageAppendix(a);
+    try{
+      var u = new URL(location.href);
+      u.searchParams.set("id", String(a.id));
+      history.replaceState(null, "", u.pathname + "?" + u.searchParams.toString());
+    }catch(e){}
+    setStatus("");
+    setWizardLoading(true);
+    updateAuditHeader(a);
+
+    refreshLiveStep0(a).then(function(){
+      runBootStep0();
+    }).catch(function(err){
+      setWizardLoading(false);
+      setStatus('<span class="k">Live Step 0 unavailable (' + esc(err.message) + ') - using indexed snapshot.</span>');
+      runBootStep0();
+    });
+  }
+
+  document.getElementById("btnResultNext").onclick = function(){
+    var el = document.querySelector('input[name="result"]:checked');
+    if(!el){ setStatus("Pick one of the options."); return; }
+    setStatus("");
+    if(el.value === "not-run"){
+      var rn = runRoute({ verify: "not-run" });
+      if(rn){ setStepBar(3, { skippedScope: true }); renderCard(rn); }
+      return;
+    }
+    if(el.value === "different"){
+      var r = runRoute({ verify: "different" });
+      if(r){ setStepBar(3, { skippedScope: true }); renderCard(r); }
+      return;
+    }
+    var early = runRoute({ verify: "same" });
+    if(early && early.lane){
+      setStepBar(3, { skippedScope: true });
+      renderCard(early);
+      return;
+    }
+    setStepBar(2);
+    showStep("stepScope");
+    var scopeHtml = formatScope(currentAudit.scope || { status: "unavailable" });
+    document.getElementById("scopeList").innerHTML = scopeHtml.html;
+    document.getElementById("fakedWrap").style.display = "flex";
+  };
+
+  document.getElementById("btnScopeNext").onclick = function(){
+    var el = document.querySelector('input[name="worry"]:checked');
+    if(!el){ setStatus("Pick whether your worry is on the list."); return; }
+    setStatus("");
+    var r = runRoute({
+      verify: "same",
+      worry: el.value,
+      suspectsFaked: document.getElementById("suspectsFaked").checked
+    });
+    if(r){ setStepBar(3, { skippedScope: false }); renderCard(r); }
+  };
+
+  document.getElementById("btnStructuralRoute").onclick = function(){
+    structuralOut.innerHTML = "";
+    setStatus("");
+    var r = runRoute({ concern: "tool" });
+    if(r) renderCard(r);
+  };
+
+  if(!M){
+    setStatus('Missing <span class="mono">view-model.js</span>. Run <span class="mono">start.bat</span> or <span class="mono">npm run index</span>, then reload.');
+  } else {
+    var fromUrl = params.get("id");
+    if(fromUrl) boot(fromUrl);
+    else location.replace("explorer.html");
+  }
+})();
+</script>
+
+<script src="your-links.js?v=5"></script>
+<script src="membrane-rail.js?v=2"></script>
+<script src="motion.js?v=1"></script>
+</body>
+</html>

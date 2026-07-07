@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>!function(){try{var k="membrane_nav_session",s=sessionStorage.getItem(k);document.documentElement.classList.add(s?"nav-session":"cold-load");if(!s)sessionStorage.setItem(k,"1")}catch(e){}}();</script>
+<title>Network flow · Network Health · Audit Cell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css?v=5">
+</head>
+<body class="page-prose">
+<div class="layout layout-docs">
+
+  <nav>
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink" href="quickstart.html">Quickstart</a>
+    <a class="navlink on" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+
+  <main>
+    <div class="inner">
+
+      <div class="doc-layer-row">
+        <a href="docs-health.html" class="doc-layer doc-layer-spec">Network Health</a>
+        <span class="doc-layer doc-layer-spec">Spec · reader</span>
+      </div>
+      <h1>Network flow</h1>
+      <p class="doc-q">How &quot;hot&quot; is the network*<em> — and where is flow allowed to </em>suggest* (never settle)?</p>
+      
+      <div class="doc-bridge doc-bridge-story">
+        <p class="doc-bridge-lbl">Story context</p>
+        <ul>
+          <li><a href="docs-book-22.html">Book ch 22 · Reading the chain</a></li>
+        </ul>
+      </div>
+      <p>The network's activity read as energy — how much value is moving, and how fast. Derived off-chain from the bounty and audit stream; advisory, never a gate.</p>
+      <p><strong>Not here:</strong> full signal catalog or signal-to-action rule — <a href="docs-health-signals.html">Signals</a>. Issuance EMA and mint size — <a href="docs-economy-activity-led-reward.html">Activity-led reward</a>.</p>
+      <h2 id="network-flow">Flow</h2>
+      <p>The central reading is <strong>`flow`</strong> — an audit's or the network's energy:</p>
+      <table class="doc-table"><thead><tr><th>Field</th><th>Meaning</th></tr></thead><tbody><tr><td><code>magnitude</code></td><td>Value in motion (bounties locked, audits in flight)</td></tr><tr><td><code>bountyBand</code></td><td>Percentile band among economically active bounties (<a href="docs-integration-bounty-bands.html">Bounty bands</a>)</td></tr></tbody></table>
+      <p>Large bounties through many audits → <strong>hot</strong>. Little locked value → <strong>idle</strong>. Flow is the thermodynamic axis; <a href="docs-health-maturity.html">Maturity</a> is &quot;how far along.&quot;</p>
+      <h2 id="phase-a-the-one-place-flow-is-consulted">Phase A — the one place flow is consulted</h2>
+      <p>When magnitude and <code>bountyBand</code> are high (<code>top_quartile</code>), the Bob card may raise <strong>`integrityReviewSuggested`</strong> — a prompt that a large, hot audit may merit an integrity review.</p>
+      <p>It is a <em>suggestion</em>: the opener still calls <code>openIntegrityReview</code> on-chain (<a href="docs-flows-integrity-review.html">Integrity review</a>). Flow never opens a review itself.</p>
+      <table class="doc-table"><thead><tr><th>Step</th><th>Layer</th><th>Meaning</th></tr></thead><tbody><tr><td>1</td><td>Off-chain <code>flow</code></td><td>Card raises <code>integrityReviewSuggested</code></td></tr><tr><td>2</td><td>Human / protocol UI</td><td>Decides whether to open review</td></tr><tr><td>3</td><td>On-chain</td><td><code>openIntegrityReview</code> — fact, not signal</td></tr></tbody></table>
+      <h2 id="what-flow-is-not">What flow is not</h2>
+      <table class="doc-table"><thead><tr><th>Flow is…</th><th>Flow is not…</th></tr></thead><tbody><tr><td>A card hint for integrity review</td><td>Payout or mint input</td></tr><tr><td>Derived from bounty + audit stream</td><td>Issuance EMA (<a href="docs-economy-activity-led-reward.html">Activity-led reward</a>)</td></tr><tr><td>Advisory thermodynamics</td><td>A settlement gate — see <a href="docs-health-signals.html">Signals</a></td></tr></tbody></table>
+      <p>Issuance follows the activity curve (<a href="docs-economy-the-positive-block.html">The positive block</a>), independent of how hot the network <em>looks</em>.</p>
+      <p><strong>Previous:</strong> <a href="docs-health-maturity.html">Maturity</a> · <strong>Next:</strong> <a href="docs-health-signals.html">Signals</a></p>
+      
+      <footer class="doc-page-foot"><a href="docs-health.html">← Network Health</a> · <a href="docs-notebook.html">Notebook</a></footer>
+    </div>
+  </main>
+
+  <aside id="docRail" aria-label="You are here" hidden></aside>
+
+</div>
+<script src="motion.js?v=1"></script>
+<script src="your-links.js?v=5"></script>
+<script src="docs-rail.js?v=5"></script>
+</body>
+</html>

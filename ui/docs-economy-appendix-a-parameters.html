@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>!function(){try{var k="membrane_nav_session",s=sessionStorage.getItem(k);document.documentElement.classList.add(s?"nav-session":"cold-load");if(!s)sessionStorage.setItem(k,"1")}catch(e){}}();</script>
+<title>Appendix A — Parameter tables · The AUDIT Economy · Audit Cell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css?v=5">
+</head>
+<body class="page-prose">
+<div class="layout layout-docs">
+
+  <nav>
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink" href="quickstart.html">Quickstart</a>
+    <a class="navlink on" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+
+  <main>
+    <div class="inner">
+
+      <div class="doc-layer-row">
+        <a href="docs-economy.html" class="doc-layer doc-layer-spec">The AUDIT Economy</a>
+        <span class="doc-layer doc-layer-spec">Spec · reader</span>
+      </div>
+      <h1>Appendix A — Parameter tables</h1>
+      <p class="doc-q">What are the <strong>default numbers</strong> on live 84532?</p>
+      
+      <div class="doc-bridge doc-bridge-story">
+        <p class="doc-bridge-lbl">Story context</p>
+        <ul>
+          <li><a href="docs-book-08.html">Book ch 8 · Value &amp; escrow</a></li>
+        </ul>
+      </div>
+      <p>Rationale: <a href="docs-economy-adaptive-issuance-uncapped-supply-by-choice.html">Adaptive issuance</a> · dan-core lineage: <code>issuance.md</code>.</p>
+      <p>Formulas: <a href="docs-economy-appendix-b-formulas.html">Appendix B</a>.</p>
+      <h2 id="treasury-split-per-confirm-deposit">Treasury split (per confirm deposit)</h2>
+      <table class="doc-table"><thead><tr><th>Parameter</th><th>Value</th><th>Meaning</th></tr></thead><tbody><tr><td><code>LP_BPS</code></td><td>7510 (75.1%)</td><td>Treasury mint → LP</td></tr><tr><td><code>ESCROW_BPS</code></td><td>2490 (24.9%)</td><td>Treasury mint → escrow</td></tr><tr><td><code>LP_CAP_BPS</code></td><td>1500 (15%)</td><td>Max immediate LP credit vs supply</td></tr><tr><td><code>TIMELOCK</code></td><td>180 days</td><td>Before <code>migrate()</code> eligible</td></tr><tr><td><code>integrityEscrowShareBps</code></td><td>800 (8%)</td><td>Of escrow slice → integrity bucket</td></tr><tr><td><code>integrityMatchBps</code> (testnet)</td><td>0</td><td>Treasury match on integrity sustain</td></tr><tr><td>Admin cap integrity share</td><td>≤ 2500 bps</td><td>Upper bound on parameter</td></tr></tbody></table>
+      <h2 id="issuance-defaults">Issuance defaults</h2>
+      <table class="doc-table"><thead><tr><th>Parameter</th><th>Default</th><th>Meaning</th></tr></thead><tbody><tr><td><code>emaToMintBps</code></td><td>2500</td><td>Activity mint rate</td></tr><tr><td><code>mintLpCapBps</code></td><td>500</td><td>LP-paced cap when LP &gt; 0</td></tr><tr><td><code>treasuryShareBps</code></td><td>10000</td><td>1× auditor reward to treasury</td></tr><tr><td><code>founderShareBps</code></td><td>305</td><td>~3.05% to founder bucket</td></tr><tr><td>Founder supply cap</td><td>1.5%</td><td>Hard cap on founder bucket</td></tr><tr><td><code>founderReleaseTarget</code></td><td>1000</td><td>Activity gate for founder claim</td></tr><tr><td><code>canonicalThreshold</code></td><td>10</td><td>Uses before CAN</td></tr></tbody></table>
+      <h2 id="discoverer-defaults">Discoverer defaults</h2>
+      <table class="doc-table"><thead><tr><th>Parameter</th><th>Default</th><th>Meaning</th></tr></thead><tbody><tr><td><code>maxBoostFactor</code></td><td>4</td><td>Boost 1×–5×</td></tr><tr><td><code>discoveryCapBps</code></td><td>500</td><td>5% general escrow</td></tr><tr><td><code>discoveryFloorBps</code></td><td>5000</td><td>50% bounty floor</td></tr><tr><td><code>claimFilingStake</code></td><td>100 AUDIT</td><td>Claim stake</td></tr><tr><td><code>claimResolutionWindow</code></td><td>30 days</td><td>Expire window</td></tr></tbody></table>
+      <h2 id="safety-knobs">Safety knobs</h2>
+      <table class="doc-table"><thead><tr><th>Parameter</th><th>Meaning</th></tr></thead><tbody><tr><td><code>maxEscrowDrawdownPerAudit</code></td><td>Caps floor draw per confirm</td></tr><tr><td><code>escrowMinimumThresholdBps</code></td><td>Green-light / backstop gates</td></tr><tr><td><code>floorDecayBps</code></td><td>Depression floor decay</td></tr><tr><td><code>manipulationThresholdBps</code></td><td>Enter Manipulation state</td></tr><tr><td><code>manipulationMintScaleBps</code></td><td>Mint discount in Manipulation</td></tr><tr><td><code>depressionThresholdBps</code></td><td>Enter Depression state</td></tr></tbody></table>
+      <h2 id="cellescrow-calls-reference">CellEscrow calls (reference)</h2>
+      <table class="doc-table"><thead><tr><th>Call</th><th>Meaning</th></tr></thead><tbody><tr><td><code>recordDeposit</code></td><td>Split + LP cap + FIFO queue</td></tr><tr><td><code>migrate</code></td><td>Timelocked escrow → LP</td></tr><tr><td><code>payDiscoverer</code></td><td>General escrow FIFO</td></tr><tr><td><code>payFloorSupplement</code></td><td>General escrow FIFO</td></tr><tr><td><code>payIntegrityReviewSubsidy</code></td><td>Integrity bucket</td></tr><tr><td><code>recordSlash</code></td><td>→ general escrow</td></tr></tbody></table>
+      
+      <footer class="doc-page-foot"><a href="docs-economy.html">← The AUDIT Economy</a> · <a href="docs-notebook.html">Notebook</a></footer>
+    </div>
+  </main>
+
+  <aside id="docRail" aria-label="You are here" hidden></aside>
+
+</div>
+<script src="motion.js?v=1"></script>
+<script src="your-links.js?v=5"></script>
+<script src="docs-rail.js?v=5"></script>
+</body>
+</html>

@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>!function(){try{var k="membrane_nav_session",s=sessionStorage.getItem(k);document.documentElement.classList.add(s?"nav-session":"cold-load");if(!s)sessionStorage.setItem(k,"1")}catch(e){}}();</script>
+<title>Design constraints · Problem · Audit Cell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css?v=5">
+</head>
+<body class="page-prose">
+<div class="layout layout-docs">
+
+  <nav>
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink" href="quickstart.html">Quickstart</a>
+    <a class="navlink on" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+
+  <main>
+    <div class="inner">
+
+      <div class="doc-layer-row">
+        <a href="docs-notebook.html" class="doc-layer doc-layer-spec">The Notebook</a>
+        <span class="doc-layer doc-layer-spec">Spec · Problem</span>
+      </div>
+      <h1>Design constraints</h1>
+      <p class="doc-q">If deployed code cannot be patched, <strong>what properties must an audit mechanism have</strong> so strangers can rely on results — not firm names?</p>
+      <p><strong>Story:</strong> <a href="docs-book-01.html">Book ch  1 — The problem</a></p>
+      <p>Normative <strong>requirements</strong> any valid audit mechanism must satisfy. The story chapter names the market gap (immutable code vs reputation audits); this leaf states what a <strong>replacement mechanism must enforce</strong> — no narrative build-up.</p>
+      <p>Next spec: <a href="docs-mechanism.html">Mechanism</a> (how the Audit Cell implements these on-chain).</p>
+      <h2 id="what-lives-here-vs-elsewhere">What lives here vs elsewhere</h2>
+      <table class="doc-table"><thead><tr><th>Axis</th><th>Role</th><th>Start here</th></tr></thead><tbody><tr><td><strong>The Book</strong></td><td>Story — why immutable code breaks reputation audits</td><td><a href="docs-book-01.html">Ch. 1 — The problem</a></td></tr><tr><td><strong>This leaf (Problem)</strong></td><td>Normative requirements — survival condition, property table</td><td>Below</td></tr><tr><td><strong>Mechanism leaf</strong></td><td>How constraints land on-chain</td><td><a href="docs-mechanism.html">Mechanism</a></td></tr><tr><td><strong>Flows / Economy / Health</strong></td><td>Procedure, settlement, advisory reads</td><td>Notebook hub</td></tr></tbody></table>
+      <h2 id="survival-condition">Survival condition</h2>
+      <p>Deployed contract bytecode is <strong>immutable</strong>. Incorrectness before deployment is <strong>permanent loss</strong> — often borne by users who never saw the audit report.</p>
+      <p>Correctness at launch is therefore a <strong>survival condition</strong>, not a quality target or marketing polish.</p>
+      <h2 id="the-gap-these-properties-close">The gap these properties close</h2>
+      <table class="doc-table"><thead><tr><th>Market defect (story)</th><th>Required property</th></tr></thead><tbody><tr><td>Output is an <strong>opinion</strong>, not reproducible</td><td><strong>Binary</strong> + <strong>Machine-checkable</strong></td></tr><tr><td>Fee clears at <strong>report delivery</strong>, not accuracy</td><td><strong>Skin in the game</strong> + <strong>Self-funding</strong></td></tr><tr><td><strong>Payer chooses</strong> the auditor</td><td><strong>Permissionless</strong> + <strong>Judgment-free</strong></td></tr><tr><td>Checks do not <strong>compound</strong> as public infrastructure</td><td><strong>Accumulating</strong></td></tr></tbody></table>
+      <p>A design that fails <strong>any</strong> row below is not a valid implementation of this notebook’s mechanism target.</p>
+      <h2 id="required-properties">Required properties</h2>
+      <p>Any valid mechanism must meet <strong>all</strong> of the following:</p>
+      <table class="doc-table"><thead><tr><th>Property</th><th>Meaning</th></tr></thead><tbody><tr><td><strong>Binary</strong></td><td>Pass or fail only — no severity spectrum, partial pay, or committee grade</td></tr><tr><td><strong>Machine-checkable</strong></td><td>Same registered tool + same pinned code + same spec → <strong>same answer</strong> for any party</td></tr><tr><td><strong>Permissionless</strong></td><td>Eligible participants join and act without a gatekeeper approving membership</td></tr><tr><td><strong>Skin in the game</strong></td><td>Auditor economics tie to <strong>long-run accuracy</strong>, not time-to-report or relationship preservation</td></tr><tr><td><strong>Self-funding</strong></td><td>Rewards issue from <strong>mechanism output</strong> (escrow, mint rules), not client goodwill alone</td></tr><tr><td><strong>Accumulating</strong></td><td>Each settled audit adds to a <strong>shared, reusable toolkit</strong> of checks — network learns in public</td></tr><tr><td><strong>Judgment-free</strong></td><td>Who audits, what counts as a claim, when pay moves — <strong>deterministic from on-chain inputs + tool replay</strong>, not discretion</td></tr></tbody></table>
+      <h2 id="what-this-rules-out">What this rules out</h2>
+      <table class="doc-table"><thead><tr><th>Out of scope for a valid mechanism</th></tr></thead><tbody><tr><td>Qualitative severity threads that gate payout</td></tr><tr><td>“Trust the firm” as the final verification step</td></tr><tr><td>Payment that clears before accuracy is falsifiable on-chain</td></tr><tr><td>Admin or committee veto after tool proof is posted</td></tr></tbody></table>
+      <p>Disputes that <strong>do</strong> belong in the live design collapse to <strong>reproducible pass/fail</strong> under registered tools (Flows book).</p>
+      <h2 id="implementation">Implementation</h2>
+      <p>The <a href="docs-mechanism.html"><strong>Audit Cell</strong></a> implements these constraints on-chain — L0 settlement core, L1 satellites for overlays, L2 organs for read models only.</p>
+      
+      <footer class="doc-page-foot"><a href="docs-notebook.html">← Notebook</a></footer>
+    </div>
+  </main>
+
+  <aside id="docRail" aria-label="You are here" hidden></aside>
+
+</div>
+<script src="motion.js?v=1"></script>
+<script src="your-links.js?v=5"></script>
+<script src="docs-rail.js?v=5"></script>
+</body>
+</html>

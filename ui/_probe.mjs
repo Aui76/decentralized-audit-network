@@ -1,0 +1,10 @@
+import fs from "fs";
+global.window = {};
+eval(fs.readFileSync("view-model.js","utf8"));
+const { buildWantFeed } = await import("./wantBoardFeed.mjs");
+const feed = buildWantFeed(window.__MODEL);
+const risky = feed.filter(c => c.riskResemblance > 0);
+console.log("total contracts on board:", feed.length);
+console.log("flagged 'resembles known failure':", risky.length);
+console.log("flagged:", risky.map(c => c.contract.slice(0,10)).join(", "));
+console.log("all statuses:", feed.map(c=>c.auditStatus).join(", "));

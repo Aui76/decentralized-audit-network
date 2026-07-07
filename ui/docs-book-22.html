@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>!function(){try{var k="membrane_nav_session",s=sessionStorage.getItem(k);document.documentElement.classList.add(s?"nav-session":"cold-load");if(!s)sessionStorage.setItem(k,"1")}catch(e){}}();</script>
+<title>22 · Reading the chain · The Book · Audit Cell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css?v=5">
+</head>
+<body class="page-prose">
+<div class="layout layout-docs">
+
+  <nav>
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink" href="quickstart.html">Quickstart</a>
+    <a class="navlink on" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+
+  <main>
+    <div class="inner">
+
+      <div class="doc-layer-row">
+        <a href="docs-book.html" class="doc-layer doc-layer-story">The Book · VI</a>
+        <span class="doc-layer doc-layer-story">Story · chapter 22</span>
+      </div>
+      <h1>Reading the chain</h1>
+      <p class="doc-q">How do strangers <strong>navigate</strong> chain truth without Solidity — and how do cards relate to settlement?</p>
+      
+      <div class="doc-bridge">
+        <p class="doc-bridge-lbl">Go deeper — notebook spec</p>
+        <ul>
+          <li><a href="docs-participants-participant-phases.html">Participant phases (O3)</a></li>
+          <li><a href="docs-economy-the-positive-block.html">The positive block</a></li>
+          <li><a href="docs-economy-where-mint-splits.html">Where mint splits</a></li>
+          <li><a href="docs-health-facts-vs-health.html">Facts vs health</a></li>
+          <li><a href="docs-health-maturity.html">Maturity</a></li>
+          <li><a href="docs-health-thermodynamics-and-flow.html">Network flow</a></li>
+          <li><a href="docs-health-signals.html">Signals</a></li>
+          <li><a href="docs-health-portfolio-contagion.html">Portfolio contagion</a></li>
+          <li><a href="docs-health-appendix-a-organ-hooks.html">Appendix A — Organ hooks</a></li>
+          <li><a href="docs-integration-integrator-hub.html">Integrator hub</a></li>
+          <li><a href="docs-integration-quickstarts.html">Quickstarts</a></li>
+          <li><a href="docs-integration-bob-card.html">Bob card</a></li>
+          <li><a href="docs-integration-protocol-ui-spec.html">Protocol UI spec</a></li>
+        </ul>
+      </div>
+      <h2 id="two-indexes-one-truth">Two indexes, one truth</h2>
+      <p><a href="docs-book-21.html">Chapter 21</a> named per-role state machines. This chapter names <strong>indexes</strong> and <strong>composed reads</strong>.</p>
+      <p>Settlement ends where the cell stops writing. Indexers assemble for humans — <strong>never authority over the mechanism</strong>.</p>
+      <p><strong>Not here:</strong> membrane quickstarts — <a href="docs-book-23.html">Chapter 23</a>. Health doctrine depth — Network Health.</p>
+      <table class="doc-table"><thead><tr><th>Index</th><th>Job</th><th>Not used for</th></tr></thead><tbody><tr><td><strong>Block / POS chain</strong></td><td>Issuance landmarks</td><td>Browsing all audits by team</td></tr><tr><td><strong>Events</strong></td><td>Navigate by protocol, auditor, audit id</td><td>Mint authority</td></tr></tbody></table>
+      <h2 id="boundary-experience-trilogy-21-22-23">Boundary — Experience trilogy (21 / 22 / 23)</h2>
+      <table class="doc-table"><thead><tr><th>Layer</th><th><a href="docs-book-21.html">Ch 21</a></th><th><strong>Ch 22</strong></th><th><a href="docs-book-23.html">Ch 23</a></th></tr></thead><tbody><tr><td><strong>On-chain states</strong></td><td>Owns seven labels</td><td>Events feed cards</td><td>UI mirrors ch 21</td></tr><tr><td><strong>Bob / hints</strong></td><td>Phases intro</td><td>Owns pipeline</td><td>Renders headlines</td></tr><tr><td><strong>Navigation</strong></td><td>Per-role machine</td><td>Owns indexes</td><td>Explorer browse</td></tr><tr><td><strong>verify.mjs</strong></td><td>Observer path named</td><td>Encoding discipline</td><td>Owns shipped script</td></tr></tbody></table>
+      <h2 id="blocks-chain-issuance-events-chain-everything-else">Blocks chain issuance; events chain everything else</h2>
+      <p>Each confirmed audit → own <strong>positive block</strong> mint anchor. Application hash chain records <strong>POS</strong> and <strong>CAN</strong>.</p>
+      <p>Strangers browse history via <strong>events</strong> — protocol, auditor, audit id filters.</p>
+      <p>Keep indexes separate — merged views lie.</p>
+      <h2 id="three-lenses-on-the-same-log">Three lenses on the same log</h2>
+      <table class="doc-table"><thead><tr><th>Lens</th><th>Question</th></tr></thead><tbody><tr><td><strong>By protocol</strong></td><td>What did this wallet post?</td></tr><tr><td><strong>By auditor</strong></td><td>What landed on them? tallies? <strong>hold</strong>?</td></tr><tr><td><strong>By issuance head</strong></td><td>Where did AUDIT enter? <strong>proof-of-audit</strong> ledger</td></tr></tbody></table>
+      <p>Permissionless assembly — same facts, any indexer.</p>
+      <h2 id="from-facts-to-a-readable-card">From facts to a readable card</h2>
+      <pre class="mono doc-pre">Cell events and getters
+        ↓
+Hint reads (narrow PASS/FAIL questions)
+        ↓
+Composer (optional multi-hint signals)
+        ↓
+Bob card (outcome · shape · action · maturity · flow · phases)
+        ↓
+Optional attachments (scope, spec-quality, portfolio exposure)</pre>
+      <p>Hints do not mint, slash, or confirm.</p>
+      <h2 id="headline-fields-strangers-actually-render">Headline fields strangers actually render</h2>
+      <table class="doc-table"><thead><tr><th>Field</th><th>Plain role</th></tr></thead><tbody><tr><td><strong>outcome</strong></td><td>Primary badge</td></tr><tr><td><strong>shape</strong></td><td>Layout mode</td></tr><tr><td><strong>action</strong></td><td>Suggested CTA</td></tr><tr><td><strong>confidence</strong></td><td>Trust given inputs</td></tr><tr><td><strong>maturityBand</strong></td><td>History depth</td></tr><tr><td><strong>phases</strong></td><td>Participant tags (<a href="docs-book-21.html">ch. 21</a>)</td></tr><tr><td><strong>flow</strong></td><td>Activity / bounty band</td></tr><tr><td><strong>integrityReviewSuggested</strong></td><td>Watch flag — not open review</td></tr></tbody></table>
+      <p><strong>Scope</strong> and <strong>spec-quality</strong> attachments <strong>alarm</strong>; void only on binary paths (<a href="docs-book-16.html">ch. 16</a>).</p>
+      <p><strong>Portfolio exposure</strong> — <strong>stock</strong> read beside <strong>flow</strong>; incomplete context → amber strip, not fake confidence.</p>
+      <h2 id="alarm-is-not-slash">Alarm is not slash</h2>
+      <p><strong>Only on-chain facts gate pay, slash, or verdict.</strong> Cards route to courts that exist: Gate A arbiter, Gate C claim, integrity review opener.</p>
+      <p>Thin inputs → surface <strong>warnings</strong> before investor headlines.</p>
+      <h2 id="health-is-synthesis-not-storage">Health is synthesis, not storage</h2>
+      <p><strong>Health</strong> — maturity, <strong>network flow</strong>, signals, exposure — assembled off-chain; stored nowhere on-chain. Never confirms, mints, or slashes.</p>
+      <h2 id="before-you-turn-the-page">Before you turn the page</h2>
+      <p><strong>Blocks</strong> — issuance landmarks · <strong>Events</strong> — audit browser · <strong>Bob card</strong> — composed read · <strong>Alarm ≠ slash</strong> · <strong>Cell writes; indexers read</strong></p>
+      
+      <footer class="doc-page-foot"><a href="docs-book.html">← The Book</a> · <a href="docs.html">Docs</a></footer>
+    </div>
+  </main>
+
+  <aside id="docRail" aria-label="You are here" hidden></aside>
+
+</div>
+<script src="motion.js?v=1"></script>
+<script src="your-links.js?v=5"></script>
+<script src="docs-rail.js?v=5"></script>
+</body>
+</html>

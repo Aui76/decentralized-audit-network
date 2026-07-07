@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>!function(){try{var k="membrane_nav_session",s=sessionStorage.getItem(k);document.documentElement.classList.add(s?"nav-session":"cold-load");if(!s)sessionStorage.setItem(k,"1")}catch(e){}}();</script>
+<title>16 · Reputation signals · The Book · Audit Cell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css?v=5">
+</head>
+<body class="page-prose">
+<div class="layout layout-docs">
+
+  <nav>
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink" href="quickstart.html">Quickstart</a>
+    <a class="navlink on" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+
+  <main>
+    <div class="inner">
+
+      <div class="doc-layer-row">
+        <a href="docs-book.html" class="doc-layer doc-layer-story">The Book · IV</a>
+        <span class="doc-layer doc-layer-story">Story · chapter 16</span>
+      </div>
+      <h1>Reputation signals</h1>
+      <p class="doc-q">What <strong>history</strong> does settlement record — and what do <strong>signals</strong> add that the cell never reads back?</p>
+      
+      <div class="doc-bridge">
+        <p class="doc-bridge-lbl">Go deeper — notebook spec</p>
+        <ul>
+          <li><a href="docs-participants-participant-phases.html">Participant phases (O3)</a></li>
+          <li><a href="docs-economy-the-discoverers-reward.html">The discoverer's reward</a></li>
+          <li><a href="docs-health-maturity.html">Maturity</a></li>
+          <li><a href="docs-health-signals.html">Signals</a></li>
+          <li><a href="docs-integration-settlement-vs-signal.html">Settlement vs signal</a></li>
+          <li><a href="docs-integration-assurance-tiers.html">Assurance tiers</a></li>
+          <li><a href="docs-integration-spec-scope-and-quality.html">Scope, spec-quality &amp; fleet § quality</a></li>
+          <li><a href="docs-integration-claim-scorecard.html">Claim-resolution scorecard</a></li>
+        </ul>
+      </div>
+      <h2 id="history-the-cell-keeps">History the cell keeps</h2>
+      <p><a href="docs-book-14.html">Chapter 14</a> scaled discoverer <strong>boost</strong> with history. <a href="docs-book-15.html">Chapter 15</a> scaled <strong>reject cap</strong> with protocol record.</p>
+      <p>On-chain counters: auditor <strong>successful / failed / found</strong>; protocol <strong>exploited</strong> marks; tool <strong>successfulUses / failedUses</strong>. Facts from settlement — not grades assigned after.</p>
+      <p><strong>Not here:</strong> full Bob card pipeline — <a href="docs-book-22.html">Chapter 22</a>. Scope/quality/fleet detail — <a href="docs-book-18.html">Chapter 18</a>.</p>
+      <table class="doc-table"><thead><tr><th>Layer</th><th>Settles?</th><th>Examples</th></tr></thead><tbody><tr><td><strong>On-chain facts</strong></td><td>Yes</td><td>Counters, state, mint, slash</td></tr><tr><td><strong>Derived signals</strong></td><td>No — suggest only</td><td>Tiers, spec-quality, phases, health</td></tr></tbody></table>
+      <h2 id="boundary-with-scope-spec-quality-and-reading-the-chain">Boundary with Scope &amp; spec quality and Reading the chain</h2>
+      <table class="doc-table"><thead><tr><th>Layer</th><th><strong>This chapter</strong></th><th><a href="docs-book-18.html">Ch 18</a></th><th><a href="docs-book-22.html">Ch 22</a></th></tr></thead><tbody><tr><td><strong>On-chain counters</strong></td><td>Owns</td><td>—</td><td>Events feed cards</td></tr><tr><td><strong>Assurance tiers · scorecard</strong></td><td>Names</td><td>—</td><td>Bob renders</td></tr><tr><td><strong>Scope / spec-quality / fleet</strong></td><td>Points to ch 18</td><td>Owns vocabulary + reads</td><td>Owns pipeline</td></tr><tr><td><strong>Signal-to-action rule</strong></td><td>Owns doctrine</td><td>Scope flags alarm only</td><td>Alarm ≠ slash</td></tr></tbody></table>
+      <h2 id="what-indexers-add">What indexers add</h2>
+      <table class="doc-table"><thead><tr><th>Signal</th><th>Meaning</th><th>Settles?</th></tr></thead><tbody><tr><td><strong>Assurance tiers</strong></td><td>Standard / High display badge</td><td>No</td></tr><tr><td><strong>Spec-quality flags</strong></td><td>Vacuous, thin, mis-scoped, marketing-skew</td><td>No — alarm only</td></tr><tr><td><strong>Claim-resolution scorecard</strong></td><td>Post-claim conduct bands</td><td>No</td></tr><tr><td><strong>Participant phases</strong></td><td>alive / declining / line corroding</td><td>No</td></tr><tr><td><strong>Health reads</strong></td><td>Maturity, <strong>network flow</strong>, contagion</td><td>No</td></tr></tbody></table>
+      <p>Integrators render on cards. The cell never reads them back.</p>
+      <h2 id="suggest-never-settle">Suggest, never settle</h2>
+      <p><strong>Only objective on-chain facts gate pay, slash, or verdict.</strong> A derived signal may suggest — a buggy indexer cannot mis-settle.</p>
+      <p><strong>Health</strong> synthesizes the network picture — advisory only; never confirms, mints, or slashes.</p>
+      <h2 id="where-history-does-bite">Where history does bite</h2>
+      <p>Only two on-chain formulas use history beyond display:</p>
+      <table class="doc-table"><thead><tr><th>Formula</th><th>Source</th></tr></thead><tbody><tr><td>Discoverer <strong>boost</strong></td><td>Auditor public record (<a href="docs-book-14.html">ch. 14</a>)</td></tr><tr><td>Protocol <strong>reject cap</strong></td><td>Exploited history (<a href="docs-book-15.html">ch. 15</a>)</td></tr></tbody></table>
+      <p>Everything else — tiers, scorecards, phases — stays off the settlement path.</p>
+      <h2 id="before-you-turn-the-page">Before you turn the page</h2>
+      <p><strong>On-chain history</strong> — counters from settlement.</p>
+      <p><strong>Signals</strong> — derived; suggest only.</p>
+      <p><strong>Signal-to-action rule</strong> — fact settles; signal suggests.</p>
+      
+      <footer class="doc-page-foot"><a href="docs-book.html">← The Book</a> · <a href="docs.html">Docs</a></footer>
+    </div>
+  </main>
+
+  <aside id="docRail" aria-label="You are here" hidden></aside>
+
+</div>
+<script src="motion.js?v=1"></script>
+<script src="your-links.js?v=5"></script>
+<script src="docs-rail.js?v=5"></script>
+</body>
+</html>

@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>!function(){try{var k="membrane_nav_session",s=sessionStorage.getItem(k);document.documentElement.classList.add(s?"nav-session":"cold-load");if(!s)sessionStorage.setItem(k,"1")}catch(e){}}();</script>
+<title>Escrow architecture · The AUDIT Economy · Audit Cell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css?v=5">
+</head>
+<body class="page-prose">
+<div class="layout layout-docs">
+
+  <nav>
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink" href="quickstart.html">Quickstart</a>
+    <a class="navlink on" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+
+  <main>
+    <div class="inner">
+
+      <div class="doc-layer-row">
+        <a href="docs-economy.html" class="doc-layer doc-layer-spec">The AUDIT Economy</a>
+        <span class="doc-layer doc-layer-spec">Spec · reader</span>
+      </div>
+      <h1>Escrow architecture</h1>
+      <p class="doc-q">Where<strong> does locked bounty and treasury deposit sit — and </strong>which bucket** pays which overlay?</p>
+      
+      <div class="doc-bridge doc-bridge-story">
+        <p class="doc-bridge-lbl">Story context</p>
+        <ul>
+          <li><a href="docs-book-08.html">Book ch 8 · Value &amp; escrow</a></li>
+          <li><a href="docs-book-14.html">Book ch 14 · Bounties &amp; pricing</a></li>
+        </ul>
+      </div>
+      <p><strong>CellEscrow</strong> holds AUDIT between events and <strong>draws</strong> when the network needs equilibrating pay: depression floor, discoverer, structural tranches, integrity subsidy.</p>
+      <h2 id="two-inflows">Two inflows</h2>
+      <table class="doc-table"><thead><tr><th>Source</th><th>When</th><th>Meaning</th></tr></thead><tbody><tr><td><strong>Bounty</strong></td><td><code>submitAudit</code></td><td>Protocol-locked AUDIT for one audit row</td></tr><tr><td><strong>Treasury deposit</strong></td><td>Each positive-block confirm</td><td>75.1% → LP · 24.9% → escrow reserves</td></tr></tbody></table>
+      <p>On <code>recordDeposit</code>: immediate LP credit capped at <strong>15% of supply</strong> (<code>LP_CAP_BPS = 1500</code>). Overflow queues in general escrow until <code>migrate()</code> or draw.</p>
+      <p>After <strong>180 days</strong> (<code>TIMELOCK</code>), permissionless <code>migrate(maxIterations)</code> moves aged general escrow → LP (same cap).</p>
+      <h2 id="integrity-escrow-bucket">Integrity ring-fence</h2>
+      <p>Default <code>integrityEscrowShareBps = 800</code> — <strong>8%</strong> of each escrow deposit → <strong>integrity bucket</strong>; remainder → <strong>general escrow</strong>.</p>
+      <pre class="mono doc-pre">toIntegrity = toEscrow × integrityEscrowShareBps / 10_000
+toGeneral   = toEscrow − toIntegrity</pre>
+      <table class="doc-table"><thead><tr><th>Draw</th><th>Bucket</th></tr></thead><tbody><tr><td><code>payIntegrityReviewSubsidy</code></td><td>Integrity only</td></tr><tr><td><code>payDiscoverer</code>, <code>payFloorSupplement</code></td><td>General only</td></tr></tbody></table>
+      <p>Hunt bursts cannot drain FIFO head before floor/discoverer. Integrity bucket may run dry (partial subsidy — correct). Slashed stakes → <strong>general</strong> only.</p>
+      <p>Integrity review: <a href="docs-flows-integrity-review.html">Integrity review</a>.</p>
+      <h2 id="cellescrow-surface">CellEscrow surface</h2>
+      <table class="doc-table"><thead><tr><th>Call</th><th>Meaning</th></tr></thead><tbody><tr><td><code>recordDeposit</code></td><td>Split + LP cap + FIFO-queue general</td></tr><tr><td><code>migrate</code></td><td>Timelocked general → LP under cap</td></tr><tr><td><code>payDiscoverer</code></td><td>FIFO from general</td></tr><tr><td><code>payFloorSupplement</code></td><td>FIFO from general (depression)</td></tr><tr><td><code>payStructuralUpgradeEscrow</code></td><td>FIFO (structural tranches)</td></tr><tr><td><code>payIntegrityReviewSubsidy</code></td><td>Integrity bucket</td></tr><tr><td><code>recordIntegrityReturn</code></td><td>Return unused match to integrity</td></tr><tr><td><code>recordSlash</code></td><td>Slash → general (FIFO-queued)</td></tr><tr><td><code>recordFounderDeposit</code> / <code>claimFounder</code></td><td>Founder bucket (cap + activity gate)</td></tr></tbody></table>
+      <p>Defaults: <a href="docs-economy-appendix-a-parameters.html">Appendix A</a>.</p>
+      <p><strong>Previous:</strong> <a href="docs-economy-where-mint-splits.html">Where mint splits</a> · <strong>Next:</strong> <a href="docs-economy-the-auditors-reward.html">The auditor's reward</a></p>
+      
+      <footer class="doc-page-foot"><a href="docs-economy.html">← The AUDIT Economy</a> · <a href="docs-notebook.html">Notebook</a></footer>
+    </div>
+  </main>
+
+  <aside id="docRail" aria-label="You are here" hidden></aside>
+
+</div>
+<script src="motion.js?v=1"></script>
+<script src="your-links.js?v=5"></script>
+<script src="docs-rail.js?v=5"></script>
+</body>
+</html>

@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>!function(){try{var k="membrane_nav_session",s=sessionStorage.getItem(k);document.documentElement.classList.add(s?"nav-session":"cold-load");if(!s)sessionStorage.setItem(k,"1")}catch(e){}}();</script>
+<title>Bounty bands · Integration · Audit Cell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css?v=5">
+</head>
+<body class="page-prose">
+<div class="layout layout-docs">
+
+  <nav>
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink" href="quickstart.html">Quickstart</a>
+    <a class="navlink on" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+
+  <main>
+    <div class="inner">
+
+      <div class="doc-layer-row">
+        <a href="docs-integration.html" class="doc-layer doc-layer-spec">Integration</a>
+        <span class="doc-layer doc-layer-spec">Spec · reader</span>
+      </div>
+      <h1>Bounty bands</h1>
+      <p class="doc-q">Where does this audit's locked bounty rank** among peers — without changing payout?</p>
+      
+      <div class="doc-bridge doc-bridge-story">
+        <p class="doc-bridge-lbl">Story context</p>
+        <ul>
+          <li><a href="docs-book-14.html">Book ch 14 · Bounties &amp; pricing</a></li>
+        </ul>
+      </div>
+      <p>Bounty bands rank one audit's locked bounty against other <strong>economically active</strong> bounties. Thermodynamic <strong>signal</strong> for cards and hints — not on-chain payout or treasury routing (<a href="docs-integration-settlement-vs-signal.html">Settlement vs signal</a>). Positive-block treasury split lives in <strong>CellEscrow</strong> and <strong>IssuanceModule</strong> (<a href="docs-economy-where-mint-splits.html">Where mint splits</a> · <a href="docs-economy-escrow-architecture.html">Escrow architecture</a>).</p>
+      <h2 id="cohort-percentiles">Cohort percentiles</h2>
+      <p>From sorted active bounties, compute <code>{ p25, p50, p75, activeCount }</code>. Classify each audit:</p>
+      <table class="doc-table"><thead><tr><th>Band</th><th>Rule</th><th>Meaning</th></tr></thead><tbody><tr><td><code>top_quartile</code></td><td><code>magnitude &gt;= p75</code></td><td>Hot cohort — may trigger integrity <strong>suggest</strong></td></tr><tr><td><code>mid</code></td><td><code>magnitude &gt;= p25</code> and <code>&lt; p75</code></td><td>Middle of active bounties</td></tr><tr><td><code>low</code></td><td><code>magnitude &lt; p25</code>, or <code>activeCount === 0</code></td><td>Below p25 or empty cohort</td></tr></tbody></table>
+      <p><strong>Active bounties</strong> — bounty locked at submit for rows in economically active states (e.g. in window, in block). Empty cohort → all bands <code>low</code>.</p>
+      <h2 id="integrator-use">Integrator use</h2>
+      <p>Rebuild <code>activeBounties</code> from chain: bounty field on each active row. Precompute <code>{ p25, p50, p75 }</code> once per tick.</p>
+      <p>On <strong>InBlock</strong> cards, pass <code>bounty</code> + <code>bountyDistribution</code> (or accept a missing-data warning). Bands gate integrity-review suggestions and flow copy — not mint or discoverer <code>paid</code>.</p>
+      <p>Organ: <code>cell/indexer/bountyDistribution.mjs</code> · test: <code>npm run test:organs-o8</code>.</p>
+      <h2 id="what-bands-do-not-do">What bands do not do</h2>
+      <ul><li>Do not change LP / escrow / founder split on confirm</li><li>Do not alter <code>nextPositiveBlockReward()</code></li><li>Do not replace discoverer boost (<a href="docs-economy-the-discoverers-reward.html">The discoverer's reward</a>)</li></ul>
+      <p><strong>Previous:</strong> <a href="docs-integration-settlement-vs-signal.html">Settlement vs signal</a> · <strong>Next:</strong> <a href="docs-integration-assurance-tiers.html">Assurance tiers</a></p>
+      
+      <footer class="doc-page-foot"><a href="docs-integration.html">← Integration</a> · <a href="docs-notebook.html">Notebook</a></footer>
+    </div>
+  </main>
+
+  <aside id="docRail" aria-label="You are here" hidden></aside>
+
+</div>
+<script src="motion.js?v=1"></script>
+<script src="your-links.js?v=5"></script>
+<script src="docs-rail.js?v=5"></script>
+</body>
+</html>

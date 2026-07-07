@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>!function(){try{var k="membrane_nav_session",s=sessionStorage.getItem(k);document.documentElement.classList.add(s?"nav-session":"cold-load");if(!s)sessionStorage.setItem(k,"1")}catch(e){}}();</script>
+<title>Participant phases (O3) · Participants · Audit Cell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css?v=5">
+</head>
+<body class="page-prose">
+<div class="layout layout-docs">
+
+  <nav>
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink" href="quickstart.html">Quickstart</a>
+    <a class="navlink on" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+
+  <main>
+    <div class="inner">
+
+      <div class="doc-layer-row">
+        <a href="docs-participants.html" class="doc-layer doc-layer-spec">Participants</a>
+        <span class="doc-layer doc-layer-spec">Spec · reader</span>
+      </div>
+      <h1>Participant phases (O3)</h1>
+      <p class="doc-q">What <strong>labels and animation</strong> should integrators show for auditor/protocol/tool/line maturity — without treating hints as payout gates?</p>
+      
+      <div class="doc-bridge doc-bridge-story">
+        <p class="doc-bridge-lbl">Story context</p>
+        <ul>
+          <li><a href="docs-book-16.html">Book ch 16 · Reputation signals</a></li>
+          <li><a href="docs-book-21.html">Book ch 21 · What each actor sees</a></li>
+          <li><a href="docs-book-22.html">Book ch 22 · Reading the chain</a></li>
+        </ul>
+      </div>
+      <p><strong>Participant phases</strong> and <strong>line phases</strong> are <strong>off-chain presentation tags</strong> on the Bob card — computed in <code>cell/indexer/</code>, <strong>not</strong> on-chain enums in the settlement cell.</p>
+      <p><strong>Rule:</strong> phases <strong>alarm and explain</strong>; only L0/L1 tool paths <strong>punish</strong> (<a href="docs-mechanism.html#signal-vs-punishment">Mechanism</a>).</p>
+      <p>Bob pipeline: <a href="docs-integration-bob-card.html">Bob card</a> · maturity: <a href="docs-health-maturity.html">Maturity</a>.</p>
+      <h2 id="boundary-with-maturity-health">Boundary with Maturity (Health)</h2>
+      <table class="doc-table"><thead><tr><th>Layer</th><th>This chapter (O3)</th><th><a href="docs-health-maturity.html">Maturity</a></th></tr></thead><tbody><tr><td><strong>Audience</strong></td><td>Integrators — exact tag values, animation, tests</td><td>Readers — doctrine: bands vs settlement</td></tr><tr><td><strong>Participant tags</strong></td><td><code>unproven</code> · <code>alive</code> · <code>declining</code> · <code>detrimental</code></td><td>Same pattern, health framing</td></tr><tr><td><strong>Line tags</strong></td><td><code>nascent</code> · <code>steady</code> · <code>corroding</code> · <code>escalating</code></td><td>Pairs with <a href="docs-health-thermodynamics-and-flow.html">Network flow</a></td></tr><tr><td><strong>Settlement</strong></td><td>Never — hints only</td><td>Never — advisory read model</td></tr></tbody></table>
+      <p>Indexer modules live here and in Integration <a href="docs-integration-bob-card.html">Bob card</a>; Health explains <strong>why</strong> tags stay off-chain.</p>
+      <h2 id="two-tag-families">Two tag families</h2>
+      <h3>Participant phases (<code>deriveBobCard.mjs</code>)</h3>
+      <p>Values: <strong>`unproven` · `alive` · `declining` · `detrimental`</strong></p>
+      <table class="doc-table"><thead><tr><th>Entity</th><th>Driver</th></tr></thead><tbody><tr><td><strong>Auditor</strong></td><td><code>deriveAuditorPhase()</code> — successful / failed / found, timeout streak</td></tr><tr><td><strong>Protocol</strong></td><td><code>deriveProtocolPhase()</code> — submissions, exploits, claims</td></tr><tr><td><strong>Tool</strong></td><td><code>deriveToolPhase()</code> — successfulUses / failedUses, canonical flag</td></tr></tbody></table>
+      <h3>Line phase (this audit card)</h3>
+      <p>Values: <strong>`nascent` · `steady` · `corroding` · `escalating`</strong></p>
+      <p><code>deriveLinePhase()</code> — <code>maturityBand</code>, trust legs, hint FAILs (<strong>wash-triangle</strong>, <strong>defended-spec-on-wash-line</strong>, dissolve tools). Hints: <code>../../meta/hint-registry.md</code>.</p>
+      <p>Assignment signals (<code>protocolRejectCount</code>, dyad stats) feed sequence hints — <a href="docs-participants-assignment.html">Assignment (CRD)</a>.</p>
+      <h2 id="bob-card-shape-example">Bob card shape (example)</h2>
+      <pre class="mono doc-pre">{
+  &quot;maturityBand&quot;: &quot;warm&quot;,
+  &quot;phases&quot;: { &quot;auditor&quot;: &quot;alive&quot;, &quot;protocol&quot;: &quot;alive&quot;, &quot;tool&quot;: &quot;alive&quot;, &quot;line&quot;: &quot;steady&quot; },
+  &quot;sequenceHints&quot;: { &quot;SEQ-defended-repeat&quot;: { &quot;result&quot;: &quot;PASS&quot; }, … },
+  &quot;phaseHistory&quot;: [ { &quot;at&quot;: 200, &quot;entity&quot;: &quot;line&quot;, &quot;from&quot;: &quot;nascent&quot;, &quot;to&quot;: &quot;steady&quot;, &quot;event&quot;: &quot;AuditConfirmed&quot; } ],
+  &quot;phaseVelocity&quot;: { &quot;windowSec&quot;: 604800, &quot;perDay&quot;: { &quot;line&quot;: 0.5 }, &quot;hot&quot;: false }
+}</pre>
+      <p>Flat <code>auditorPhase</code> / <code>linePhase</code> keys duplicate <code>phases.*</code> for legacy integrators.</p>
+      <h2 id="phase-animation-derivephaseanimationmjs">Phase animation (<code>derivePhaseAnimation.mjs</code>)</h2>
+      <p>Event-sequence layer on snapshot phases:</p>
+      <table class="doc-table"><thead><tr><th>Export</th><th>Meaning</th></tr></thead><tbody><tr><td><code>deriveSequenceHints(input)</code></td><td><code>SEQ-defended-repeat</code>, <code>SEQ-reject-loop</code>, <code>SEQ-integrity-open</code></td></tr><tr><td><code>derivePhaseHistory(input, phases)</code></td><td>Transition log from <code>input.events[]</code></td></tr><tr><td><code>derivePhaseVelocity(history, windowSec)</code></td><td>Cadence (<code>perDay</code>, <code>hot</code>)</td></tr><tr><td><code>derivePhaseAnimation(input, phases)</code></td><td>Bundles hints + history + velocity</td></tr><tr><td><code>SEQUENCE_HINT_IDS</code></td><td>Registered sequence hint ids</td></tr></tbody></table>
+      <h3>Event feed</h3>
+      <p><code>input.events</code> as <code>{ type, ts, auditId? }</code> aligned to cell events:</p>
+      <p><code>AuditSubmitted</code>, <code>AuditConfirmed</code>, <code>SpecChallengeOpened</code>, <code>IntegrityReviewOpened</code>, <code>VulnerabilityClaimed</code>, <code>PositiveBlockMinted</code>, <code>AuditTimedOut</code>, …</p>
+      <p>Full map: <code>EVENT_PHASE_HINTS</code> in module.</p>
+      <h3>Sequence hint inputs</h3>
+      <table class="doc-table"><thead><tr><th>Hint</th><th>Fires when</th></tr></thead><tbody><tr><td><code>SEQ-defended-repeat</code></td><td><code>defendedChallengeCount</code> ≥ 2</td></tr><tr><td><code>SEQ-reject-loop</code></td><td><code>protocolRejectCount</code> ≥ 2</td></tr><tr><td><code>SEQ-integrity-open</code></td><td>Integrity review Open / VerdictSubmitted</td></tr></tbody></table>
+      <h2 id="tests">Tests</h2>
+      <table class="doc-table"><thead><tr><th>Check</th><th>Command</th></tr></thead><tbody><tr><td>O3 standalone</td><td><code>cd cell &amp;&amp; npm run test:phase-animation</code></td></tr><tr><td>O3 bundle</td><td><code>cd cell &amp;&amp; npm run test:organs-o3</code></td></tr><tr><td>Bob integration</td><td><code>cd cell &amp;&amp; npm run test:bob-fixtures</code></td></tr></tbody></table>
+      <p>Golden fixtures: <code>cell/indexer/deriveBobCard.fixtures.test.mjs</code>.</p>
+      <p><strong>Previous:</strong> <a href="docs-participants-assignment.html">Assignment (CRD)</a></p>
+      
+      <footer class="doc-page-foot"><a href="docs-participants.html">← Participants</a> · <a href="docs-notebook.html">Notebook</a></footer>
+    </div>
+  </main>
+
+  <aside id="docRail" aria-label="You are here" hidden></aside>
+
+</div>
+<script src="motion.js?v=1"></script>
+<script src="your-links.js?v=5"></script>
+<script src="docs-rail.js?v=5"></script>
+</body>
+</html>

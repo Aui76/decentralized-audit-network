@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How an audit works · Docs · Audit Cell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="site.css?v=5"></head>
+<body>
+<div class="layout layout-docs">
+
+  <nav>
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink" href="quickstart.html">Quickstart</a>
+    <a class="navlink on" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+
+  <main>
+    <div class="inner">
+      <p class="eyebrow"><a href="docs.html">Docs</a></p>
+      <h1>How an audit works</h1>
+      <p class="lede">One contract, from posted to settled. Every step is an on-chain action — nothing is decided by hand.</p>
+
+      <div class="pathline"><b>Posted</b> → <b>Assigned</b> → <b>Checked</b> → <b>Challenge period</b> → <b>Settled</b></div>
+
+      <h2 id="posted">Posted</h2>
+      <p>A protocol posts a contract and a bounty, and names the check that applies. The check is fixed at this moment and can't be changed later.</p>
+
+      <h2 id="assigned">Assigned</h2>
+      <p>An auditor from the pool is offered the contract. The protocol accepts them — or stays silent, and it accepts automatically. No one races for work; assignment is structural.</p>
+
+      <h2 id="checked">Checked</h2>
+      <p>The auditor runs the named tool against the contract and gives one answer: pass or fail. Nothing in between.</p>
+
+      <h2 id="challenge">Challenge period</h2>
+      <p>A pass doesn't pay right away. A fixed waiting period opens — time for anyone to prove a bug the auditor missed. This adversarial slot is permanent by design, not a delay.</p>
+
+      <h2 id="settled">Settled</h2>
+      <p>If the challenge period closes with no bug proven, the audit is confirmed: the auditor is paid and the record is final.</p>
+
+      <h2 id="bug">When a bug is found</h2>
+      <p>A fail at the check, or a bug claimed during the challenge period, opens a dispute. An independent auditor re-checks the original contract — re-running the claimed tool on the same deployed code.</p>
+      <p>If they reproduce the bug, the original audit is marked exploited and the finder is paid from reserves — no new tokens are minted for a failure. If they can't reproduce it, the claim is rejected, the original audit stands, and the finder loses their stake.</p>
+      <p>Settlement is always the result reproduced on the <i>original</i> contract — never a patch, and never some other procedure finishing on your behalf.</p>
+
+      <h2 id="final">Permanent and reproducible</h2>
+      <p>Settled and exploited are final. The whole history is on-chain, and anyone can recompute any verdict from the live code.</p>
+
+      <span class="badge"><span class="live"></span> Testnet · Base Sepolia — test funds only</span>
+    </div>
+  </main>
+
+  <aside id="docRail" aria-label="You are here" hidden></aside>
+
+</div>
+<script src="your-links.js?v=5"></script>
+<script src="docs-rail.js?v=5"></script>
+<script src="motion.js?v=1"></script>
+</body>
+</html>

@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>!function(){try{var k="membrane_nav_session",s=sessionStorage.getItem(k);document.documentElement.classList.add(s?"nav-session":"cold-load");if(!s)sessionStorage.setItem(k,"1")}catch(e){}}();</script>
+<title>Audit mutex · Flows · Audit Cell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css?v=5">
+</head>
+<body class="page-prose">
+<div class="layout layout-docs">
+
+  <nav>
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink" href="quickstart.html">Quickstart</a>
+    <a class="navlink on" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+
+  <main>
+    <div class="inner">
+
+      <div class="doc-layer-row">
+        <a href="docs-flows.html" class="doc-layer doc-layer-spec">Flows</a>
+        <span class="doc-layer doc-layer-spec">Spec · reader</span>
+      </div>
+      <h1>Audit mutex</h1>
+      <p class="doc-q">If two fights could apply to the same audit row, <strong>which one is legal now</strong> — and what must wait?</p>
+      
+      <div class="doc-bridge doc-bridge-story">
+        <p class="doc-bridge-lbl">Story context</p>
+        <ul>
+          <li><a href="docs-book-11.html">Book ch 11 · The break path</a></li>
+          <li><a href="docs-book-12.html">Book ch 12 · Overlays</a></li>
+          <li><a href="docs-book-19.html">Book ch 19 · Gaming &amp; defenses</a></li>
+        </ul>
+      </div>
+      <p>Each ordinary <strong>`auditId`</strong> runs <strong>at most one dispute lane</strong> at a time. The cell exposes the active lane in <strong>`disputeLaneOf(auditId)`</strong> — the on-chain lock that blocks competing openers.</p>
+      <p>Related: <a href="docs-flows-vulnerability.html">Vulnerability disclosure</a> (Claim lane) · <a href="docs-flows-spec-arbiter.html">Spec arbiter</a> (Spec lane) · <a href="docs-flows-integrity-review.html">Integrity review</a> (Integrity lane) · <a href="docs-flows-lifecycle.html">Audit lifecycle</a>.</p>
+      <h2 id="one-row-one-lane">One row, one lane</h2>
+      <pre class="mono doc-pre">auditId N  ──►  disputeLaneOf  ∈  { None, Spec, Integrity, Claim }
+                      │
+                      └── first opener acquires; second reverts</pre>
+      <p><strong>First acquire wins.</strong> A second <code>challengeSpecInvalid</code>, <code>openIntegrityReview</code>, or <code>claimVulnerability</code> / <code>proveFail</code> while another lane is active <strong>reverts</strong>.</p>
+      <h2 id="three-dispute-lanes">Three dispute lanes</h2>
+      <table class="doc-table"><thead><tr><th>Lane</th><th>Question it settles</th><th>Opened by</th><th>While active</th></tr></thead><tbody><tr><td><strong>Spec</strong></td><td>Was the <strong>Gate A declaration</strong> invalid?</td><td><code>challengeSpecInvalid</code></td><td>Spec arbiter path — <a href="docs-flows-spec-arbiter.html">Gate A overlay</a></td></tr><tr><td><strong>Integrity</strong></td><td>Did the <strong>audit line</strong> fail an independent re-check (collusion / pass could not stand)?</td><td><code>openIntegrityReview</code></td><td><a href="docs-flows-integrity-review.html">Integrity review</a></td></tr><tr><td><strong>Claim</strong></td><td>Did PASS <strong>miss a bug</strong> on pinned code (Gate C)?</td><td><code>claimVulnerability</code> / <code>proveFail</code></td><td><a href="docs-flows-vulnerability.html">Break path</a></td></tr></tbody></table>
+      <p>View on-chain: <code>disputeLaneOf(auditId)</code> → <code>None</code> | <code>Spec</code> | <code>Integrity</code> | <code>Claim</code>.</p>
+      <h2 id="which-fight-when-routing">Which fight when (routing)</h2>
+      <table class="doc-table"><thead><tr><th>Situation</th><th>Dominant lane</th><th>Blocked openers</th></tr></thead><tbody><tr><td>Normal progress toward confirm</td><td><strong>None</strong></td><td>—</td></tr><tr><td>Bad or non-auditable <strong>declared spec</strong></td><td><strong>Spec</strong></td><td>Integrity open, claim</td></tr><tr><td>Wash / collusion / “pass cannot stand”</td><td><strong>Integrity</strong></td><td>Spec open, claim</td></tr><tr><td><strong>Code fails spec</strong> after provisional PASS</td><td><strong>Claim</strong></td><td>Spec open, integrity open</td></tr></tbody></table>
+      <p>Route the <strong>dominant question</strong> first. Mixing lanes on one row is how participants argue past each other while nothing settles.</p>
+      <p>Wrong-spec → <strong>Spec</strong> (<a href="docs-flows-gate-a.html">Gate A</a>). Missed bug → <strong>Claim</strong> (<a href="docs-flows-vulnerability.html">Gate C</a>).</p>
+      <h2 id="precedence-what-waits">Precedence (what waits)</h2>
+      <p>When a lane is active, the cell blocks conflicting moves on the <strong>same `auditId`</strong>:</p>
+      <table class="doc-table"><thead><tr><th>Priority</th><th>If active…</th><th>Blocks (typical)</th></tr></thead><tbody><tr><td>1</td><td>Spec challenge</td><td><code>confirmAudit</code>, claim, integrity-open, in-audit verdict</td></tr><tr><td>2</td><td>Integrity review</td><td><code>confirmAudit</code>, claim, spec-open</td></tr><tr><td>3</td><td>Claim lane</td><td><code>confirmAudit</code>, integrity-open, spec-open</td></tr><tr><td>4</td><td>—</td><td>Main-phase eligibility (assign, accept, prove, confirm)</td></tr></tbody></table>
+      <h2 id="law-vs-signal">Law vs signal</h2>
+      <table class="doc-table"><thead><tr><th>Layer</th><th>Scope</th><th>Role</th></tr></thead><tbody><tr><td><strong>Constraint (law)</strong></td><td>One <code>auditId</code></td><td><strong>`disputeLaneOf`</strong> — only one lane open; enforces routing above</td></tr><tr><td><strong>Amplifier (signal)</strong></td><td>Portfolio / Bob</td><td>Hints <strong>suggest</strong> scrutiny — they do <strong>not</strong> open or close lanes by themselves</td></tr></tbody></table>
+      <h2 id="triangle-alarm">Triangle alarm — hint to scrutiny, not slash</h2>
+      <p>Off-chain manipulation hints (<strong>wash-triangle</strong>, <strong>spec-defended-unverified</strong>) route <strong>scrutiny</strong>. They <strong>do not</strong> move money, open <code>disputeLaneOf</code>, or slash by themselves.</p>
+      <p>Heuristics have false positives. Auto-slash on hint → false-positive loss + weaponized griefing.</p>
+      <h3>Pipeline</h3>
+      <pre class="mono doc-pre">1. Hint fires (off-chain)     → Bob WALK / integrityReviewSuggested — advisory
+2. Alarm escalates bar        → confirm/mint blocked until independent re-run path runs
+3. Objective result           → slash / invalidate / clear only if tool proof contradicts line</pre>
+      <p><strong>Default damper for wash/collusion:</strong> <a href="docs-flows-integrity-review.html">Integrity review</a>. Spec smells: <a href="docs-flows-spec-arbiter.html">Spec arbiter</a>.</p>
+      <p>Health / signals: <a href="docs-health-signals.html">Signals</a> · Bob: <a href="docs-integration-bob-card.html">Bob card</a>.</p>
+      <h3>Shipped objective fixes (spec lane)</h3>
+      <table class="doc-table"><thead><tr><th>Trigger</th><th>Effect</th></tr></thead><tbody><tr><td>Repeat defended challenge same (address, audit)</td><td>Escalating penalty; first stake refunded on defend</td></tr><tr><td>Spec invalidate by protocol non-defense</td><td>Auditor <code>failed++</code> <strong>not</strong> incremented (liveness ≠ bad spec)</td></tr></tbody></table>
+      <h2 id="integrator-discipline">Integrator discipline</h2>
+      <p><strong>On-chain `InBlock` ≠ spec verified.</strong> Surface Bob card + spec arbiter status before “verified” copy. During open spec challenge, defend replay alone does not clear spec (<code>P5d</code> / spec-defended-unverified).</p>
+      <h2 id="legacy-cleanup">Legacy cleanup</h2>
+      <p>If integrity void or spec invalidation lands while a stale <strong>`Claimed`</strong> row exists, the cell clears the unresolved claim before void.</p>
+      <p><strong>Previous:</strong> <a href="docs-flows-vulnerability.html">Vulnerability disclosure</a> · <strong>Next:</strong> <a href="docs-flows-spec-arbiter.html">Spec arbiter</a></p>
+      
+      <footer class="doc-page-foot"><a href="docs-flows.html">← Flows</a> · <a href="docs-notebook.html">Notebook</a></footer>
+    </div>
+  </main>
+
+  <aside id="docRail" aria-label="You are here" hidden></aside>
+
+</div>
+<script src="motion.js?v=1"></script>
+<script src="your-links.js?v=5"></script>
+<script src="docs-rail.js?v=5"></script>
+</body>
+</html>

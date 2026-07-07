@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bugs &amp; disputes · Docs · Audit Cell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="site.css?v=5"></head>
+<body>
+<div class="layout layout-docs">
+
+  <nav>
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink" href="quickstart.html">Quickstart</a>
+    <a class="navlink on" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+
+  <main>
+    <div class="inner">
+      <p class="eyebrow"><a href="docs.html">Docs</a></p>
+      <h1>Bugs &amp; disputes</h1>
+      <p class="lede">A pass isn't paid right away. The challenge period is the window where a missed bug can be claimed — and settled by re-checking the original contract.</p>
+
+      <h2 id="claim">Filing a claim</h2>
+      <p>During the challenge period, anyone in the pool — except the contract's protocol or its original auditor — can prove a bug the auditor missed and file a claim. Filing requires a stake. The claim is a proof, not an accusation: it pauses the audit and starts the resolution.</p>
+
+      <h2 id="recheck">The independent re-check</h2>
+      <p>The protocol can open a dispute, which it funds. An independent auditor — not the protocol, the original auditor, or the claimant — re-checks the original contract, re-running the claimed tool on the same deployed code.</p>
+
+      <h2 id="settle">How it settles</h2>
+      <p>If the re-check reproduces the bug, the original audit is marked exploited and the finder is paid from reserves — never from new supply. If it can't be reproduced, the claim is rejected, the finder loses their stake, and the original audit stands.</p>
+
+      <h2 id="deadline">If nothing happens</h2>
+      <p>If a claim is never taken up and its window runs out, it's closed: the finder's stake is slashed, no one is paid, and the original audit is restored. A claim you can't back costs you.</p>
+
+      <h2 id="original">Always on the original — never a patch</h2>
+      <p class="key">Settlement is always the result reproduced on the <i>original</i> contract. Patching the contract, or finishing any other procedure, never settles a claim for you. The network acts only on the same code, the same tool, the same result.</p>
+      <p>A fail at the check — the auditor's own verdict — opens this same resolution. Either way, the question is one thing: does the bug reproduce on the contract that was audited?</p>
+
+      <span class="badge"><span class="live"></span> Testnet · Base Sepolia — test funds only</span>
+    </div>
+  </main>
+
+  <aside id="docRail" aria-label="You are here" hidden></aside>
+
+</div>
+<script src="your-links.js?v=5"></script>
+<script src="docs-rail.js?v=5"></script>
+<script src="motion.js?v=1"></script>
+</body>
+</html>

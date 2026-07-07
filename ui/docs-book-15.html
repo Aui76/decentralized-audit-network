@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>!function(){try{var k="membrane_nav_session",s=sessionStorage.getItem(k);document.documentElement.classList.add(s?"nav-session":"cold-load");if(!s)sessionStorage.setItem(k,"1")}catch(e){}}();</script>
+<title>15 · The pool · The Book · Audit Cell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css?v=5">
+</head>
+<body class="page-prose">
+<div class="layout layout-docs">
+
+  <nav>
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink" href="quickstart.html">Quickstart</a>
+    <a class="navlink on" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+
+  <main>
+    <div class="inner">
+
+      <div class="doc-layer-row">
+        <a href="docs-book.html" class="doc-layer doc-layer-story">The Book · IV</a>
+        <span class="doc-layer doc-layer-story">Story · chapter 15</span>
+      </div>
+      <h1>The pool</h1>
+      <p class="doc-q">How does an <strong>open pool</strong> assign auditors — without a hiring desk or captured queue head?</p>
+      
+      <div class="doc-bridge">
+        <p class="doc-bridge-lbl">Go deeper — notebook spec</p>
+        <ul>
+          <li><a href="docs-participants-assignment.html">Assignment (CRD)</a></li>
+          <li><a href="docs-participants-roles.html">Roles</a></li>
+        </ul>
+      </div>
+      <h2 id="open-but-priced">Open, but priced</h2>
+      <p><a href="docs-book-09.html">Chapter 9</a> named <strong>assign</strong>. This chapter names the pool: join cost, draw mechanics, reject cap, dispute FIFO.</p>
+      <p><strong>Not here:</strong> Bob phase tags — <a href="docs-book-16.html">Chapter 16</a> · <a href="docs-participants-participant-phases.html">Participant phases (O3)</a>.</p>
+      <table class="doc-table"><thead><tr><th>Lane</th><th>Selector</th><th>Why</th></tr></thead><tbody><tr><td><strong>Ordinary audit</strong></td><td><strong>Constrained random draw (CRD)</strong></td><td>Fair + anti-gaming</td></tr><tr><td><strong>Dispute / fix / gap / UPG</strong></td><td><strong>FIFO + exclusions</strong></td><td>Independence over lottery</td></tr></tbody></table>
+      <h2 id="position-scaled-hold">Position-scaled hold</h2>
+      <p>Required hold: <code>(position − 1) × increment</code>. First registrar: <strong>zero</strong> before any confirm existed.</p>
+      <table class="doc-table"><thead><tr><th>Bucket</th><th>Meaning</th></tr></thead><tbody><tr><td><strong>Hold</strong></td><td>Stay eligible in queue</td></tr><tr><td><strong>Claim stake</strong> (<a href="docs-book-14.html">ch. 14</a>)</td><td>File against one bounty</td></tr></tbody></table>
+      <p>Both require real <strong>AUDIT</strong>; they guard different games.</p>
+      <h2 id="who-draws-whom-constrained-random-draw-crd">Who draws whom — <strong>constrained random draw (CRD)</strong></h2>
+      <p>Filtered reservoir sample over eligible registrants. Reject or decline → exclude for <strong>this audit id</strong>; re-roll.</p>
+      <p><strong>Reject</strong> picks <strong>who</strong>, never whether spec or verdict is wrong. <strong>Capped</strong> — scales with protocol record.</p>
+      <p><strong>Dyad cap</strong> after confirm — limits repeat protocol–auditor pairs.</p>
+      <h2 id="dispute-assign-fifo-not-lottery">Dispute assign — FIFO, not lottery</h2>
+      <p>Break path, spec-gap, fix, <strong>UPG</strong>: walk queue <strong>first in, first out</strong> with hard exclusions. Protocol, original auditor, claimant never assignable on that line.</p>
+      <h2 id="one-register-many-hats">One register, many hats</h2>
+      <p>Same pool feeds ordinary and dispute work. Roles still conflict <strong>per row</strong>.</p>
+      <h2 id="before-you-turn-the-page">Before you turn the page</h2>
+      <p><strong>Pool</strong> — permissionless queue; position-scaled <strong>hold</strong>.</p>
+      <p><strong>CRD</strong> — ordinary assignment lottery.</p>
+      <p><strong>FIFO</strong> — dispute-style walk from front.</p>
+      <p><strong>Reject / decline</strong> — exclude pairing; capped.</p>
+      <p><strong>Dispute assign</strong> — exclusions + FIFO.</p>
+      
+      <footer class="doc-page-foot"><a href="docs-book.html">← The Book</a> · <a href="docs.html">Docs</a></footer>
+    </div>
+  </main>
+
+  <aside id="docRail" aria-label="You are here" hidden></aside>
+
+</div>
+<script src="motion.js?v=1"></script>
+<script src="your-links.js?v=5"></script>
+<script src="docs-rail.js?v=5"></script>
+</body>
+</html>

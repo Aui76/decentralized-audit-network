@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Protocol · Quickstart · Audit Cell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="site.css?v=5"></head>
+<body>
+<div class="layout layout-docs">
+
+  <nav>
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink on" href="quickstart.html">Quickstart</a>
+    <a class="navlink" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+
+  <main>
+    <div class="inner">
+      <p class="eyebrow">Quickstart</p>
+      <h1>Protocol</h1>
+      <p class="lede">Post a contract, get it audited, settle on-chain.</p>
+
+      <div class="flow">
+
+        <div class="step" id="prepare">
+          <div class="num">1</div>
+          <div>
+            <p class="t">Prepare</p>
+            <p class="d">A deployed contract, a spec, a registered tool, and AUDIT for the bounty.</p>
+          </div>
+        </div>
+
+        <div class="step" id="approve">
+          <div class="num">2</div>
+          <div>
+            <p class="t">Approve</p>
+            <p class="d">Allow the network to hold your bounty in escrow.</p>
+          </div>
+        </div>
+
+        <div class="step" id="submit">
+          <div class="num">3</div>
+          <div>
+            <p class="t">Submit</p>
+            <p class="d">Post the contract and bounty. The audit goes live.</p>
+            <a class="link" href="post.html">Open the submit tool →</a>
+          </div>
+        </div>
+
+        <div class="step" id="accept">
+          <div class="num">4</div>
+          <div>
+            <p class="t">Accept your auditor</p>
+            <p class="d">An auditor is assigned. Accept to start the review. Stay silent and it auto-accepts after the window.</p>
+            <a class="link" href="manage.html">Open manage →</a>
+          </div>
+        </div>
+
+        <div class="step" id="window">
+          <div class="num">5</div>
+          <div>
+            <p class="t">Wait for the challenge period</p>
+            <p class="d">The auditor reviews your contract and gives a verdict. Then a fixed waiting period opens — time for anyone to find a missed bug before the auditor is paid.</p>
+          </div>
+        </div>
+
+        <div class="step" id="confirm">
+          <div class="num">6</div>
+          <div>
+            <p class="t">Confirm</p>
+            <p class="d">If the waiting period ends with no bug found, confirm to pay the auditor and close the audit.</p>
+            <a class="link" href="manage.html">Open manage →</a>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="branch" id="dispute">
+        <p class="bh">Branch — a bug was found on the contract</p>
+        <p class="t">Ask for an independent re-check (dispute)</p>
+        <p class="d">Someone says your contract has a bug the auditor missed. Have a different, independent auditor re-check the original contract — their result decides whether the bug is real.</p>
+        <a class="link" href="manage.html">Open manage →</a>
+      </div>
+
+    </div>
+  </main>
+
+  <aside>
+    <div class="lbl">The flow</div>
+    <a href="#prepare">1 · Prepare</a>
+    <a href="#approve">2 · Approve</a>
+    <a href="#submit">3 · Submit</a>
+    <a href="#accept">4 · Accept auditor</a>
+    <a href="#window">5 · Challenge period</a>
+    <a href="#confirm">6 · Confirm</a>
+    <a href="#dispute">Branch · Dispute</a>
+  </aside>
+
+</div>
+
+<script src="your-links.js?v=5"></script>
+<script src="membrane-rail.js?v=2"></script>
+<script src="motion.js?v=1"></script>
+</body>
+</html>

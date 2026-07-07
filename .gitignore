@@ -1,0 +1,21 @@
+# --- secrets (NEVER commit) ---
+.env
+.env.*
+!.env.example
+
+# --- dependencies / build artifacts (regenerated) ---
+**/node_modules/
+cell/lib/
+cell/out/
+cell/cache/
+cell/broadcast/
+cell/.build-stamp/
+
+# --- logs / editor / OS ---
+*.log
+.cursor/
+.vscode/
+.idea/
+.claude/
+.DS_Store
+Thumbs.db

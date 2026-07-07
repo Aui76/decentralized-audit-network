@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>!function(){try{var k="membrane_nav_session",s=sessionStorage.getItem(k);document.documentElement.classList.add(s?"nav-session":"cold-load");if(!s)sessionStorage.setItem(k,"1")}catch(e){}}();</script>
+<title>Appendix A — Organ hooks · Network Health · Audit Cell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css?v=5">
+</head>
+<body class="page-prose">
+<div class="layout layout-docs">
+
+  <nav>
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink" href="quickstart.html">Quickstart</a>
+    <a class="navlink on" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+
+  <main>
+    <div class="inner">
+
+      <div class="doc-layer-row">
+        <a href="docs-health.html" class="doc-layer doc-layer-spec">Network Health</a>
+        <span class="doc-layer doc-layer-spec">Spec · reader</span>
+      </div>
+      <h1>Appendix A — Organ hooks</h1>
+      <p class="doc-q">What do I pass to <code>deriveBobCard</code>** for portfolio fuse — and how do I test O5?</p>
+      
+      <div class="doc-bridge doc-bridge-story">
+        <p class="doc-bridge-lbl">Story context</p>
+        <ul>
+          <li><a href="docs-book-22.html">Book ch 22 · Reading the chain</a></li>
+        </ul>
+      </div>
+      <p>Implementation pointers. Card derivation spec: <a href="docs-integration-bob-card.html">Bob card</a>.</p>
+      <h2 id="portfoliocontext-minimum-shape"><code>portfolioContext</code> (minimum shape)</h2>
+      <p>Passed to <code>deriveBobCard({ …, portfolioContext })</code>:</p>
+      <pre class="mono doc-pre">{
+  audits: [
+    { id, state, specToolId, vulnerabilityClassId? }, // Exploited = 7, InBlock = 5
+  ],
+  exploits: [ { auditId, vulnerabilityClassId, specToolId? } ], // optional; merged with Exploited rows
+  toolKnownGaps: { [toolIdHex]: [classIdHex, …] },
+  windowSize: 150,           // optional
+  exposureThreshold: 1,      // optional — reauditAdvisory when exposureScore &gt;= threshold
+}</pre>
+      <p>Rebuild from chain: active <strong>InBlock</strong> rows + resolved exploits + <code>toolKnownGaps</code> after claim/fix resolution (FMEA backfill). UI spec: <a href="docs-integration-protocol-ui-spec.html">Protocol UI spec</a>.</p>
+      <h2 id="tests">Tests</h2>
+      <pre class="mono doc-pre">cd cell &amp;&amp; npm run test:contagion          # derivePortfolioContagion unit
+cd cell &amp;&amp; npm run test:bob-contagion     # deriveBobCard fuse path
+cd cell &amp;&amp; npm run test:organs-o5         # both</pre>
+      <p>Module path: <code>cell/indexer/deriveContagion.mjs</code>. Cathedral oracle: same modules under <code>testnet/indexer/</code>.</p>
+      <p>Integration row: <a href="docs-integration-integrator-hub.html#organs">Integrator hub § organs</a>.</p>
+      <p>Book home · <a href="docs-health-portfolio-contagion.html">Portfolio contagion</a></p>
+      
+      <footer class="doc-page-foot"><a href="docs-health.html">← Network Health</a> · <a href="docs-notebook.html">Notebook</a></footer>
+    </div>
+  </main>
+
+  <aside id="docRail" aria-label="You are here" hidden></aside>
+
+</div>
+<script src="motion.js?v=1"></script>
+<script src="your-links.js?v=5"></script>
+<script src="docs-rail.js?v=5"></script>
+</body>
+</html>

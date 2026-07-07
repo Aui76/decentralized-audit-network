@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>!function(){try{var k="membrane_nav_session",s=sessionStorage.getItem(k);document.documentElement.classList.add(s?"nav-session":"cold-load");if(!s)sessionStorage.setItem(k,"1")}catch(e){}}();</script>
+<title>4 · The core model · The Book · Audit Cell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css?v=5">
+</head>
+<body class="page-prose">
+<div class="layout layout-docs">
+
+  <nav>
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink" href="quickstart.html">Quickstart</a>
+    <a class="navlink on" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+
+  <main>
+    <div class="inner">
+
+      <div class="doc-layer-row">
+        <a href="docs-book.html" class="doc-layer doc-layer-story">The Book · I</a>
+        <span class="doc-layer doc-layer-story">Story · chapter 4</span>
+      </div>
+      <h1>The core model</h1>
+      <p class="doc-q">How does the network keep score** — and what is the minimum body around the settlement cell?</p>
+      
+      <div class="doc-bridge">
+        <p class="doc-bridge-lbl">Go deeper — notebook spec</p>
+        <ul>
+          <li><a href="docs-participants-roles.html">Roles</a></li>
+          <li><a href="docs-economy-one-token-three-movements.html">One token, three movements</a></li>
+          <li><a href="docs-health-facts-vs-health.html">Facts vs health</a></li>
+        </ul>
+      </div>
+      <h2 id="one-ledger-many-contracts">One ledger, many contracts</h2>
+      <p>Chapters <a href="docs-book-01.html">1</a>–<a href="docs-book-03.html">3</a> named the grievance, the promise, and the product shape.</p>
+      <p>Every audited contract is a line on a public ledger. For each one the chain remembers roughly two things:</p>
+      <table class="doc-table"><thead><tr><th>Field</th><th>Meaning</th></tr></thead><tbody><tr><td><strong>Value secured</strong></td><td>Declared magnitude at submit — thermometer, not payout formula</td></tr><tr><td><strong>Audit standing</strong></td><td>Binary — check still good, or failed because exploit reproduced</td></tr></tbody></table>
+      <p>Add up value on lines that still stand → <strong>network TVL</strong> in the story sense: <strong>value the network is currently vouching for</strong> through unbroken audits.</p>
+      <p>Token supply grows only when the mechanism records real output — not when someone prints a narrative.</p>
+      <p><strong>Not here:</strong> escrow splits, mint formulas — <a href="docs-book-08.html">Chapter 8</a> · <a href="docs-book-10.html">Chapter 10</a>.</p>
+      <table class="doc-table"><thead><tr><th>Layer</th><th>Question</th><th>Read</th></tr></thead><tbody><tr><td><strong>This chapter</strong></td><td>What is the scoreboard?</td><td>Below</td></tr><tr><td><a href="docs-book-08.html">Chapter 8</a></td><td>What unit and vault?</td><td>Value &amp; escrow</td></tr><tr><td><a href="docs-book-09.html">Chapter 9</a></td><td>What is the heartbeat?</td><td>The audit cycle</td></tr></tbody></table>
+      <h2 id="skin-in-the-game-at-every-layer">Skin in the game at every layer</h2>
+      <table class="doc-table"><thead><tr><th>Role</th><th>Consequence aligned with accuracy</th></tr></thead><tbody><tr><td><strong>Auditor</strong></td><td>Paid only after pass survives <strong>challenge window</strong>; reproducible miss → failed record</td></tr><tr><td><strong>Protocol</strong></td><td>Bounty locked; valid challenge cannot be vetoed by politics</td></tr><tr><td><strong>Bug-hunter</strong></td><td>Paid from <a href="docs-economy-escrow-architecture.html"><strong>reserves</strong></a> on reproduced miss — not fresh mint</td></tr><tr><td><strong>Token holder</strong></td><td>Network valuable when it prevents and catches bugs</td></tr></tbody></table>
+      <p>The ledger updates when tools and windows produce binary outcomes — not when a committee interprets intent.</p>
+      <h2 id="supply-follows-survived-truth">Supply follows survived truth</h2>
+      <p>New tokens enter only through mechanism output — chiefly confirmed <strong>success-path (positive-path)</strong> audits and tool standing earned in public. Discoverer payouts come from <strong>reserves already set aside</strong>.</p>
+      <p>Market price is outside the contracts. What the chain fixes is <strong>when minting is allowed at all</strong>.</p>
+      <h2 id="cell-and-the-minimum-body">Cell and the minimum body</h2>
+      <p>The <a href="docs-mechanism.html"><strong>Audit Cell</strong></a> is the settlement layer — what moves state, escrow, and mint when reproduction succeeds or fails.</p>
+      <p><strong>Placement test:</strong> <em>does this piece change what the cell treats as settled truth?</em> For the minimum body, <strong>no</strong>.</p>
+      <table class="doc-table"><thead><tr><th>Organ</th><th>Closes</th><th>Story chapter</th></tr></thead><tbody><tr><td><strong>Heart</strong></td><td>Reproducible <strong>toolkit</strong> — manifest, harness, <strong>`resultRoot`</strong></td><td><a href="docs-book-07.html">7</a> · <a href="docs-book-13.html">13</a></td></tr><tr><td><strong>Independence</strong></td><td><strong>Pool</strong> — CRD ordinary assign; FIFO + exclusion on break path</td><td><a href="docs-book-15.html">15</a></td></tr><tr><td><strong>Membrane</strong></td><td><strong>Arrival</strong> — explorer, Bob, verify, quickstarts</td><td><a href="docs-book-23.html">23</a></td></tr></tbody></table>
+      <p>Settlement is the cell’s job. Truth production, independent re-run, and accessible arrival are the body’s — three axes, three organs.</p>
+      <h2 id="what-this-chapter-is-for">What this chapter is for</h2>
+      <p>If you carry one picture from here, carry this:</p>
+      <p><strong>Binary audit lines + value weighted by what still stands + issuance only on survived output.</strong></p>
+      <p>The next chapters unpack the rules. This one says what the scoreboard is measuring.</p>
+      
+      <footer class="doc-page-foot"><a href="docs-book.html">← The Book</a> · <a href="docs.html">Docs</a></footer>
+    </div>
+  </main>
+
+  <aside id="docRail" aria-label="You are here" hidden></aside>
+
+</div>
+<script src="motion.js?v=1"></script>
+<script src="your-links.js?v=5"></script>
+<script src="docs-rail.js?v=5"></script>
+</body>
+</html>

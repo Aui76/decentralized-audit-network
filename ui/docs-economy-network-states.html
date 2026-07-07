@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>!function(){try{var k="membrane_nav_session",s=sessionStorage.getItem(k);document.documentElement.classList.add(s?"nav-session":"cold-load");if(!s)sessionStorage.setItem(k,"1")}catch(e){}}();</script>
+<title>Issuance network states · The AUDIT Economy · Audit Cell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css?v=5">
+</head>
+<body class="page-prose">
+<div class="layout layout-docs">
+
+  <nav>
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink" href="quickstart.html">Quickstart</a>
+    <a class="navlink on" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+
+  <main>
+    <div class="inner">
+
+      <div class="doc-layer-row">
+        <a href="docs-economy.html" class="doc-layer doc-layer-spec">The AUDIT Economy</a>
+        <span class="doc-layer doc-layer-spec">Spec · reader</span>
+      </div>
+      <h1>Issuance network states</h1>
+      <p class="doc-q">When the network is <strong>depressed</strong> — what <strong>extra AUDIT</strong> (floor supplement, green-light) can confirm trigger <strong>on top of</strong> <a href="docs-economy-activity-led-reward.html">Activity-led reward</a>?</p>
+      
+      <div class="doc-bridge doc-bridge-story">
+        <p class="doc-bridge-lbl">Story context</p>
+        <ul>
+          <li><a href="docs-book-10.html">Book ch 10 · Issuance &amp; positive blocks</a></li>
+        </ul>
+      </div>
+      <p>When activity sags or escrow cannot cover the floor, issuance adds <strong>pay beyond the base positive-block reward</strong> — escrow supplements and, in extremis, conditional fresh mint.</p>
+      <p>Design: <a href="docs-economy-adaptive-issuance-uncapped-supply-by-choice.html">Adaptive issuance</a> · base mint formula: <a href="docs-economy-activity-led-reward.html">Activity-led reward</a>.</p>
+      <h2 id="boundary-with-activity-led-reward">Boundary with Activity-led reward</h2>
+      <table class="doc-table"><thead><tr><th>Layer</th><th>This chapter</th><th><a href="docs-economy-activity-led-reward.html">Activity-led reward</a></th></tr></thead><tbody><tr><td><strong>Base POS mint</strong></td><td>Uses <code>emaFast</code> / <code>emaSlow</code> only as <strong>inputs</strong> to state</td><td>Owns formula, LP cap, <strong>manipulation discount</strong> on <code>reward</code></td></tr><tr><td><strong>Extra pay</strong></td><td>Floor supplement, green-light backstop</td><td>—</td></tr><tr><td><strong>Preview</strong></td><td>Supplements not in <code>nextPositiveBlockReward()</code> alone</td><td><code>nextPositiveBlockReward()</code> = base reward estimate</td></tr></tbody></table>
+      <h2 id="issuance-states-context">Issuance states (context)</h2>
+      <p><code>issuanceNetworkState()</code> — four labels from the fast/slow ratio:</p>
+      <table class="doc-table"><thead><tr><th>State</th><th>Rough meaning</th></tr></thead><tbody><tr><td><strong>Stable</strong></td><td>Normal activity band</td></tr><tr><td><strong>Manipulation</strong></td><td>Ratio above threshold — base mint discounted in ch 04</td></tr><tr><td><strong>Depression</strong></td><td>Ratio below depression threshold — floor + possible green-light <strong>here</strong></td></tr><tr><td><strong>Recovery</strong></td><td>Climbing back from depression</td></tr></tbody></table>
+      <pre class="mono doc-pre">                    manipulationThreshold
+                           ↑
+              Manipulation │ Stable
+                           │
+         depressionThreshold
+                           ↓
+              Depression ←→ Recovery
+                    │           │
+                    └─ floor ───┘
+                         green-light if escrow empty</pre>
+      <h2 id="depression-floor">Depression floor</h2>
+      <p>When <strong>Depression</strong> → <code>payFloorSupplement</code> from <strong>general escrow</strong> (not fresh mint).</p>
+      <table class="doc-table"><thead><tr><th>Mechanism</th><th>Meaning</th></tr></thead><tbody><tr><td><code>payFloorSupplement</code></td><td>Extra AUDIT on confirm — capped by <code>maxEscrowDrawdownPerAudit</code></td></tr><tr><td><code>floorDecayBps</code> + <code>failedRecoveryAttempts</code></td><td>Floor strength decays — no permanent bailout</td></tr></tbody></table>
+      <h2 id="green-light-backstop">Green-light backstop</h2>
+      <p>When escrow cannot cover full floor and reserves are depleted → <strong>`greenLightMintAllowed()`</strong> may allow <strong>fresh mint</strong> to the completing auditor.</p>
+      <p>Treat green-light as <strong>conditional backstop</strong>, not ordinary issuance.</p>
+      <p><a href="docs-economy-what-is-not-live-yet.html#green-light-real-gates">What is not live yet § green-light</a> · <a href="docs-flows-mainnet-gates.html#issuance-gates-issuancemodule">Mainnet gates I-3</a>.</p>
+      <p><strong>Previous:</strong> <a href="docs-economy-activity-led-reward.html">Activity-led reward</a> · <strong>Next:</strong> <a href="docs-economy-where-mint-splits.html">Where mint splits</a></p>
+      
+      <footer class="doc-page-foot"><a href="docs-economy.html">← The AUDIT Economy</a> · <a href="docs-notebook.html">Notebook</a></footer>
+    </div>
+  </main>
+
+  <aside id="docRail" aria-label="You are here" hidden></aside>
+
+</div>
+<script src="motion.js?v=1"></script>
+<script src="your-links.js?v=5"></script>
+<script src="docs-rail.js?v=5"></script>
+</body>
+</html>

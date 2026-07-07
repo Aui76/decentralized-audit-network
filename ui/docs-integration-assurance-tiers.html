@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>!function(){try{var k="membrane_nav_session",s=sessionStorage.getItem(k);document.documentElement.classList.add(s?"nav-session":"cold-load");if(!s)sessionStorage.setItem(k,"1")}catch(e){}}();</script>
+<title>Assurance tiers · Integration · Audit Cell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css?v=5">
+</head>
+<body class="page-prose">
+<div class="layout layout-docs">
+
+  <nav>
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink" href="quickstart.html">Quickstart</a>
+    <a class="navlink on" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+
+  <main>
+    <div class="inner">
+
+      <div class="doc-layer-row">
+        <a href="docs-integration.html" class="doc-layer doc-layer-spec">Integration</a>
+        <span class="doc-layer doc-layer-spec">Spec · reader</span>
+      </div>
+      <h1>Assurance tiers</h1>
+      <p class="doc-q">What do Standard / High badges mean** — and what do they not change on-chain?</p>
+      
+      <div class="doc-bridge doc-bridge-story">
+        <p class="doc-bridge-lbl">Story context</p>
+        <ul>
+          <li><a href="docs-book-16.html">Book ch 16 · Reputation signals</a></li>
+        </ul>
+      </div>
+      <p><strong>Standard</strong> and <strong>High</strong> are informational labels for cards and integrator UI — <strong>not settlement inputs</strong> (<a href="docs-integration-settlement-vs-signal.html">Settlement vs signal</a>). Tiers never move pay, mint, assignment, verdict, or claim outcome.</p>
+      <p>Every audit gets the <strong>same</strong> challenge window and claim stake at <code>submitAudit</code>. The contract does not ask &quot;Standard or High?&quot; Tiers are <strong>badges</strong> an indexer may show. Build wallet flows from contract state only, not from tier badges.</p>
+      <h2 id="what-indexers-derive">What indexers derive</h2>
+      <table class="doc-table"><thead><tr><th>Signal</th><th>Meaning for UI</th></tr></thead><tbody><tr><td><strong>Assurance tier</strong> (<code>standard</code> / <code>high</code>)</td><td>Badge from declared tool count and optional snapshot metadata</td></tr><tr><td><strong>Complexity phase</strong> (0–3)</td><td>Launch ramp from lines of code or bounty USD (reference pricing)</td></tr><tr><td><strong>Multiplier label</strong> (1×–20×)</td><td>Protocol AUDIT balance at submit — copy only</td></tr></tbody></table>
+      <h3>Typical inputs</h3>
+      <table class="doc-table"><thead><tr><th>Field</th><th>Meaning</th></tr></thead><tbody><tr><td><code>bountyWei</code></td><td>Locked bounty at submit</td></tr><tr><td><code>linesOfCode</code></td><td>Artifact metadata (optional)</td></tr><tr><td><code>declaredToolCount</code></td><td>Non-spec tools declared at submit</td></tr><tr><td><code>protocolBalanceWei</code></td><td>Protocol balance for multiplier label</td></tr><tr><td><code>auditTokenPriceUsd</code></td><td>USD bands (reference default 0.10)</td></tr></tbody></table>
+      <p>Optional snapshot fields (<code>onChainAssuranceTier</code>, <code>multiplierAtSubmission</code>) affect <strong>display only</strong> when present.</p>
+      <h3>Typical output</h3>
+      <pre class="mono doc-pre">{
+  assuranceTier: &quot;standard&quot; | &quot;high&quot;,
+  complexityPhase: 0..3,
+  multiplierLabel: &quot;1x&quot; | &quot;2x&quot; | ...,
+  disclaimer: &quot;informational only — ...&quot;
+}</pre>
+      <p>Discoverer <strong>boost</strong> is separate — reputation history, not tier badges (<a href="docs-economy-the-discoverers-reward.html">The discoverer's reward</a>).</p>
+      <p>Organ: <code>cell/indexer/deriveTier.mjs</code> · test: <code>npm run test:organs-x3</code>.</p>
+      <h2 id="what-tiers-do-not-do">What tiers do not do</h2>
+      <ul><li>Do <strong>not</strong> scale discoverer payout, positive-block mint, or treasury split</li><li>Do <strong>not</strong> gate assignment, verdict, confirm, or witness settlement</li><li>Do <strong>not</strong> substitute for discoverer <strong>boost</strong></li></ul>
+      <p><strong>Previous:</strong> <a href="docs-integration-bounty-bands.html">Bounty bands</a> · <strong>Next:</strong> <a href="docs-integration-ripe-slot-indicator.html">Ripe-slot indicator</a></p>
+      
+      <footer class="doc-page-foot"><a href="docs-integration.html">← Integration</a> · <a href="docs-notebook.html">Notebook</a></footer>
+    </div>
+  </main>
+
+  <aside id="docRail" aria-label="You are here" hidden></aside>
+
+</div>
+<script src="motion.js?v=1"></script>
+<script src="your-links.js?v=5"></script>
+<script src="docs-rail.js?v=5"></script>
+</body>
+</html>

@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>!function(){try{var k="membrane_nav_session",s=sessionStorage.getItem(k);document.documentElement.classList.add(s?"nav-session":"cold-load");if(!s)sessionStorage.setItem(k,"1")}catch(e){}}();</script>
+<title>Escrow equilibrium · The AUDIT Economy · Audit Cell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css?v=5">
+</head>
+<body class="page-prose">
+<div class="layout layout-docs">
+
+  <nav>
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink" href="quickstart.html">Quickstart</a>
+    <a class="navlink on" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+
+  <main>
+    <div class="inner">
+
+      <div class="doc-layer-row">
+        <a href="docs-economy.html" class="doc-layer doc-layer-spec">The AUDIT Economy</a>
+        <span class="doc-layer doc-layer-spec">Spec · reader</span>
+      </div>
+      <h1>Escrow equilibrium</h1>
+      <p class="doc-q">Why <strong>24.9% inflow</strong> vs <strong>~16–17% outflow</strong> — and what breaks if reserves are wrong?</p>
+      
+      <div class="doc-bridge doc-bridge-story">
+        <p class="doc-bridge-lbl">Story context</p>
+        <ul>
+          <li><a href="docs-book-08.html">Book ch 8 · Value &amp; escrow</a></li>
+        </ul>
+      </div>
+      <p>Escrow is a <strong>margin buffer</strong> — not the primary APY engine.</p>
+      <h2 id="design-target">Design target</h2>
+      <table class="doc-table"><thead><tr><th>Flow</th><th>Rough target</th></tr></thead><tbody><tr><td><strong>Outflow</strong></td><td>Long-run ~<strong>16–17%</strong> of normal mint per audit (calibrated mix)</td></tr><tr><td><strong>Inflow</strong></td><td><strong>24.9%</strong> of treasury deposit per confirm</td></tr></tbody></table>
+      <p>Inflow slightly above outflow → reserves build slowly.</p>
+      <p>When <strong>LP cap binds</strong>, more mint queues in timelocked escrow → slower immediate LP depth, <strong>stronger</strong> reserve for floor / discoverer / integrity.</p>
+      <h2 id="failure-modes">Failure modes</h2>
+      <table class="doc-table"><thead><tr><th>Problem</th><th>Symptom</th></tr></thead><tbody><tr><td><strong>Too high escrow capture</strong></td><td>Games draining or starving queues</td></tr><tr><td><strong>Too low reserve</strong></td><td>No equilibrating power in depression or hunt bursts</td></tr></tbody></table>
+      <p>Recalibrate at mainnet from telemetry — <a href="docs-economy-mainnet-calibration.html">Mainnet calibration</a>.</p>
+      <h2 id="principle">Principle</h2>
+      <p>Market <strong>price</strong> of AUDIT is outside contracts. Chain fixes <strong>when mint/draws allowed</strong> and <strong>which bucket</strong>. Escrow smooths; issuance rewards <strong>survived work</strong>.</p>
+      <p><strong>Previous:</strong> <a href="docs-economy-the-discoverers-reward.html">The discoverer's reward</a> · <strong>Next:</strong> <a href="docs-economy-what-is-not-live-yet.html">What is not live yet</a></p>
+      
+      <footer class="doc-page-foot"><a href="docs-economy.html">← The AUDIT Economy</a> · <a href="docs-notebook.html">Notebook</a></footer>
+    </div>
+  </main>
+
+  <aside id="docRail" aria-label="You are here" hidden></aside>
+
+</div>
+<script src="motion.js?v=1"></script>
+<script src="your-links.js?v=5"></script>
+<script src="docs-rail.js?v=5"></script>
+</body>
+</html>

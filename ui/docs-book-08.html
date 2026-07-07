@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>!function(){try{var k="membrane_nav_session",s=sessionStorage.getItem(k);document.documentElement.classList.add(s?"nav-session":"cold-load");if(!s)sessionStorage.setItem(k,"1")}catch(e){}}();</script>
+<title>8 · Value &amp; escrow · The Book · Audit Cell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css?v=5">
+</head>
+<body class="page-prose">
+<div class="layout layout-docs">
+
+  <nav>
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink" href="quickstart.html">Quickstart</a>
+    <a class="navlink on" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+
+  <main>
+    <div class="inner">
+
+      <div class="doc-layer-row">
+        <a href="docs-book.html" class="doc-layer doc-layer-story">The Book · III</a>
+        <span class="doc-layer doc-layer-story">Story · chapter 8</span>
+      </div>
+      <h1>Value &amp; escrow</h1>
+      <p class="doc-q">What <strong>unit</strong> prices risk and pay — and where is money <strong>already held</strong> before anyone trusts a promise?</p>
+      
+      <div class="doc-bridge">
+        <p class="doc-bridge-lbl">Go deeper — notebook spec</p>
+        <ul>
+          <li><a href="docs-economy-one-token-three-movements.html">One token, three movements</a></li>
+          <li><a href="docs-economy-escrow-architecture.html">Escrow architecture</a></li>
+          <li><a href="docs-economy-the-auditors-reward.html">The auditor's reward</a></li>
+          <li><a href="docs-economy-the-discoverers-reward.html">The discoverer's reward</a></li>
+          <li><a href="docs-economy-equilibrium.html">Escrow equilibrium</a></li>
+          <li><a href="docs-economy-appendix-a-parameters.html">Appendix A — Parameter tables</a></li>
+        </ul>
+      </div>
+      <h2 id="the-fingerprint-needs-a-unit">The fingerprint needs a unit</h2>
+      <p><a href="docs-book-07.html">Chapter 7</a> fixed <em>what</em> gets settled — reproducible <strong>fingerprints</strong>. For that the network needs <strong>value held under rules</strong>, not goodwill.</p>
+      <p>Two pieces land together: <strong>the token</strong> and <strong>escrow</strong>.</p>
+      <p><strong>Not here:</strong> mint splits, EMA issuance — <a href="docs-book-10.html">Chapter 10</a>. Discoverer boost math — <a href="docs-book-14.html">Chapter 14</a>.</p>
+      <table class="doc-table"><thead><tr><th>Layer</th><th>Question</th><th>Read</th></tr></thead><tbody><tr><td><a href="docs-book-07.html">Chapter 7</a></td><td>What gets settled?</td><td>The fingerprint</td></tr><tr><td><strong>This chapter</strong></td><td>What unit · what vault?</td><td>Below</td></tr><tr><td><a href="docs-book-09.html">Chapter 9</a></td><td>What loop consumes both?</td><td>The audit cycle</td></tr></tbody></table>
+      <h2 id="boundary-value-issuance-bounties">Boundary — Value, Issuance, Bounties</h2>
+      <table class="doc-table"><thead><tr><th>Layer</th><th><a href="docs-book-08.html">Ch 8</a></th><th><a href="docs-book-10.html">Ch 10</a></th><th><a href="docs-book-14.html">Ch 14</a></th></tr></thead><tbody><tr><td><strong>AUDIT unit</strong></td><td>Owns — supply discipline</td><td>Uses — mint authorized</td><td>Uses — lock at submit</td></tr><tr><td><strong>Escrow buckets</strong></td><td>Owns — bounty + reserves</td><td>Treasury slice from POS</td><td>Uses — cap/floor vs bounty</td></tr><tr><td><strong>When auditor paid</strong></td><td>Window discipline (intro)</td><td>Owns — confirm → POS</td><td>Names timing only</td></tr><tr><td><strong>Discoverer pay</strong></td><td>Reserves exist</td><td><strong>Not mint</strong></td><td>Owns — boost, cap, floor, stake</td></tr><tr><td><strong>Deferrals</strong></td><td>—</td><td>Story live rules</td><td>—</td></tr></tbody></table>
+      <p>Notebook depth: The AUDIT Economy</p>
+      <h2 id="value-audit">Value — AUDIT</h2>
+      <p>The mechanism promised <a href="docs-problem.html"><strong>self-funding</strong></a> rewards. The unit is <strong>AUDIT</strong>.</p>
+      <table class="doc-table"><thead><tr><th>Property</th><th>Meaning</th></tr></thead><tbody><tr><td><strong>Supply discipline</strong></td><td>New supply only through mechanism output — chiefly confirmed <strong>success-path (positive path)</strong> work</td></tr><tr><td><strong>Minter sealed</strong></td><td>One-way lock after bootstrap; no admin inflation for disputes</td></tr><tr><td><strong>Genesis</strong></td><td>First tokens <strong>earned</strong> on first real confirm — zero before that</td></tr></tbody></table>
+      <p>The token does not encode audit logic. It encodes <strong>trust in supply</strong>: if it moved, the mechanism authorized it.</p>
+      <h2 id="escrow--money-already-there">Escrow — money already there</h2>
+      <table class="doc-table"><thead><tr><th>Bucket</th><th>Meaning</th></tr></thead><tbody><tr><td><strong>Bounty</strong></td><td>AUDIT locked at <strong>submit</strong> — before assign or verdict</td></tr><tr><td><strong>Reserves</strong></td><td>Slices for discoverer pay on reproduced miss — <strong>never fresh mint</strong></td></tr></tbody></table>
+      <p>On a pass, auditor payment waits out the <strong>challenge window</strong> — <strong>lasting stake</strong>. Escrow turns <em>you will be paid if the check holds</em> into a <strong>fact on chain</strong>.</p>
+      <h2 id="why-they-are-one-chapter">Why they are one chapter</h2>
+      <p>Value without escrow is a coin with nothing to lock. Escrow without a disciplined token is a vault someone can inflate.</p>
+      <p>Together they answer what <a href="docs-book-04.html">chapter 4</a> named: <strong>skin in the game</strong> with money that already exists under published rules.</p>
+      <h2 id="before-you-turn-the-page">Before you turn the page</h2>
+      <p><strong>AUDIT</strong> — mechanism-minted; supply grows on authorized output only.</p>
+      <p><strong>Bounty</strong> — locked at submit; magnitude public from day one.</p>
+      <p><strong>Reserves</strong> — discoverer payout source; never mint to make whole.</p>
+      
+      <footer class="doc-page-foot"><a href="docs-book.html">← The Book</a> · <a href="docs.html">Docs</a></footer>
+    </div>
+  </main>
+
+  <aside id="docRail" aria-label="You are here" hidden></aside>
+
+</div>
+<script src="motion.js?v=1"></script>
+<script src="your-links.js?v=5"></script>
+<script src="docs-rail.js?v=5"></script>
+</body>
+</html>

@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Specs &amp; checking · Docs · Audit Cell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="site.css?v=5"></head>
+<body>
+<div class="layout layout-docs">
+
+  <nav>
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink" href="quickstart.html">Quickstart</a>
+    <a class="navlink on" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+
+  <main>
+    <div class="inner">
+      <p class="eyebrow"><a href="docs.html">Docs</a></p>
+      <h1>Specs &amp; checking</h1>
+      <p class="lede">How a contract is checked — declared up front, re-run to accept, reproducible by anyone.</p>
+
+      <h2 id="what">What a spec is</h2>
+      <p>A spec is a written, machine-checkable statement of what a contract must do, paired with a named tool that returns one answer: pass or fail. The spec itself lives off-chain; only a fingerprint of it is recorded — so anyone holding the spec can prove it's the exact one the audit used.</p>
+
+      <h2 id="declare">Declared up front</h2>
+      <p>When a contract is posted, the protocol names the spec and the tool, and what a passing run of that tool produces. This is fixed at that moment and can't be changed afterward. It is the ground truth for the audit.</p>
+
+      <h2 id="rerun">Re-run to accept</h2>
+      <p>Before an auditor takes the job, they run the same spec tool themselves and must get the same result the protocol declared. If it doesn't match, they can't accept. The check is agreed by reproduction — not by trust.</p>
+
+      <h2 id="reproduce">Reproducible by anyone</h2>
+      <p>The network never runs the tool itself. It records the commitment, holds the bounty, and times the window. The checking happens off-chain, where anyone running the same tool on the same code gets the same answer. That is what turns a verdict into a proof.</p>
+
+      <h2 id="tools">The tools</h2>
+      <p>Tools are registered openly: protocols name them, auditors run them. A tool earns canonical standing by surviving real audits — not by a vote. That growing set of trusted tools is the network's real product.</p>
+
+      <span class="badge"><span class="live"></span> Testnet · Base Sepolia — test funds only</span>
+    </div>
+  </main>
+
+  <aside id="docRail" aria-label="You are here" hidden></aside>
+
+</div>
+<script src="your-links.js?v=5"></script>
+<script src="docs-rail.js?v=5"></script>
+<script src="motion.js?v=1"></script>
+</body>
+</html>

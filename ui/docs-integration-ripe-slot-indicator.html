@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>!function(){try{var k="membrane_nav_session",s=sessionStorage.getItem(k);document.documentElement.classList.add(s?"nav-session":"cold-load");if(!s)sessionStorage.setItem(k,"1")}catch(e){}}();</script>
+<title>Ripe-slot indicator — deferred beacon · Integration · Audit Cell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css?v=5">
+</head>
+<body class="page-prose">
+<div class="layout layout-docs">
+
+  <nav>
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink" href="quickstart.html">Quickstart</a>
+    <a class="navlink on" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+
+  <main>
+    <div class="inner">
+
+      <div class="doc-layer-row">
+        <a href="docs-integration.html" class="doc-layer doc-layer-spec">Integration</a>
+        <span class="doc-layer doc-layer-spec">Spec · reader</span>
+      </div>
+      <h1>Ripe-slot indicator — deferred beacon</h1>
+      <p class="doc-q">Where might the next verification primitive want to be built** — without minting or gating?</p>
+      
+      <p><strong>Status:</strong> <strong>DEFERRED</strong> — exploratory design note only. No indexer, no CI, no card field today.</p>
+      <p><strong>Source:</strong> dan-core <code>ripe-slot-indicator-design-note.txt</code></p>
+      <h2 id="what-it-is">What it is</h2>
+      <p>A <strong>probabilistic beacon</strong> that ranks vulnerability classes by where the next high-value verification primitive “wants to be built” — at the intersection of:</p>
+      <ul><li><strong>Demand</strong> — existing tools have <strong>saturated</strong> on class <em>c</em> (marginal gain → 0) but exploits <strong>still escape</strong> (residual demand, boosted by contagion R₀).</li><li><strong>Supply</strong> — neighbouring classes in the co-occurrence graph already have <strong>canonical</strong> tools (“adjacent possible” exists).</li></ul>
+      <pre class="mono doc-pre">D(c)         = saturation(c) × residualDemand(c)
+S(c)         = fraction of c's neighbours with a canonical tool
+RIPENESS(c)  = D(c) × S(c)</pre>
+      <p>High ripeness + high <strong>fan-out</strong> → predicted <strong>age</strong> (broad primitive). High ripeness + low fan-out → predicted <strong>improvement</strong> (narrow stirrup).</p>
+      <p>Computation is <strong>event-driven</strong> (dyad splits, tool-P2G triangles, contagion spikes) — a maintained view over the alarm stream, not a periodic scan. Same thermodynamic spine as <a href="docs-health-thermodynamics-and-flow.html">Network flow</a>; applied to <strong>tools</strong> via FMEA gap vectors, not auditors.</p>
+      <p><strong>Complement to issuance:</strong> the depression floor keeps <strong>activity</strong> (FLOW) alive; ripe-slot points <strong>builder attention</strong> at where <strong>stock</strong> risk concentrates. Orthogonal to <a href="docs-economy-adaptive-issuance-uncapped-supply-by-choice.html">Adaptive issuance — Uncapped Supply by choice</a>.</p>
+      <h2 id="guardrail-beacon-not-budget">Guardrail — beacon, not budget</h2>
+      <p>Per the design note §0 and <a href="docs-integration-settlement-vs-signal.html">Settlement vs signal</a>:</p>
+      <table class="doc-table"><thead><tr><th>Allowed</th><th>Forbidden</th></tr></thead><tbody><tr><td>Direct <strong>attention</strong> (maintainer maps, R&amp;D prioritization)</td><td>Auto-mint, auto-fund, auto-priority bounty</td></tr><tr><td>Invite falsification on under-tested quiet (corroboration axis)</td><td>Gate audits, tools, or assignment by ripeness</td></tr><tr><td>Self-score when oracle-confirmed tools <strong>lit</strong> a hot region</td><td>Pay or punish on probability alone</td></tr></tbody></table>
+      <p><strong>Money still moves only on fact-gated rails:</strong> confirm, claim, discoverer draw, tool canonization (AUDIT Economy).</p>
+      <h2 id="what-is-not-live">What is not live</h2>
+      <table class="doc-table"><thead><tr><th>Piece</th><th>Today</th><th>Target (if it ships)</th></tr></thead><tbody><tr><td><code>deriveRipeSlots.mjs</code></td><td><strong>No</strong></td><td>Sibling to <code>deriveContagion.mjs</code></td></tr><tr><td>Bob card field</td><td><strong>No</strong></td><td>Maintainer view only — not investor card</td></tr><tr><td><code>npm run test:ripe-slots</code></td><td><strong>No</strong></td><td>CI-gated when organ exists</td></tr><tr><td>Saturation / co-occurrence graph</td><td><strong>No</strong></td><td>Requires real audit + claim history</td></tr></tbody></table>
+      <p><strong>Readiness gate:</strong> cannot compute saturation, R₀, or the co-occurrence graph on empty history — same bar as mature FMEA / scope overlap (design note §10). Filed as <strong>NOTE</strong>, not an apply-ready proposal.</p>
+      <p><strong>Honest limit:</strong> sees the <strong>frontier</strong> (tool disagreement); <strong>blind to the horizon</strong> (unanimous blind consensus). Permanent challenge windows remain the hedge (design note §9).</p>
+      <h2 id="integrator-rules-today-and-if-it-ships">Integrator rules (today and if it ships)</h2>
+      <ul><li>Do <strong>not</strong> quote APY, mint size, or discoverer payout from ripeness rank.</li><li>Do <strong>not</strong> show ripe-slot on retail/investor Bob cards unless explicitly labeled <strong>R&amp;D / maintainer — not settlement</strong>.</li><li>Do <strong>not</strong> treat a “top ripe” class as proof of safety or unsafe — it is a <strong>where to build / where to attack</strong> hint only.</li><li><strong>Do</strong> keep wallet flows on chain state; use <a href="docs-integration-bounty-bands.html">Bounty bands</a> and <a href="docs-integration-assurance-tiers.html">Assurance tiers</a> as the only economic <strong>card</strong> signals today.</li></ul>
+      <h2 id="cross-links">Cross-links</h2>
+      <ul><li><a href="docs-health-portfolio-contagion.html">Portfolio contagion</a> — demand side (R₀, spreading classes)</li><li><a href="docs-book-20.html">What we defer (story)</a></li><li><a href="docs-integration-integrator-hub.html">Integrator hub — organs</a></li></ul>
+      <p><strong>Previous:</strong> <a href="docs-integration-assurance-tiers.html">Assurance tiers</a> · <strong>Next:</strong> <a href="docs-integration-appendix-a-organ-tests.html">Appendix A — Organ tests &amp; gas baselines</a></p>
+      
+      <footer class="doc-page-foot"><a href="docs-integration.html">← Integration</a> · <a href="docs-notebook.html">Notebook</a></footer>
+    </div>
+  </main>
+
+  <aside id="docRail" aria-label="You are here" hidden></aside>
+
+</div>
+<script src="motion.js?v=1"></script>
+<script src="your-links.js?v=5"></script>
+<script src="docs-rail.js?v=5"></script>
+</body>
+</html>

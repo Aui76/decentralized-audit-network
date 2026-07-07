@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>!function(){try{var k="membrane_nav_session",s=sessionStorage.getItem(k);document.documentElement.classList.add(s?"nav-session":"cold-load");if(!s)sessionStorage.setItem(k,"1")}catch(e){}}();</script>
+<title>The door (Gate A) · Flows · Audit Cell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css?v=5">
+</head>
+<body class="page-prose">
+<div class="layout layout-docs">
+
+  <nav>
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink" href="quickstart.html">Quickstart</a>
+    <a class="navlink on" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+
+  <main>
+    <div class="inner">
+
+      <div class="doc-layer-row">
+        <a href="docs-flows.html" class="doc-layer doc-layer-spec">Flows</a>
+        <span class="doc-layer doc-layer-spec">Spec · reader</span>
+      </div>
+      <h1>The door (Gate A)</h1>
+      
+      
+      <div class="doc-bridge doc-bridge-story">
+        <p class="doc-bridge-lbl">Story context</p>
+        <ul>
+          <li><a href="docs-book-02.html">Book ch 2 · The idea</a></li>
+          <li><a href="docs-book-03.html">Book ch 3 · Toolkit as product</a></li>
+          <li><a href="docs-book-06.html">Book ch 6 · Three checks</a></li>
+        </ul>
+      </div>
+      <p><strong>Gate A</strong> is the entrance check on the <strong>declared spec</strong> — the machine-checkable filing that says what “pass” means for this audit. The cell never runs spec tools on-chain; it stores commitments and compares digests parties reproduce off-chain.</p>
+      <p><strong>Question Gate A answers:</strong> Was the filing <strong>valid and auditable</strong> before anyone judged the code — and did the assigned auditor <strong>re-run the same filing</strong> at accept?</p>
+      <p>Wrong-spec fights (“we meant a different check”) belong here. Missed-bug fights after a pass belong on <a href="docs-flows-vulnerability.html">Vulnerability disclosure</a> (Gate C).</p>
+      <p><strong>Not here:</strong> pre-mint overlay procedure (<code>challengeSpecInvalid</code>, arbiter assignment, void hooks) — <a href="docs-flows-spec-arbiter.html">Spec arbiter</a>.</p>
+      <h2 id="gate-a-vs-the-other-gates">Gate A vs the other gates</h2>
+      <table class="doc-table"><thead><tr><th>Gate</th><th>Question</th><th>When</th></tr></thead><tbody><tr><td><strong>A — the door</strong></td><td>Is the <strong>declared spec</strong> valid, pinned, and re-runnable?</td><td>Submit (declare) · accept (re-run) · pre-mint spec challenge</td></tr><tr><td><strong>B — the audit</strong></td><td>Does <strong>pinned bytecode</strong> pass or fail <strong>the spec on file</strong>?</td><td>Verdict tools during <code>InAudit</code></td></tr><tr><td><strong>C — the challenge</strong></td><td>After a pass, can a tool show the <strong>code</strong> fails <strong>that same spec</strong>?</td><td>Claim window after provisional PASS</td></tr></tbody></table>
+      <h2 id="where-gate-a-sits-in-the-lifecycle">Where Gate A sits in the lifecycle</h2>
+      <pre class="mono doc-pre">submitAudit          acceptAudit              provePass / overlays
+    │                     │                         │
+    ▼                     ▼                         ▼
+ declare spec ──► assigned auditor re-runs spec ──► Gate B verdict on code
+ (Gate A)              (Gate A)              (Gate A challenge may void pre-mint)</pre>
+      <p>At <strong>submit</strong>, the protocol posts bounty, pins bytecode, and <strong>declares</strong> spec <strong>S</strong> (via <code>specHash</code> + spec-validation tool + PASS digest). At <strong>accept</strong>, the drawn auditor must <strong>re-run</strong> the same tool on the same spec and match what was stored. Only then does Gate B (verdict on code) proceed.</p>
+      <p>States and transitions: <a href="docs-flows-lifecycle.html">Audit lifecycle</a>.</p>
+      <h2 id="principle">Principle</h2>
+      <p>Anyone with the exact spec artifact, exact registered tool version, and exact inputs must get the same PASS/FAIL and the same <code>errorsRoot</code>. The cell records <code>specRunDigest(...)</code> only — it does not execute tools inside <code>AuditCell</code>.</p>
+      <h2 id="declare-at-submit-submitaudit">Declare at submit (<code>submitAudit</code>)</h2>
+      <p>The protocol commits to off-chain spec <strong>S</strong> and to a PASS run of a <strong>registered spec-validation tool</strong> against <strong>S</strong>.</p>
+      <table class="doc-table"><thead><tr><th>Parameter</th><th>Meaning</th></tr></thead><tbody><tr><td><code>specHash</code></td><td>Content address of spec artifact <strong>S</strong> (what “on file” means for this audit)</td></tr><tr><td><code>specToolId</code></td><td>Registered tool with <code>isSpecValidationTool == true</code> (how <strong>S</strong> is checked)</td></tr><tr><td><code>specErrorsRoot</code></td><td>Output root from a PASS run of that tool on <strong>S</strong> (declared at submit)</td></tr></tbody></table>
+      <p>The cell stores:</p>
+      <p><code>specPassDigest = specRunDigest(specHash, specToolId, pass=true, specErrorsRoot)</code></p>
+      <p><strong>Reverts</strong> if <code>specToolId</code> is zero, unregistered, or not marked as a spec-validation tool.</p>
+      <h2 id="re-run-at-accept-acceptaudit">Re-run at accept (<code>acceptAudit</code>)</h2>
+      <p>The assigned auditor calls <code>acceptAudit(id, specErrorsRoot)</code> after re-running the <strong>same</strong> spec tool on the <strong>same</strong> <code>specHash</code>. The supplied root must match the stored <code>specPassDigest</code>.</p>
+      <table class="doc-table"><thead><tr><th>Outcome</th><th>Meaning</th></tr></thead><tbody><tr><td>Digest matches</td><td>Auditor attests the declaration is reproducible; audit moves toward Gate B</td></tr><tr><td>Mismatch</td><td><code>SpecRunMismatch</code> — declared filing cannot be reproduced as stated</td></tr></tbody></table>
+      <p>Digest function (deterministic binding <code>AUDIT_SPEC_RUN_V1</code>):</p>
+      <pre class="mono doc-pre">specRunDigest(specHash, specToolId, pass, errorsRoot)</pre>
+      <h2 id="pre-mint-spec-challenge-gate-a-overlay">Pre-mint spec challenge (Gate A overlay)</h2>
+      <p>After intake, while the line is still pre-mint (<code>Submitted</code> … <code>AwaitingWindow</code>), a permissionless challenger may dispute the <strong>declared spec PASS binding</strong> — not “the code failed the spec on file.”</p>
+      <table class="doc-table"><thead><tr><th>If sustained</th><th>Effect</th></tr></thead><tbody><tr><td>Declaration invalid</td><td>Line → <code>Invalidated</code>; bounty returned (per module rules); artifact pin cleared</td></tr></tbody></table>
+      <p>That fight is <strong>Gate A</strong>, not Gate C: <em>should this audit line have been admitted?</em> Procedure: <a href="docs-flows-spec-arbiter.html">Spec arbiter</a>.</p>
+      <h2 id="on-chain-surface">On-chain surface</h2>
+      <table class="doc-table"><thead><tr><th>Contract</th><th>Role</th></tr></thead><tbody><tr><td><code>AuditCell</code></td><td><code>submitAudit</code> (declare) · <code>acceptAudit</code> (re-run) · <code>specRunDigest</code> · <code>Invalidated</code> on void</td></tr></tbody></table>
+      <p>Off-chain scope and spec-quality read models (tags, covered / not-checked lists) do not change Gate A digests; they help readers interpret <strong>S</strong>. Reference: <a href="docs-integration-spec-scope-and-quality.html">Scope, spec-quality &amp; fleet</a>.</p>
+      <p><strong>Previous:</strong> <a href="docs-flows-lifecycle.html">Audit lifecycle</a> · <strong>Next:</strong> <a href="docs-flows-vulnerability.html">Vulnerability disclosure</a></p>
+      
+      <footer class="doc-page-foot"><a href="docs-flows.html">← Flows</a> · <a href="docs-notebook.html">Notebook</a></footer>
+    </div>
+  </main>
+
+  <aside id="docRail" aria-label="You are here" hidden></aside>
+
+</div>
+<script src="motion.js?v=1"></script>
+<script src="your-links.js?v=5"></script>
+<script src="docs-rail.js?v=5"></script>
+</body>
+</html>

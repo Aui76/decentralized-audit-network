@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>!function(){try{var k="membrane_nav_session",s=sessionStorage.getItem(k);document.documentElement.classList.add(s?"nav-session":"cold-load");if(!s)sessionStorage.setItem(k,"1")}catch(e){}}();</script>
+<title>7 · The fingerprint · The Book · Audit Cell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css?v=5">
+</head>
+<body class="page-prose">
+<div class="layout layout-docs">
+
+  <nav>
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink" href="quickstart.html">Quickstart</a>
+    <a class="navlink on" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+
+  <main>
+    <div class="inner">
+
+      <div class="doc-layer-row">
+        <a href="docs-book.html" class="doc-layer doc-layer-story">The Book · II</a>
+        <span class="doc-layer doc-layer-story">Story · chapter 7</span>
+      </div>
+      <h1>The fingerprint</h1>
+      <p class="doc-q">What is the <strong>fixed object</strong> two parties must compute the same — and what does the chain store?</p>
+      
+      <div class="doc-bridge">
+        <p class="doc-bridge-lbl">Go deeper — notebook spec</p>
+        <ul>
+          <li><a href="docs-integration-wallets-and-verification.html">Wallets, re-run &amp; verifier seam</a></li>
+          <li><a href="docs-integration-integrator-hub.html">Integrator hub</a></li>
+        </ul>
+      </div>
+      <h2 id="the-promise-needs-a-shape">The promise needs a shape</h2>
+      <p><a href="docs-book-06.html">Chapter 6</a> named three checks. Each ends the same way: a registered tool states <strong>pass or fail</strong>, and strangers disagree only by <strong>re-running</strong> what was run.</p>
+      <p>That only works if “what was run” is not a story. It has to be a <strong>fixed object</strong> two parties compute independently and get the same answer from.</p>
+      <p>That object is the <strong>fingerprint</strong> — a 32-byte digest. At <strong>the audit (Gate B)</strong> and <strong>the challenge (Gate C)</strong>, the chain stores <strong>`resultRoot`</strong> under <strong>`AUDIT_RESULT_V1`</strong>. At <strong>the door (Gate A)</strong>, <strong>`specPassDigest`</strong> under <strong>`AUDIT_SPEC_RUN_V1`</strong>.</p>
+      <p><strong>Not here:</strong> wallet signing, EIP-712 seam — <a href="docs-integration-wallets-and-verification.html">Integration § wallets</a>.</p>
+      <table class="doc-table"><thead><tr><th>Gate</th><th>Digest field</th><th>Formula family</th></tr></thead><tbody><tr><td><strong>The door (Gate A)</strong></td><td><code>specPassDigest</code></td><td><code>AUDIT_SPEC_RUN_V1</code></td></tr><tr><td><strong>The audit / challenge (B/C)</strong></td><td><code>resultRoot</code></td><td><code>AUDIT_RESULT_V1</code></td></tr></tbody></table>
+      <h2 id="what-gets-pinned">What gets pinned</h2>
+      <p>Every audit row pins four things:</p>
+      <table class="doc-table"><thead><tr><th>Pin</th><th>Meaning</th></tr></thead><tbody><tr><td><strong>Tool</strong></td><td>Registered check on-chain — not “best practice”</td></tr><tr><td><strong>Artifact</strong></td><td>Bytecode pinned at submit — no moving target</td></tr><tr><td><strong>Spec</strong></td><td>Declared check from <strong>the door (Gate A)</strong></td></tr><tr><td><strong>Run context</strong></td><td>Compiler, tool version — inside posted digest</td></tr></tbody></table>
+      <p>Each gate compares the digest <strong>its phase owns</strong>. Run the tool with the inputs for that phase. <strong>If you cannot reproduce the digest for that gate, you cannot settle the dispute on that path.</strong></p>
+      <h2 id="what-the-chain-holds">What the chain holds</h2>
+      <p>The cell does not execute tools on-chain. It <strong>stores commitments</strong> and moves state when independent re-runs match.</p>
+      <p>Value settles <strong>on</strong> the fingerprint. The cycle exists <strong>to produce</strong> it.</p>
+      <h2 id="before-you-turn-the-page">Before you turn the page</h2>
+      <p><strong>Fingerprint</strong> — 32-byte deterministic digest per gate phase.</p>
+      <p><strong>Reproducible</strong> — same tool, same inputs → same digest.</p>
+      <p><strong>Binary</strong> — pass or fail on-chain for each gate’s phase.</p>
+      
+      <footer class="doc-page-foot"><a href="docs-book.html">← The Book</a> · <a href="docs.html">Docs</a></footer>
+    </div>
+  </main>
+
+  <aside id="docRail" aria-label="You are here" hidden></aside>
+
+</div>
+<script src="motion.js?v=1"></script>
+<script src="your-links.js?v=5"></script>
+<script src="docs-rail.js?v=5"></script>
+</body>
+</html>

@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>!function(){try{var k="membrane_nav_session",s=sessionStorage.getItem(k);document.documentElement.classList.add(s?"nav-session":"cold-load");if(!s)sessionStorage.setItem(k,"1")}catch(e){}}();</script>
+<title>Appendix B — Formula reference · The AUDIT Economy · Audit Cell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css?v=5">
+</head>
+<body class="page-prose">
+<div class="layout layout-docs">
+
+  <nav>
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink" href="quickstart.html">Quickstart</a>
+    <a class="navlink on" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+
+  <main>
+    <div class="inner">
+
+      <div class="doc-layer-row">
+        <a href="docs-economy.html" class="doc-layer doc-layer-spec">The AUDIT Economy</a>
+        <span class="doc-layer doc-layer-spec">Spec · reader</span>
+      </div>
+      <h1>Appendix B — Formula reference</h1>
+      <p class="doc-q">One page** of settlement math — copy/paste for integrators.</p>
+      
+      <p>Defaults: <a href="docs-economy-appendix-a-parameters.html">Appendix A</a>. Fence post: <a href="docs-economy-value-vs-signal.html">Value vs signal</a>.</p>
+      <h2 id="positive-block-reward">Positive block reward</h2>
+      <pre class="mono doc-pre">activityMint = emaSlow × emaToMintBps / 10_000
+lpCap        = mintLpCapBps × lpBalance / 10_000          (skipped when lpBalance = 0)
+reward       = min(activityMint, lpCap)                   when LP &gt; 0
+             = activityMint                                 when LP = 0</pre>
+      <p><strong>Manipulation discount</strong> (when <code>emaFast / emaSlow &gt; manipulationThresholdBps</code>):</p>
+      <pre class="mono doc-pre">reward = reward × manipulationMintScaleBps / 10_000</pre>
+      <p><strong>Preview vs actual:</strong> <code>nextPositiveBlockReward()</code> = live estimate; <code>auditBlockRewardMinted(id)</code> = what minted on confirm.</p>
+      <h2 id="treasury-on-confirm">Treasury on confirm</h2>
+      <pre class="mono doc-pre">auditorMint   = reward
+treasuryMint  = reward × treasuryShareBps / 10_000       (default 1× reward)
+founderMint   = reward × founderShareBps / 10_000          (capped by founder bucket)</pre>
+      <p><strong>Treasury deposit split</strong> (<code>recordDeposit</code>):</p>
+      <pre class="mono doc-pre">toLP        = treasuryMint × LP_BPS / 10_000
+toEscrow    = treasuryMint × ESCROW_BPS / 10_000
+toIntegrity = toEscrow × integrityEscrowShareBps / 10_000
+toGeneral   = toEscrow − toIntegrity</pre>
+      <p>LP immediate credit capped at <code>LP_CAP_BPS × supply / 10_000</code>.</p>
+      <h2 id="discoverer-pay">Discoverer pay</h2>
+      <pre class="mono doc-pre">paid = min( bounty × boost,
+            max( escrowBalance × discoveryCapBps / 10_000,
+                 bounty × discoveryFloorBps / 10_000 ) )</pre>
+      <ul><li><strong>General escrow</strong> only. Never mint.</li><li><code>boost</code> from reputation — not assurance tier badges.</li></ul>
+      <h2 id="can-mint">CAN mint</h2>
+      <p>At <code>canonicalThreshold</code> uses at confirm:</p>
+      <pre class="mono doc-pre">canMint = nextPositiveBlockReward() / currentBlockSize    (BS = 1)</pre>
+      <p><strong>CAN</strong> extends application hash chain on confirm; <strong>UPG</strong> does not.</p>
+      <h2 id="upg-mint">UPG mint</h2>
+      <p>On structural adoption:</p>
+      <pre class="mono doc-pre">upgMint = upgradeAdoptMintBps × blockRewardFloor / 10_000</pre>
+      <p>Module events only — not POS hash chain.</p>
+      <h2 id="depression-floor-sketch">Depression floor (sketch)</h2>
+      <p>When <code>emaFast / emaSlow &lt; depressionThresholdBps</code>:</p>
+      <pre class="mono doc-pre">supplement = f(emaSlow, floorFractionBps, depressionIntensityBps)   via payFloorSupplement</pre>
+      <p>Capped by <code>maxEscrowDrawdownPerAudit</code>. May escalate to green-light — <a href="docs-economy-network-states.html">Issuance network states</a> · <a href="docs-economy-what-is-not-live-yet.html">What is not live yet</a>.</p>
+      <h2 id="escrow-equilibrium-design">Escrow equilibrium (design)</h2>
+      <pre class="mono doc-pre">long-run escrow outflow ≈ 16–17% of normalMint per audit
+escrow inflow per confirm = 24.9% of treasury deposit</pre>
+      <p><a href="docs-economy-appendix-a-parameters.html">Appendix A</a> · <a href="docs-economy-adaptive-issuance-uncapped-supply-by-choice.html">Adaptive issuance design</a> · Book home</p>
+      
+      <footer class="doc-page-foot"><a href="docs-economy.html">← The AUDIT Economy</a> · <a href="docs-notebook.html">Notebook</a></footer>
+    </div>
+  </main>
+
+  <aside id="docRail" aria-label="You are here" hidden></aside>
+
+</div>
+<script src="motion.js?v=1"></script>
+<script src="your-links.js?v=5"></script>
+<script src="docs-rail.js?v=5"></script>
+</body>
+</html>

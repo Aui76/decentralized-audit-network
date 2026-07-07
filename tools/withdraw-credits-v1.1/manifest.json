@@ -1,0 +1,14 @@
+{
+  "toolName": "withdraw-credits",
+  "toolVersion": "1.1.0",
+  "entrypoint": "encodeResult(address,uint256,uint256)",
+  "toolArtifactHash": "0x630e81f397d999d092e086f66d93af2828eed69363e37dc1cca6395c5670c2c7",
+  "toolId": "0xd485f0578dcf1925aa28cfb312584a4a172c4f5da7f05bde4c078c992b598456",
+  "specHash": "0x7fe57aec3c363ab9da26d8a45f6bd22f30a5f441b597136e9b8fbcdca38fbe77",
+  "contextRoot": "0x52c6c0ad349e991a23a9abf6f7e6400f1c1d85ae811e0657a2550b644103f74a",
+  "invariantId": "0x1e19e88e6bcd0405e3fd16df7d17a2fdde86054967b62152fd6d28c0b11c0397",
+  "implementation": "../cell/contracts/tools/WithdrawCreditsV1.sol",
+  "harness": "../cell/script/tools/RunWithdrawCreditsV1.s.sol",
+  "toolArtifactHashNote": "L-02: keccak256(runtime bytecode) with TOOL_ARTIFACT_HASH slot = 0 at build; recompute via ComputeToolArtifactHash.s.sol",
+  "supersedes": "tools/withdraw-credits-v1/manifest.json (1.0.0 label-bound, historical)"
+}

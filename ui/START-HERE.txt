@@ -1,0 +1,25 @@
+AUDIT CELL — start here
+=======================
+
+A decentralized smart-contract audit network (running on a testnet).
+
+HOW TO OPEN
+-----------
+1. Unzip this folder anywhere.
+2. Double-click  index.html  — it opens in your browser. That's it.
+
+Use the left menu: Welcome · Quickstart · Resources · Help.
+- Quickstart: pick a role (Protocol / Auditor / Bug-hunter / Observer) to see its flow.
+- Explorer (from Welcome → "Verify an audit"): browse real audits and how each settles.
+- Resources: Docs, Tokenomics, and the Whitepaper.
+
+GOOD TO KNOW
+------------
+- Best viewed online — the font loads from the web (offline it just uses a
+  default monospace font; everything still works).
+- It's a TESTNET demo: no real money, test funds only.
+- Browsing needs nothing. Actually *signing* a transaction (on the Post /
+  Manage pages) would need a browser wallet (e.g. MetaMask) on Base Sepolia —
+  not required just to look around.
+
+Questions? The Help page has a feedback box.

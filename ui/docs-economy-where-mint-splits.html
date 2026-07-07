@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>!function(){try{var k="membrane_nav_session",s=sessionStorage.getItem(k);document.documentElement.classList.add(s?"nav-session":"cold-load");if(!s)sessionStorage.setItem(k,"1")}catch(e){}}();</script>
+<title>Where mint splits · The AUDIT Economy · Audit Cell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css?v=5">
+</head>
+<body class="page-prose">
+<div class="layout layout-docs">
+
+  <nav>
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink" href="quickstart.html">Quickstart</a>
+    <a class="navlink on" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+
+  <main>
+    <div class="inner">
+
+      <div class="doc-layer-row">
+        <a href="docs-economy.html" class="doc-layer doc-layer-spec">The AUDIT Economy</a>
+        <span class="doc-layer doc-layer-spec">Spec · reader</span>
+      </div>
+      <h1>Where mint splits</h1>
+      <p class="doc-q">Who gets what share<strong> at confirm — and what are the </strong>secondary mint** paths (CAN, UPG)?</p>
+      
+      <div class="doc-bridge doc-bridge-story">
+        <p class="doc-bridge-lbl">Story context</p>
+        <ul>
+          <li><a href="docs-book-10.html">Book ch 10 · Issuance &amp; positive blocks</a></li>
+          <li><a href="docs-book-13.html">Book ch 13 · Tools &amp; canonization</a></li>
+          <li><a href="docs-book-22.html">Book ch 22 · Reading the chain</a></li>
+        </ul>
+      </div>
+      <p>Each <strong>positive block</strong> divides mint among auditor, treasury, and founder — then treasury deposit splits again into LP and escrow.</p>
+      <h2 id="per-positive-block">Per positive block</h2>
+      <table class="doc-table"><thead><tr><th>Share</th><th>Size (defaults)</th><th>Destination</th></tr></thead><tbody><tr><td><strong>Auditor</strong></td><td><code>nextPositiveBlockReward()</code></td><td>Confirming auditor</td></tr><tr><td><strong>Treasury</strong></td><td><code>treasuryShareBps = 10000</code> (1× reward)</td><td>75.1% LP · 24.9% escrow</td></tr><tr><td><strong>Founder</strong></td><td><code>founderShareBps = 305</code> (~3.05%)</td><td>Founder bucket — 1.5% supply cap, activity-gated</td></tr></tbody></table>
+      <p>Treasury <strong>escrow slice</strong> (24.9%): <strong>180-day timelock</strong>. Aged general escrow → LP via permissionless <code>migrate()</code> — LP never above <strong>15% of supply</strong>.</p>
+      <p>Escrow funds discoverer pay, integrity subsidy, depression floor — <a href="docs-economy-escrow-architecture.html">Escrow architecture</a>.</p>
+      <p><strong>Testnet DEX:</strong> internal LP bucket ≠ Uniswap; optional seeding is ops-only — Sepolia test liquidity.</p>
+      <p>Founder release gated by <code>totalSuccessfulAudits / founderReleaseTarget</code> (default 1000). Loyalty premium <strong>not shipped</strong> — <a href="docs-economy-what-is-not-live-yet.html">What is not live yet</a>.</p>
+      <h2 id="structural-adoption-upg">Structural adoption (UPG)</h2>
+      <p>Governed adopt → <code>mintUpgradeAdopt</code> mints <code>upgradeAdoptMintBps</code> × block-reward floor to proposer.</p>
+      <p>UPG lives in <strong>module events</strong> — not POS application hash chain.</p>
+      <p>Spec: <a href="docs-structural.html">Structural upgrades</a>.</p>
+      <h2 id="tool-canonization-can">Tool canonization (CAN)</h2>
+      <p>At <code>canonicalThreshold</code> successful uses (default <strong>10</strong>, counted at confirm) → auto-canonicalize → proposer receives <code>nextPositiveBlockReward() / currentBlockSize</code> via <code>mintToolCanonization</code>.</p>
+      <p><strong>CAN</strong> extends <code>latestBlockHash</code> on confirm path with <strong>POS</strong>. UPG/rollback lineage stays in module events only.</p>
+      <p><strong>Previous:</strong> <a href="docs-economy-network-states.html">Issuance network states</a> · <strong>Next:</strong> <a href="docs-economy-escrow-architecture.html">Escrow architecture</a></p>
+      
+      <footer class="doc-page-foot"><a href="docs-economy.html">← The AUDIT Economy</a> · <a href="docs-notebook.html">Notebook</a></footer>
+    </div>
+  </main>
+
+  <aside id="docRail" aria-label="You are here" hidden></aside>
+
+</div>
+<script src="motion.js?v=1"></script>
+<script src="your-links.js?v=5"></script>
+<script src="docs-rail.js?v=5"></script>
+</body>
+</html>

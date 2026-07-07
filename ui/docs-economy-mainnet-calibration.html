@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>!function(){try{var k="membrane_nav_session",s=sessionStorage.getItem(k);document.documentElement.classList.add(s?"nav-session":"cold-load");if(!s)sessionStorage.setItem(k,"1")}catch(e){}}();</script>
+<title>Mainnet calibration · The AUDIT Economy · Audit Cell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css?v=5">
+</head>
+<body class="page-prose">
+<div class="layout layout-docs">
+
+  <nav>
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink" href="quickstart.html">Quickstart</a>
+    <a class="navlink on" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+
+  <main>
+    <div class="inner">
+
+      <div class="doc-layer-row">
+        <a href="docs-economy.html" class="doc-layer doc-layer-spec">The AUDIT Economy</a>
+        <span class="doc-layer doc-layer-spec">Spec · reader</span>
+      </div>
+      <h1>Mainnet calibration</h1>
+      <p class="doc-q">What is <strong>already in `CellEscrow` code</strong> vs what remains <strong>parameter sign-off at deploy</strong>?</p>
+      
+      <div class="doc-bridge doc-bridge-story">
+        <p class="doc-bridge-lbl">Story context</p>
+        <ul>
+          <li><a href="docs-book-20.html">Book ch 20 · What we defer</a></li>
+        </ul>
+      </div>
+      <p>Deposit split, LP cap, and migration <strong>ship today</strong>. Mainnet work is <strong>worksheet + labeling</strong>, not new mechanism code.</p>
+      <h2 id="what-ships-mechanism">What ships (mechanism)</h2>
+      <table class="doc-table"><thead><tr><th>Mechanism</th><th>Value</th><th>Meaning</th></tr></thead><tbody><tr><td>Deposit split</td><td><code>LP_BPS = 7510</code>, <code>ESCROW_BPS = 2490</code></td><td>75.1% LP / 24.9% escrow per treasury mint</td></tr><tr><td>LP cap</td><td><code>LP_CAP_BPS = 1500</code></td><td>Immediate LP credit stops at 15% supply</td></tr><tr><td>Migration</td><td><code>migrate()</code></td><td>Aged escrow → LP under cap</td></tr><tr><td>Integrity ring-fence</td><td><code>integrityEscrowShareBps = 800</code></td><td>8% of escrow slice isolated</td></tr></tbody></table>
+      <p>Cap binding → stronger reserve for floor/discoverer — <a href="docs-economy-equilibrium.html">Escrow equilibrium</a>.</p>
+      <h2 id="deploy-worksheet">Deploy worksheet</h2>
+      <table class="doc-table"><thead><tr><th>#</th><th>Item</th></tr></thead><tbody><tr><td>1</td><td>Supply at launch</td></tr><tr><td>2</td><td>Implied LP cap = 15% × supply</td></tr><tr><td>3</td><td>Treasury mint per confirm (<code>nextPositiveBlockReward</code> × treasury share)</td></tr><tr><td>4</td><td>Order-of-magnitude confirms until cap binds</td></tr><tr><td>5</td><td>Accept cap binding? (If no — tune pre-lock)</td></tr><tr><td>6</td><td>Migration ops — who runs <code>migrate()</code> after 180d</td></tr><tr><td>7</td><td>Fail-closed confirm — escrow wired + mutual bind verified</td></tr></tbody></table>
+      <h2 id="integrator-labeling">Integrator labeling</h2>
+      <ul><li>Distinguish testnet proxy gates vs mainnet green-light (<a href="docs-economy-what-is-not-live-yet.html">What is not live yet</a> · <a href="docs-flows-mainnet-gates.html">Mainnet gates</a>)</li><li>No APY from tier badges or bounty bands (<a href="docs-integration-settlement-vs-signal.html">Settlement vs signal</a>)</li><li>Historical mint = <code>auditBlockRewardMinted(id)</code>, not preview alone</li></ul>
+      <p><strong>Previous:</strong> <a href="docs-economy-what-is-not-live-yet.html">What is not live yet</a> · <strong>Appendices:</strong> <a href="docs-economy-appendix-a-parameters.html">Appendix A</a> · <a href="docs-economy-appendix-b-formulas.html">Appendix B</a></p>
+      
+      <footer class="doc-page-foot"><a href="docs-economy.html">← The AUDIT Economy</a> · <a href="docs-notebook.html">Notebook</a></footer>
+    </div>
+  </main>
+
+  <aside id="docRail" aria-label="You are here" hidden></aside>
+
+</div>
+<script src="motion.js?v=1"></script>
+<script src="your-links.js?v=5"></script>
+<script src="docs-rail.js?v=5"></script>
+</body>
+</html>

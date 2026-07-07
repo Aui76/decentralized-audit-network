@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Demo swap · AUDIT · Audit Cell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css?v=5">
+</head>
+<body>
+<div class="layout layout-docs">
+
+  <nav>
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink" href="quickstart.html">Quickstart</a>
+    <a class="navlink" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+
+  <main>
+    <div class="inner">
+      <p class="eyebrow">Demo · testnet only</p>
+      <h1>Swap AUDIT</h1>
+
+      <span class="badge"><span class="live"></span> DEMO · Base Sepolia</span>
+      <p class="testnote warnc">
+        <strong>Not price discovery.</strong> Base Sepolia ETH is valueless. This pool demonstrates the
+        mint → treasury → LP → tradeable loop on-chain. Do not treat the quoted price as economic signal,
+        APY, or mainnet guidance.
+      </p>
+
+      <p class="lede">
+        A thin Uniswap V3 AUDIT/WETH pool (1% fee tier) seeded single-sided with AUDIT above spot.
+        Only AUDIT was put into the pool; buyers bring their own test ETH when they swap.
+      </p>
+
+      <div class="cards">
+        <div class="card" style="cursor:default">
+          <span class="name">Pool status</span>
+          <span class="line" id="pool-status">Loading…</span>
+          <p><strong>Quoted price:</strong> <span id="pool-price">—</span></p>
+        </div>
+      </div>
+
+      <section class="demo-stats act-section" id="demo-stats" hidden>
+        <h2>Pool stats</h2>
+        <p class="tiny mut">Physical WETH and AUDIT held by the pool contract (includes the LP position). Swapping buys AUDIT — it is not a deposit.</p>
+        <div class="grid2" style="margin-top:14px">
+          <div class="stat" title="All WETH in the pool: LP position NFT plus any loose WETH in the pool contract">
+            <span class="k">Total WETH</span>
+            <b id="stat-weth">—</b>
+          </div>
+          <div class="stat" title="All AUDIT in the pool: LP position plus any loose AUDIT">
+            <span class="k">Total AUDIT</span>
+            <b id="stat-audit">—</b>
+          </div>
+        </div>
+        <p class="tiny mut" id="stat-detail" style="margin-top:10px"></p>
+        <div class="stat demo-stat-tvl" style="margin-top:14px" title="Total WETH plus total AUDIT marked to spot when readable">
+          <span class="k">TVL (in WETH)</span>
+          <b id="stat-tvl">—</b>
+        </div>
+        <p class="tiny mut" id="stat-note" style="margin-top:10px"></p>
+        <p class="tiny mut" id="stat-updated"></p>
+      </section>
+
+      <section class="demo-swap act-section">
+        <h2>Swap test ETH → AUDIT</h2>
+        <p class="tiny mut">The Uniswap app does not support Base Sepolia — swap here through the live demo pool.</p>
+        <div class="card" style="cursor:default;margin-top:14px">
+          <div id="demo-wallet-root"></div>
+          <label for="demo-swap-eth">ETH amount</label>
+          <input id="demo-swap-eth" type="text" inputmode="decimal" value="0.01" autocomplete="off">
+          <p class="tiny">Testnet ETH only. You pay gas + the amount above; AUDIT lands in your wallet.</p>
+          <button type="button" id="demo-swap-btn" disabled>Swap for AUDIT</button>
+          <p class="tiny" id="demo-swap-log" style="margin-top:10px"></p>
+        </div>
+      </section>
+
+      <section class="demo-addrs act-section" id="demo-addrs" hidden>
+        <h2>Addresses</h2>
+        <p class="tiny mut">Base Sepolia — import AUDIT in your wallet or open on Basescan.</p>
+        <div id="demo-addrs-list" class="demo-addrs-list"></div>
+      </section>
+
+      <footer class="doc-page-foot">
+        <a href="resources.html">Resources</a> · <a href="explorer.html">Explorer</a> · <a href="help.html">Help</a>
+      </footer>
+    </div>
+  </main>
+
+</div>
+
+<script src="your-links.js?v=5"></script>
+<script src="view-model.js?v=1"></script>
+<script src="wallet-bar.js?v=13"></script>
+<script src="demo-pool-swap.js?v=1"></script>
+<script src="membrane-rail.js?v=2"></script>
+<script src="motion.js?v=1"></script>
+<script type="module" src="demo-pool.mjs"></script>
+</body>
+</html>

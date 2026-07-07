@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>!function(){try{var k="membrane_nav_session",s=sessionStorage.getItem(k);document.documentElement.classList.add(s?"nav-session":"cold-load");if(!s)sessionStorage.setItem(k,"1")}catch(e){}}();</script>
+<title>23 · The membrane · The Book · Audit Cell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css?v=5">
+</head>
+<body class="page-prose">
+<div class="layout layout-docs">
+
+  <nav>
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink" href="quickstart.html">Quickstart</a>
+    <a class="navlink on" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+
+  <main>
+    <div class="inner">
+
+      <div class="doc-layer-row">
+        <a href="docs-book.html" class="doc-layer doc-layer-story">The Book · VI</a>
+        <span class="doc-layer doc-layer-story">Story · chapter 23</span>
+      </div>
+      <h1>The membrane</h1>
+      <p class="doc-q">Where do strangers <strong>arrive</strong> — read, verify, and act — without reading Solidity?</p>
+      
+      <div class="doc-bridge">
+        <p class="doc-bridge-lbl">Go deeper — notebook spec</p>
+        <ul>
+          <li><a href="docs-integration-integrator-hub.html">Integrator hub</a></li>
+          <li><a href="docs-integration-quickstarts.html">Quickstarts</a></li>
+          <li><a href="docs-integration-protocol-ui-spec.html">Protocol UI spec</a></li>
+        </ul>
+      </div>
+      <h2 id="the-rail-strangers-can-touch">The rail strangers can touch</h2>
+      <p><a href="docs-book-22.html">Chapter 22</a> named indexer composition. This chapter names the <strong>membrane</strong>: explorer, <strong>`verify.mjs`</strong>, role quickstarts.</p>
+      <p>Settlement lives in the cell; legibility in organs; <strong>arrival</strong> in the membrane. Adds no new settlement rules — <strong>composes</strong> what ships.</p>
+      <p>Build order (body-design): Heart + Independence first; membrane last.</p>
+      <p><strong>Not here:</strong> integrator hub API detail — <a href="docs-integration-integrator-hub.html">Integrator hub</a>.</p>
+      <table class="doc-table"><thead><tr><th>Surface</th><th>Job</th></tr></thead><tbody><tr><td><strong>Explorer</strong></td><td>Read-only browse</td></tr><tr><td><strong>verify.mjs</strong></td><td>Recompute <strong>`resultRoot`</strong> — no wallet</td></tr><tr><td><strong>Quickstarts</strong></td><td>Post · audit · claim guides</td></tr></tbody></table>
+      <h2 id="boundary-experience-trilogy-21-22-23">Boundary — Experience trilogy (21 / 22 / 23)</h2>
+      <table class="doc-table"><thead><tr><th>Layer</th><th><a href="docs-book-21.html">Ch 21</a></th><th><a href="docs-book-22.html">Ch 22</a></th><th><strong>Ch 23</strong></th></tr></thead><tbody><tr><td><strong>Logic</strong></td><td>Owns state machines</td><td>Owns card composition</td><td>Mirrors both in UI</td></tr><tr><td><strong>Read vs write</strong></td><td>Names moves</td><td>Indexer layer</td><td>Enforces split in product</td></tr><tr><td><strong>Spec authority</strong></td><td>Protocol UI spec</td><td>Integration hub</td><td>Quickstarts only — spec wins</td></tr></tbody></table>
+      <h2 id="read-first-write-where-it-belongs">Read first, write where it belongs</h2>
+      <p><strong>Browse and verify stay read-only.</strong> <strong>`verify.mjs`</strong> recomputes pass/fail against live bytecode on the pin (<a href="docs-book-07.html">ch. 7</a>).</p>
+      <p><strong>Writes</strong> on dedicated wallet pages — post bounty, register, claim, accept — mirroring <a href="docs-book-21.html">ch. 21</a>.</p>
+      <p>Honest UI states posture: declare-and-re-run is live trust model when verifier seam unset.</p>
+      <h2 id="one-guide-per-arrival">One guide per arrival</h2>
+      <table class="doc-table"><thead><tr><th>Intent</th><th>Guide</th></tr></thead><tbody><tr><td><strong>Verify yourself</strong></td><td>Recompute roots; MATCH / MISMATCH</td></tr><tr><td><strong>Post a bounty</strong></td><td>Spec pre-flight; Gate A + B flows</td></tr><tr><td><strong>Get paid in AUDIT</strong></td><td>Pool · verdict · confirm</td></tr><tr><td><strong>File a claim</strong></td><td>Stake · FAIL root · Gate C</td></tr><tr><td><strong>Not sure</strong></td><td>Concern router</td></tr></tbody></table>
+      <p>Quickstarts = onboarding, not authority. Same gates, same proof — fewer clicks.</p>
+      <h2 id="what-verify-promises-and-what-it-does-not">What verify promises — and what it does not</h2>
+      <p><strong>Does:</strong> self-test encoding; fetch live bytecode; re-derive PASS/FAIL <strong>`resultRoot`</strong>s; compare to chain.</p>
+      <p><strong>Does not:</strong> full EVM replay in script — <strong>Level B</strong> execution named explicitly when it ships. <strong>Level A</strong> recomputation is falsifiable today.</p>
+      <h2 id="live-surface-testnet-label">Live surface, testnet label</h2>
+      <p>Canonical UI → <strong>Base Sepolia</strong>, <strong>demo / testnet-grade</strong> (<a href="docs-book-20.html">ch. 20</a>). Wiring real; stakes exercise-scale.</p>
+      <p>Builders anchor on Integration when behavior beats copying screens. <strong>Spec wins</strong> over prettier UI.</p>
+      <h2 id="before-you-turn-the-page">Before you turn the page</h2>
+      <p><strong>Membrane</strong> — composes, does not redefine · <strong>Read/write split</strong> · <strong>Role guides</strong> · <strong>verify.mjs limits stated</strong> · <strong>Sepolia live under label</strong></p>
+      
+      <footer class="doc-page-foot"><a href="docs-book.html">← The Book</a> · <a href="docs.html">Docs</a></footer>
+    </div>
+  </main>
+
+  <aside id="docRail" aria-label="You are here" hidden></aside>
+
+</div>
+<script src="motion.js?v=1"></script>
+<script src="your-links.js?v=5"></script>
+<script src="docs-rail.js?v=5"></script>
+</body>
+</html>

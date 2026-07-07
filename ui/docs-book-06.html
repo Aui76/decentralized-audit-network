@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>!function(){try{var k="membrane_nav_session",s=sessionStorage.getItem(k);document.documentElement.classList.add(s?"nav-session":"cold-load");if(!s)sessionStorage.setItem(k,"1")}catch(e){}}();</script>
+<title>6 · Three checks · The Book · Audit Cell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css?v=5">
+</head>
+<body class="page-prose">
+<div class="layout layout-docs">
+
+  <nav>
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink" href="quickstart.html">Quickstart</a>
+    <a class="navlink on" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+
+  <main>
+    <div class="inner">
+
+      <div class="doc-layer-row">
+        <a href="docs-book.html" class="doc-layer doc-layer-story">The Book · II</a>
+        <span class="doc-layer doc-layer-story">Story · chapter 6</span>
+      </div>
+      <h1>Three checks</h1>
+      <p class="doc-q">When something feels unfair, <strong>which of three checks</strong> applies — and what is out of scope?</p>
+      
+      <div class="doc-bridge">
+        <p class="doc-bridge-lbl">Go deeper — notebook spec</p>
+        <ul>
+          <li><a href="docs-flows-gate-a.html">The door (Gate A)</a></li>
+          <li><a href="docs-flows-lifecycle.html">Audit lifecycle</a></li>
+          <li><a href="docs-flows-vulnerability.html">Vulnerability disclosure</a></li>
+        </ul>
+      </div>
+      <h2 id="three-questions">Three questions, not three committees</h2>
+      <p><strong>Discipline question:</strong> Can a registered tool state the problem in binary form — pass or fail?</p>
+      <p>If yes → one of three <strong>checks</strong>. If no → out of scope for settlement.</p>
+      <table class="doc-table"><thead><tr><th>Check</th><th>Question in plain English</th></tr></thead><tbody><tr><td><strong>The door (Gate A)</strong></td><td>Is the declared check valid before anyone audits?</td></tr><tr><td><strong>The audit (Gate B)</strong></td><td>Does the code pass or fail that check?</td></tr><tr><td><strong>The challenge (Gate C)</strong></td><td>After a pass, can someone prove the pass was wrong?</td></tr></tbody></table>
+      <p>Three checks. No fourth appeals court on code truth.</p>
+      <p><strong>Not here:</strong> overlay modules (spec arbiter, integrity review) — <a href="docs-book-12.html">Chapter 12</a>. Vocabulary for <strong>claimed</strong> — <a href="docs-book-05.html">Chapter 5</a>.</p>
+      <h2 id="gate-a">The door (Gate A)</h2>
+      <p><strong>Question:</strong> Is what the protocol <strong>declared</strong> — spec, binding, audibility — valid and machine-checkable?</p>
+      <p><strong>Entrance check.</strong> Sloppy or non-auditable declaration stops here — void before rewards mint. “We meant a different spec” belongs at the door — not in a vulnerability claim.</p>
+      <p>Protocols <strong>declare</strong> at submit. Auditors <strong>re-run</strong> at accept. Still binary.</p>
+      <p>Wrong spec filed → <em>this audit should never have counted.</em></p>
+      <h2 id="gate-b">The audit (Gate B)</h2>
+      <p><strong>Question:</strong> Does <strong>pinned code</strong> pass or fail <strong>the spec on file</strong>?</p>
+      <table class="doc-table"><thead><tr><th>Verdict</th><th>Meaning</th></tr></thead><tbody><tr><td><strong>Fail (`proveFail`)</strong></td><td>No challenge window; patch and submit fresh audit</td></tr><tr><td><strong>Pass</strong></td><td><strong>Challenge window</strong> opens before <strong>success path (positive path)</strong> can close</td></tr></tbody></table>
+      <h2 id="gate-c">The challenge (Gate C)</h2>
+      <p><strong>Question:</strong> After a pass, can a registered tool show <strong>deployed code fails</strong> the <strong>spec on file</strong>?</p>
+      <p><a href="docs-book-05.html#proof-bearing-claim"><strong>Proof-bearing claim</strong></a>: reproducible FAIL <strong>`resultRoot`</strong>, stake, eligible party.</p>
+      <table class="doc-table"><thead><tr><th>Outcome</th><th>Meaning</th></tr></thead><tbody><tr><td>Tool cannot reproduce fail</td><td>Settlement silent — no severity thread</td></tr><tr><td>Tool reproduces fail</td><td><strong>Claimed</strong> → <strong>challenge procedure (break path)</strong> to completion</td></tr></tbody></table>
+      <p>Not <em>we meant a different spec</em> (Gate A). Not <em>website looks phishy</em> (out of scope if spec never bound it).</p>
+      <h2 id="when-people-bring-the-wrong-fight">When people bring the wrong fight</h2>
+      <table class="doc-table"><thead><tr><th>Feels like…</th><th>Belongs on…</th></tr></thead><tbody><tr><td>“We meant another spec”</td><td><strong>The door (Gate A)</strong></td></tr><tr><td>“Medium severity, pay half”</td><td>Out of scope — binary only</td></tr><tr><td>“Committee should decide”</td><td>Out of scope</td></tr><tr><td>“PASS missed a bug”</td><td><strong>The challenge (Gate C)</strong> — if tool proves fail</td></tr></tbody></table>
+      <h2 id="before-you-turn-the-page">Before you turn the page</h2>
+      <p>Every overlay still lands as <strong>binary tool output</strong> on one of these three checks.</p>
+      
+      <footer class="doc-page-foot"><a href="docs-book.html">← The Book</a> · <a href="docs.html">Docs</a></footer>
+    </div>
+  </main>
+
+  <aside id="docRail" aria-label="You are here" hidden></aside>
+
+</div>
+<script src="motion.js?v=1"></script>
+<script src="your-links.js?v=5"></script>
+<script src="docs-rail.js?v=5"></script>
+</body>
+</html>

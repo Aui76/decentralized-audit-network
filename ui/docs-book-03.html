@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>!function(){try{var k="membrane_nav_session",s=sessionStorage.getItem(k);document.documentElement.classList.add(s?"nav-session":"cold-load");if(!s)sessionStorage.setItem(k,"1")}catch(e){}}();</script>
+<title>3 · Toolkit as product · The Book · Audit Cell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css?v=5">
+</head>
+<body class="page-prose">
+<div class="layout layout-docs">
+
+  <nav>
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink" href="quickstart.html">Quickstart</a>
+    <a class="navlink on" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+
+  <main>
+    <div class="inner">
+
+      <div class="doc-layer-row">
+        <a href="docs-book.html" class="doc-layer doc-layer-story">The Book · I</a>
+        <span class="doc-layer doc-layer-story">Story · chapter 3</span>
+      </div>
+      <h1>Toolkit as product</h1>
+      <p class="doc-q">If audits are not the product, <strong>what is</strong> — and how does each audit grow it?</p>
+      
+      <div class="doc-bridge">
+        <p class="doc-bridge-lbl">Go deeper — notebook spec</p>
+        <ul>
+          <li><a href="docs-participants-roles.html">Roles</a></li>
+          <li><a href="docs-flows-gate-a.html">The door (Gate A)</a></li>
+          <li><a href="docs-flows-lifecycle.html">Audit lifecycle</a></li>
+        </ul>
+      </div>
+      <h2 id="the-reframe">The reframe</h2>
+      <p>Chapters <a href="docs-book-01.html">1</a> and <a href="docs-book-02.html">2</a> named the problem and the promise: replace trust in a name with a <a href="docs-mechanism.html"><strong>reproducible verdict</strong></a>. That promise could still be read as “another audit market.”</p>
+      <p>It is not. <strong>The primary product is not audit verdicts. It is a canonical, growing set of verification tools</strong> — the <a href="docs-mechanism.html#primary-product"><strong>toolkit</strong></a>.</p>
+      <p>Individual audits are how the toolkit grows. The audits are exhaust; <strong>the toolkit is the engine.</strong></p>
+      <p><strong>Not here:</strong> on-chain canonization mechanics and FMEA — <a href="docs-book-13.html">Chapter 13</a>.</p>
+      <table class="doc-table"><thead><tr><th>Layer</th><th>Question</th><th>Read</th></tr></thead><tbody><tr><td><a href="docs-book-02.html">Chapter 2</a></td><td>What is the network shape?</td><td>The idea</td></tr><tr><td><strong>This chapter</strong></td><td>What is the product?</td><td>Below</td></tr><tr><td><a href="docs-book-13.html">Chapter 13</a></td><td>How do tools earn standing?</td><td>Tools &amp; canonization</td></tr></tbody></table>
+      <h2 id="what-every-audit-must-leave-behind">What every audit must leave behind</h2>
+      <p>Each submission posts three things:</p>
+      <table class="doc-table"><thead><tr><th>Artifact</th><th>Meaning</th></tr></thead><tbody><tr><td><strong>Proof</strong></td><td>What was run and what came out — inspectable, not a narrative</td></tr><tr><td><strong>Registered tools</strong></td><td>On-chain IDs, not “best practice”</td></tr><tr><td><strong>Optional new tool</strong></td><td>Contribution the next team can cite unchanged</td></tr></tbody></table>
+      <p>The next audit starts from whatever already exists plus whatever this one adds. The set grows <strong>monotonically</strong>.</p>
+      <h2 id="why-this-framing-lasts">Why this framing lasts</h2>
+      <table class="doc-table"><thead><tr><th>Property</th><th>Meaning</th></tr></thead><tbody><tr><td><strong>Tools are reproducible</strong></td><td>Same tool + bytecode → same answer; pass is computation with provenance</td></tr><tr><td><strong>Complexity ramps gradually</strong></td><td>Simple binary checks first; hard problems when the toolkit can state them</td></tr><tr><td><strong>Incumbents can adopt</strong></td><td>Canonical rail both sides run — human judgment on top, same base underneath</td></tr><tr><td><strong>Specs sharpen with tools</strong></td><td>Better tools → sharper declarations at submit</td></tr></tbody></table>
+      <h2 id="how-a-tool-earns-standing">How a tool earns standing</h2>
+      <p>No committee vote. No brand deal. <strong>Reputation accumulates through use:</strong></p>
+      <ol><li>Anyone can register a deterministic checker — <a href="docs-problem.html"><strong>permissionless</strong></a>.</li><li>An auditor cites it; the audit runs its <strong>challenge window</strong>.</li><li>Clean confirm → successful-use count increments on-chain.</li><li>Threshold crossed → <strong>canonized</strong>; author earns <a href="docs-economy-where-mint-splits.html#tool-canonization-can"><strong>CAN mint</strong></a>.</li><li>Later exploit → failure count increments — public signal the checker is suspect.</li></ol>
+      <p>Every step is observable and binary. Tool standing is <strong>what happened when people bet real bounties on this checker.</strong></p>
+      <h2 id="what-this-means-for-everyone-else">What this means for everyone else</h2>
+      <table class="doc-table"><thead><tr><th>Role</th><th>Meaning</th></tr></thead><tbody><tr><td><strong>Protocol</strong></td><td>Pins launch to checks others can cite next quarter</td></tr><tr><td><strong>Auditor</strong></td><td>Executes registered tools; posts proof</td></tr><tr><td><strong>Tool author</strong></td><td>Ships reusable checkers; upside is canonization</td></tr><tr><td><strong>Stranger</strong></td><td>Compares recorded tools to canonical set; re-runs if they choose</td></tr></tbody></table>
+      <h2 id="the-loop-restated">The loop, restated</h2>
+      <p>Token flows, pool rules, and escrow mechanics serve this loop: <strong>tools get registered, cited, tested under fire, and canonized or flagged.</strong> Audits are the stress test; the toolkit is what survives.</p>
+      
+      <footer class="doc-page-foot"><a href="docs-book.html">← The Book</a> · <a href="docs.html">Docs</a></footer>
+    </div>
+  </main>
+
+  <aside id="docRail" aria-label="You are here" hidden></aside>
+
+</div>
+<script src="motion.js?v=1"></script>
+<script src="your-links.js?v=5"></script>
+<script src="docs-rail.js?v=5"></script>
+</body>
+</html>

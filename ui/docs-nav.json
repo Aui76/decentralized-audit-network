@@ -1,0 +1,1303 @@
+{
+  "docs-book-01.html": {
+    "track": "book",
+    "hub": "docs-book.html",
+    "title": "The problem",
+    "part": "I — Why & what",
+    "pos": 1,
+    "total": 24,
+    "next": "docs-book-02.html",
+    "nextLabel": "The idea"
+  },
+  "docs-book-02.html": {
+    "track": "book",
+    "hub": "docs-book.html",
+    "title": "The idea",
+    "part": "I — Why & what",
+    "pos": 2,
+    "total": 24,
+    "prev": "docs-book-01.html",
+    "prevLabel": "The problem",
+    "next": "docs-book-03.html",
+    "nextLabel": "Toolkit as product",
+    "relatedSpecs": [
+      {
+        "href": "docs-participants-roles.html",
+        "label": "Roles"
+      }
+    ]
+  },
+  "docs-book-03.html": {
+    "track": "book",
+    "hub": "docs-book.html",
+    "title": "Toolkit as product",
+    "part": "I — Why & what",
+    "pos": 3,
+    "total": 24,
+    "prev": "docs-book-02.html",
+    "prevLabel": "The idea",
+    "next": "docs-book-04.html",
+    "nextLabel": "The core model"
+  },
+  "docs-book-04.html": {
+    "track": "book",
+    "hub": "docs-book.html",
+    "title": "The core model",
+    "part": "I — Why & what",
+    "pos": 4,
+    "total": 24,
+    "prev": "docs-book-03.html",
+    "prevLabel": "Toolkit as product",
+    "next": "docs-book-05.html",
+    "nextLabel": "Definitions",
+    "relatedSpecs": [
+      {
+        "href": "docs-economy-one-token-three-movements.html",
+        "label": "One token, three movements"
+      },
+      {
+        "href": "docs-health-facts-vs-health.html",
+        "label": "Facts vs health"
+      }
+    ]
+  },
+  "docs-book-05.html": {
+    "track": "book",
+    "hub": "docs-book.html",
+    "title": "Definitions",
+    "part": "II — Rules of the game",
+    "pos": 5,
+    "total": 24,
+    "prev": "docs-book-04.html",
+    "prevLabel": "The core model",
+    "next": "docs-book-06.html",
+    "nextLabel": "Three checks"
+  },
+  "docs-book-06.html": {
+    "track": "book",
+    "hub": "docs-book.html",
+    "title": "Three checks",
+    "part": "II — Rules of the game",
+    "pos": 6,
+    "total": 24,
+    "prev": "docs-book-05.html",
+    "prevLabel": "Definitions",
+    "next": "docs-book-07.html",
+    "nextLabel": "The fingerprint",
+    "relatedSpecs": [
+      {
+        "href": "docs-flows-lifecycle.html",
+        "label": "Audit lifecycle"
+      },
+      {
+        "href": "docs-flows-gate-a.html",
+        "label": "The door (Gate A)"
+      },
+      {
+        "href": "docs-flows-vulnerability.html",
+        "label": "Vulnerability disclosure"
+      }
+    ]
+  },
+  "docs-book-07.html": {
+    "track": "book",
+    "hub": "docs-book.html",
+    "title": "The fingerprint",
+    "part": "II — Rules of the game",
+    "pos": 7,
+    "total": 24,
+    "prev": "docs-book-06.html",
+    "prevLabel": "Three checks",
+    "next": "docs-book-08.html",
+    "nextLabel": "Value & escrow",
+    "relatedSpecs": [
+      {
+        "href": "docs-integration-wallets-and-verification.html",
+        "label": "Wallets, re-run & verifier seam"
+      },
+      {
+        "href": "docs-integration-integrator-hub.html",
+        "label": "Integrator hub"
+      }
+    ]
+  },
+  "docs-book-08.html": {
+    "track": "book",
+    "hub": "docs-book.html",
+    "title": "Value & escrow",
+    "part": "III — The mechanism",
+    "pos": 8,
+    "total": 24,
+    "prev": "docs-book-07.html",
+    "prevLabel": "The fingerprint",
+    "next": "docs-book-09.html",
+    "nextLabel": "The audit cycle",
+    "relatedSpecs": [
+      {
+        "href": "docs-economy-escrow-architecture.html",
+        "label": "Escrow architecture"
+      },
+      {
+        "href": "docs-economy-the-auditors-reward.html",
+        "label": "The auditor's reward"
+      },
+      {
+        "href": "docs-economy-the-discoverers-reward.html",
+        "label": "The discoverer's reward"
+      },
+      {
+        "href": "docs-economy-equilibrium.html",
+        "label": "Escrow equilibrium"
+      },
+      {
+        "href": "docs-economy-appendix-a-parameters.html",
+        "label": "Appendix A — Parameter tables"
+      }
+    ]
+  },
+  "docs-book-09.html": {
+    "track": "book",
+    "hub": "docs-book.html",
+    "title": "The audit cycle",
+    "part": "III — The mechanism",
+    "pos": 9,
+    "total": 24,
+    "prev": "docs-book-08.html",
+    "prevLabel": "Value & escrow",
+    "next": "docs-book-10.html",
+    "nextLabel": "Issuance & positive blocks",
+    "relatedSpecs": [
+      {
+        "href": "docs-participants-assignment.html",
+        "label": "Assignment (CRD)"
+      },
+      {
+        "href": "docs-integration-artifact-registry.html",
+        "label": "Artifact registry"
+      }
+    ]
+  },
+  "docs-book-10.html": {
+    "track": "book",
+    "hub": "docs-book.html",
+    "title": "Issuance & positive blocks",
+    "part": "III — The mechanism",
+    "pos": 10,
+    "total": 24,
+    "prev": "docs-book-09.html",
+    "prevLabel": "The audit cycle",
+    "next": "docs-book-11.html",
+    "nextLabel": "The break path",
+    "relatedSpecs": [
+      {
+        "href": "docs-economy-the-positive-block.html",
+        "label": "The positive block"
+      },
+      {
+        "href": "docs-economy-activity-led-reward.html",
+        "label": "Activity-led reward"
+      },
+      {
+        "href": "docs-economy-network-states.html",
+        "label": "Issuance network states"
+      },
+      {
+        "href": "docs-economy-where-mint-splits.html",
+        "label": "Where mint splits"
+      },
+      {
+        "href": "docs-economy-adaptive-issuance-uncapped-supply-by-choice.html",
+        "label": "Adaptive issuance — Uncapped Supply by choice"
+      },
+      {
+        "href": "docs-structural.html",
+        "label": "Structural upgrades"
+      }
+    ]
+  },
+  "docs-book-11.html": {
+    "track": "book",
+    "hub": "docs-book.html",
+    "title": "The break path",
+    "part": "III — The mechanism",
+    "pos": 11,
+    "total": 24,
+    "prev": "docs-book-10.html",
+    "prevLabel": "Issuance & positive blocks",
+    "next": "docs-book-12.html",
+    "nextLabel": "Overlays",
+    "relatedSpecs": [
+      {
+        "href": "docs-flows-mutex.html",
+        "label": "Audit mutex"
+      }
+    ]
+  },
+  "docs-book-12.html": {
+    "track": "book",
+    "hub": "docs-book.html",
+    "title": "Overlays",
+    "part": "III — The mechanism",
+    "pos": 12,
+    "total": 24,
+    "prev": "docs-book-11.html",
+    "prevLabel": "The break path",
+    "next": "docs-book-13.html",
+    "nextLabel": "Tools & canonization",
+    "relatedSpecs": [
+      {
+        "href": "docs-flows-spec-arbiter.html",
+        "label": "Spec arbiter"
+      },
+      {
+        "href": "docs-flows-spec-gap.html",
+        "label": "Spec-gap overlay"
+      },
+      {
+        "href": "docs-flows-integrity-review.html",
+        "label": "Integrity review"
+      }
+    ]
+  },
+  "docs-book-13.html": {
+    "track": "book",
+    "hub": "docs-book.html",
+    "title": "Tools & canonization",
+    "part": "IV — People & money",
+    "pos": 13,
+    "total": 24,
+    "prev": "docs-book-12.html",
+    "prevLabel": "Overlays",
+    "next": "docs-book-14.html",
+    "nextLabel": "Bounties & pricing"
+  },
+  "docs-book-14.html": {
+    "track": "book",
+    "hub": "docs-book.html",
+    "title": "Bounties & pricing",
+    "part": "IV — People & money",
+    "pos": 14,
+    "total": 24,
+    "prev": "docs-book-13.html",
+    "prevLabel": "Tools & canonization",
+    "next": "docs-book-15.html",
+    "nextLabel": "The pool",
+    "relatedSpecs": [
+      {
+        "href": "docs-integration-bounty-bands.html",
+        "label": "Bounty bands"
+      }
+    ]
+  },
+  "docs-book-15.html": {
+    "track": "book",
+    "hub": "docs-book.html",
+    "title": "The pool",
+    "part": "IV — People & money",
+    "pos": 15,
+    "total": 24,
+    "prev": "docs-book-14.html",
+    "prevLabel": "Bounties & pricing",
+    "next": "docs-book-16.html",
+    "nextLabel": "Reputation signals"
+  },
+  "docs-book-16.html": {
+    "track": "book",
+    "hub": "docs-book.html",
+    "title": "Reputation signals",
+    "part": "IV — People & money",
+    "pos": 16,
+    "total": 24,
+    "prev": "docs-book-15.html",
+    "prevLabel": "The pool",
+    "next": "docs-book-17.html",
+    "nextLabel": "Binary by choice",
+    "relatedSpecs": [
+      {
+        "href": "docs-participants-participant-phases.html",
+        "label": "Participant phases (O3)"
+      },
+      {
+        "href": "docs-health-maturity.html",
+        "label": "Maturity"
+      },
+      {
+        "href": "docs-health-signals.html",
+        "label": "Signals"
+      },
+      {
+        "href": "docs-integration-settlement-vs-signal.html",
+        "label": "Settlement vs signal"
+      },
+      {
+        "href": "docs-integration-assurance-tiers.html",
+        "label": "Assurance tiers"
+      },
+      {
+        "href": "docs-integration-spec-scope-and-quality.html",
+        "label": "Scope, spec-quality & fleet"
+      },
+      {
+        "href": "docs-integration-claim-scorecard.html",
+        "label": "Claim-resolution scorecard"
+      }
+    ]
+  },
+  "docs-book-17.html": {
+    "track": "book",
+    "hub": "docs-book.html",
+    "title": "Binary by choice",
+    "part": "V — Philosophy & edge",
+    "pos": 17,
+    "total": 24,
+    "prev": "docs-book-16.html",
+    "prevLabel": "Reputation signals",
+    "next": "docs-book-18.html",
+    "nextLabel": "Scope & spec quality"
+  },
+  "docs-book-18.html": {
+    "track": "book",
+    "hub": "docs-book.html",
+    "title": "Scope & spec quality",
+    "part": "V — Philosophy & edge",
+    "pos": 18,
+    "total": 24,
+    "prev": "docs-book-17.html",
+    "prevLabel": "Binary by choice",
+    "next": "docs-book-19.html",
+    "nextLabel": "Gaming & defenses"
+  },
+  "docs-book-19.html": {
+    "track": "book",
+    "hub": "docs-book.html",
+    "title": "Gaming & defenses",
+    "part": "V — Philosophy & edge",
+    "pos": 19,
+    "total": 24,
+    "prev": "docs-book-18.html",
+    "prevLabel": "Scope & spec quality",
+    "next": "docs-book-20.html",
+    "nextLabel": "What we defer",
+    "relatedSpecs": [
+      {
+        "href": "docs-health-portfolio-contagion.html",
+        "label": "Portfolio contagion"
+      }
+    ]
+  },
+  "docs-book-20.html": {
+    "track": "book",
+    "hub": "docs-book.html",
+    "title": "What we defer",
+    "part": "V — Philosophy & edge",
+    "pos": 20,
+    "total": 24,
+    "prev": "docs-book-19.html",
+    "prevLabel": "Gaming & defenses",
+    "next": "docs-book-21.html",
+    "nextLabel": "What each actor sees",
+    "relatedSpecs": [
+      {
+        "href": "docs-economy-what-is-not-live-yet.html",
+        "label": "What is not live yet"
+      },
+      {
+        "href": "docs-economy-mainnet-calibration.html",
+        "label": "Mainnet calibration"
+      },
+      {
+        "href": "docs-flows-mainnet-gates.html",
+        "label": "Mainnet gates"
+      }
+    ]
+  },
+  "docs-book-21.html": {
+    "track": "book",
+    "hub": "docs-book.html",
+    "title": "What each actor sees",
+    "part": "VI — Experience",
+    "pos": 21,
+    "total": 24,
+    "prev": "docs-book-20.html",
+    "prevLabel": "What we defer",
+    "next": "docs-book-22.html",
+    "nextLabel": "Reading the chain",
+    "relatedSpecs": [
+      {
+        "href": "docs-integration-protocol-ui-spec.html",
+        "label": "Protocol UI spec"
+      }
+    ]
+  },
+  "docs-book-22.html": {
+    "track": "book",
+    "hub": "docs-book.html",
+    "title": "Reading the chain",
+    "part": "VI — Experience",
+    "pos": 22,
+    "total": 24,
+    "prev": "docs-book-21.html",
+    "prevLabel": "What each actor sees",
+    "next": "docs-book-23.html",
+    "nextLabel": "The membrane",
+    "relatedSpecs": [
+      {
+        "href": "docs-health-thermodynamics-and-flow.html",
+        "label": "Network flow"
+      },
+      {
+        "href": "docs-health-appendix-a-organ-hooks.html",
+        "label": "Appendix A — Organ hooks"
+      },
+      {
+        "href": "docs-integration-quickstarts.html",
+        "label": "Quickstarts"
+      },
+      {
+        "href": "docs-integration-bob-card.html",
+        "label": "Bob card"
+      }
+    ]
+  },
+  "docs-book-23.html": {
+    "track": "book",
+    "hub": "docs-book.html",
+    "title": "The membrane",
+    "part": "VI — Experience",
+    "pos": 23,
+    "total": 24,
+    "prev": "docs-book-22.html",
+    "prevLabel": "Reading the chain",
+    "next": "docs-book-24.html",
+    "nextLabel": "What this network is, reduced"
+  },
+  "docs-book-24.html": {
+    "track": "book",
+    "hub": "docs-book.html",
+    "title": "What this network is, reduced",
+    "part": "Close — Reduced whole-network summary",
+    "pos": 24,
+    "total": 24,
+    "prev": "docs-book-23.html",
+    "prevLabel": "The membrane"
+  },
+  "docs-participants-roles.html": {
+    "track": "spec",
+    "book": "Participants",
+    "hub": "docs-participants.html",
+    "part": "Part I — Roles",
+    "partPos": 1,
+    "partTotal": 1,
+    "pos": 1,
+    "total": 3,
+    "next": "docs-participants-assignment.html",
+    "nextLabel": "Assignment (CRD)",
+    "nextPart": "Part II — Assignment",
+    "story": "docs-book-02.html",
+    "storyLabel": "Ch 2 · The idea"
+  },
+  "docs-participants-assignment.html": {
+    "track": "spec",
+    "book": "Participants",
+    "hub": "docs-participants.html",
+    "part": "Part II — Assignment",
+    "partPos": 1,
+    "partTotal": 1,
+    "pos": 2,
+    "total": 3,
+    "prev": "docs-participants-roles.html",
+    "prevLabel": "Roles",
+    "prevPart": "Part I — Roles",
+    "next": "docs-participants-participant-phases.html",
+    "nextLabel": "Participant phases (O3)",
+    "nextPart": "Part III — Presentation (O3)",
+    "story": "docs-book-09.html",
+    "storyLabel": "Ch 9 · The audit cycle"
+  },
+  "docs-participants-participant-phases.html": {
+    "track": "spec",
+    "book": "Participants",
+    "hub": "docs-participants.html",
+    "part": "Part III — Presentation (O3)",
+    "partPos": 1,
+    "partTotal": 1,
+    "pos": 3,
+    "total": 3,
+    "prev": "docs-participants-assignment.html",
+    "prevLabel": "Assignment (CRD)",
+    "prevPart": "Part II — Assignment",
+    "story": "docs-book-16.html",
+    "storyLabel": "Ch 16 · Reputation signals"
+  },
+  "docs-economy-one-token-three-movements.html": {
+    "track": "spec",
+    "book": "The AUDIT Economy",
+    "hub": "docs-economy.html",
+    "part": "Part I — The pipeline",
+    "partPos": 1,
+    "partTotal": 2,
+    "pos": 1,
+    "total": 15,
+    "next": "docs-economy-value-vs-signal.html",
+    "nextLabel": "Value vs signal",
+    "story": "docs-book-04.html",
+    "storyLabel": "Ch 4 · The core model"
+  },
+  "docs-economy-value-vs-signal.html": {
+    "track": "spec",
+    "book": "The AUDIT Economy",
+    "hub": "docs-economy.html",
+    "part": "Part I — The pipeline",
+    "partPos": 2,
+    "partTotal": 2,
+    "pos": 2,
+    "total": 15,
+    "prev": "docs-economy-one-token-three-movements.html",
+    "prevLabel": "One token, three movements",
+    "next": "docs-economy-the-positive-block.html",
+    "nextLabel": "The positive block",
+    "nextPart": "Part II — Issuance"
+  },
+  "docs-economy-the-positive-block.html": {
+    "track": "spec",
+    "book": "The AUDIT Economy",
+    "hub": "docs-economy.html",
+    "part": "Part II — Issuance",
+    "partPos": 1,
+    "partTotal": 4,
+    "pos": 3,
+    "total": 15,
+    "prev": "docs-economy-value-vs-signal.html",
+    "prevLabel": "Value vs signal",
+    "prevPart": "Part I — The pipeline",
+    "next": "docs-economy-activity-led-reward.html",
+    "nextLabel": "Activity-led reward",
+    "story": "docs-book-10.html",
+    "storyLabel": "Ch 10 · Issuance & positive blocks"
+  },
+  "docs-economy-activity-led-reward.html": {
+    "track": "spec",
+    "book": "The AUDIT Economy",
+    "hub": "docs-economy.html",
+    "part": "Part II — Issuance",
+    "partPos": 2,
+    "partTotal": 4,
+    "pos": 4,
+    "total": 15,
+    "prev": "docs-economy-the-positive-block.html",
+    "prevLabel": "The positive block",
+    "next": "docs-economy-network-states.html",
+    "nextLabel": "Issuance network states",
+    "story": "docs-book-10.html",
+    "storyLabel": "Ch 10 · Issuance & positive blocks"
+  },
+  "docs-economy-network-states.html": {
+    "track": "spec",
+    "book": "The AUDIT Economy",
+    "hub": "docs-economy.html",
+    "part": "Part II — Issuance",
+    "partPos": 3,
+    "partTotal": 4,
+    "pos": 5,
+    "total": 15,
+    "prev": "docs-economy-activity-led-reward.html",
+    "prevLabel": "Activity-led reward",
+    "next": "docs-economy-where-mint-splits.html",
+    "nextLabel": "Where mint splits",
+    "story": "docs-book-10.html",
+    "storyLabel": "Ch 10 · Issuance & positive blocks"
+  },
+  "docs-economy-where-mint-splits.html": {
+    "track": "spec",
+    "book": "The AUDIT Economy",
+    "hub": "docs-economy.html",
+    "part": "Part II — Issuance",
+    "partPos": 4,
+    "partTotal": 4,
+    "pos": 6,
+    "total": 15,
+    "prev": "docs-economy-network-states.html",
+    "prevLabel": "Issuance network states",
+    "next": "docs-economy-escrow-architecture.html",
+    "nextLabel": "Escrow architecture",
+    "nextPart": "Part III — Escrow & payout",
+    "story": "docs-book-10.html",
+    "storyLabel": "Ch 10 · Issuance & positive blocks"
+  },
+  "docs-economy-escrow-architecture.html": {
+    "track": "spec",
+    "book": "The AUDIT Economy",
+    "hub": "docs-economy.html",
+    "part": "Part III — Escrow & payout",
+    "partPos": 1,
+    "partTotal": 4,
+    "pos": 7,
+    "total": 15,
+    "prev": "docs-economy-where-mint-splits.html",
+    "prevLabel": "Where mint splits",
+    "prevPart": "Part II — Issuance",
+    "next": "docs-economy-the-auditors-reward.html",
+    "nextLabel": "The auditor's reward",
+    "story": "docs-book-08.html",
+    "storyLabel": "Ch 8 · Value & escrow"
+  },
+  "docs-economy-the-auditors-reward.html": {
+    "track": "spec",
+    "book": "The AUDIT Economy",
+    "hub": "docs-economy.html",
+    "part": "Part III — Escrow & payout",
+    "partPos": 2,
+    "partTotal": 4,
+    "pos": 8,
+    "total": 15,
+    "prev": "docs-economy-escrow-architecture.html",
+    "prevLabel": "Escrow architecture",
+    "next": "docs-economy-the-discoverers-reward.html",
+    "nextLabel": "The discoverer's reward",
+    "story": "docs-book-08.html",
+    "storyLabel": "Ch 8 · Value & escrow"
+  },
+  "docs-economy-the-discoverers-reward.html": {
+    "track": "spec",
+    "book": "The AUDIT Economy",
+    "hub": "docs-economy.html",
+    "part": "Part III — Escrow & payout",
+    "partPos": 3,
+    "partTotal": 4,
+    "pos": 9,
+    "total": 15,
+    "prev": "docs-economy-the-auditors-reward.html",
+    "prevLabel": "The auditor's reward",
+    "next": "docs-economy-equilibrium.html",
+    "nextLabel": "Escrow equilibrium",
+    "story": "docs-book-08.html",
+    "storyLabel": "Ch 8 · Value & escrow"
+  },
+  "docs-economy-equilibrium.html": {
+    "track": "spec",
+    "book": "The AUDIT Economy",
+    "hub": "docs-economy.html",
+    "part": "Part III — Escrow & payout",
+    "partPos": 4,
+    "partTotal": 4,
+    "pos": 10,
+    "total": 15,
+    "prev": "docs-economy-the-discoverers-reward.html",
+    "prevLabel": "The discoverer's reward",
+    "next": "docs-economy-what-is-not-live-yet.html",
+    "nextLabel": "What is not live yet",
+    "nextPart": "Part IV — Boundaries",
+    "story": "docs-book-08.html",
+    "storyLabel": "Ch 8 · Value & escrow"
+  },
+  "docs-economy-what-is-not-live-yet.html": {
+    "track": "spec",
+    "book": "The AUDIT Economy",
+    "hub": "docs-economy.html",
+    "part": "Part IV — Boundaries",
+    "partPos": 1,
+    "partTotal": 2,
+    "pos": 11,
+    "total": 15,
+    "prev": "docs-economy-equilibrium.html",
+    "prevLabel": "Escrow equilibrium",
+    "prevPart": "Part III — Escrow & payout",
+    "next": "docs-economy-mainnet-calibration.html",
+    "nextLabel": "Mainnet calibration",
+    "story": "docs-book-20.html",
+    "storyLabel": "Ch 20 · What we defer"
+  },
+  "docs-economy-mainnet-calibration.html": {
+    "track": "spec",
+    "book": "The AUDIT Economy",
+    "hub": "docs-economy.html",
+    "part": "Part IV — Boundaries",
+    "partPos": 2,
+    "partTotal": 2,
+    "pos": 12,
+    "total": 15,
+    "prev": "docs-economy-what-is-not-live-yet.html",
+    "prevLabel": "What is not live yet",
+    "next": "docs-economy-appendix-a-parameters.html",
+    "nextLabel": "Appendix A — Parameter tables",
+    "nextPart": "Back matter",
+    "story": "docs-book-20.html",
+    "storyLabel": "Ch 20 · What we defer"
+  },
+  "docs-economy-appendix-a-parameters.html": {
+    "track": "spec",
+    "book": "The AUDIT Economy",
+    "hub": "docs-economy.html",
+    "part": "Back matter",
+    "partPos": 1,
+    "partTotal": 2,
+    "pos": 13,
+    "total": 15,
+    "prev": "docs-economy-mainnet-calibration.html",
+    "prevLabel": "Mainnet calibration",
+    "prevPart": "Part IV — Boundaries",
+    "next": "docs-economy-appendix-b-formulas.html",
+    "nextLabel": "Appendix B — Formula reference",
+    "story": "docs-book-08.html",
+    "storyLabel": "Ch 8 · Value & escrow"
+  },
+  "docs-economy-appendix-b-formulas.html": {
+    "track": "spec",
+    "book": "The AUDIT Economy",
+    "hub": "docs-economy.html",
+    "part": "Back matter",
+    "partPos": 2,
+    "partTotal": 2,
+    "pos": 14,
+    "total": 15,
+    "prev": "docs-economy-appendix-a-parameters.html",
+    "prevLabel": "Appendix A — Parameter tables",
+    "next": "docs-economy-adaptive-issuance-uncapped-supply-by-choice.html",
+    "nextLabel": "Adaptive issuance — Uncapped Supply by choice",
+    "nextPart": "Adaptive issuance — Uncapped Supply by choice"
+  },
+  "docs-economy-adaptive-issuance-uncapped-supply-by-choice.html": {
+    "track": "spec",
+    "book": "The AUDIT Economy",
+    "hub": "docs-economy.html",
+    "part": "Adaptive issuance — Uncapped Supply by choice",
+    "partPos": 1,
+    "partTotal": 1,
+    "pos": 15,
+    "total": 15,
+    "prev": "docs-economy-appendix-b-formulas.html",
+    "prevLabel": "Appendix B — Formula reference",
+    "prevPart": "Back matter",
+    "story": "docs-book-10.html",
+    "storyLabel": "Ch 10 · Issuance & positive blocks"
+  },
+  "docs-health-facts-vs-health.html": {
+    "track": "spec",
+    "book": "Network Health",
+    "hub": "docs-health.html",
+    "part": "Part I — Doctrine",
+    "partPos": 1,
+    "partTotal": 1,
+    "pos": 1,
+    "total": 6,
+    "next": "docs-health-maturity.html",
+    "nextLabel": "Maturity",
+    "nextPart": "Part II — Readings",
+    "story": "docs-book-04.html",
+    "storyLabel": "Ch 4 · The core model"
+  },
+  "docs-health-maturity.html": {
+    "track": "spec",
+    "book": "Network Health",
+    "hub": "docs-health.html",
+    "part": "Part II — Readings",
+    "partPos": 1,
+    "partTotal": 2,
+    "pos": 2,
+    "total": 6,
+    "prev": "docs-health-facts-vs-health.html",
+    "prevLabel": "Facts vs health",
+    "prevPart": "Part I — Doctrine",
+    "next": "docs-health-thermodynamics-and-flow.html",
+    "nextLabel": "Network flow",
+    "story": "docs-book-16.html",
+    "storyLabel": "Ch 16 · Reputation signals"
+  },
+  "docs-health-thermodynamics-and-flow.html": {
+    "track": "spec",
+    "book": "Network Health",
+    "hub": "docs-health.html",
+    "part": "Part II — Readings",
+    "partPos": 2,
+    "partTotal": 2,
+    "pos": 3,
+    "total": 6,
+    "prev": "docs-health-maturity.html",
+    "prevLabel": "Maturity",
+    "next": "docs-health-signals.html",
+    "nextLabel": "Signals",
+    "nextPart": "Part III — Signals & exposure",
+    "story": "docs-book-22.html",
+    "storyLabel": "Ch 22 · Reading the chain"
+  },
+  "docs-health-signals.html": {
+    "track": "spec",
+    "book": "Network Health",
+    "hub": "docs-health.html",
+    "part": "Part III — Signals & exposure",
+    "partPos": 1,
+    "partTotal": 2,
+    "pos": 4,
+    "total": 6,
+    "prev": "docs-health-thermodynamics-and-flow.html",
+    "prevLabel": "Network flow",
+    "prevPart": "Part II — Readings",
+    "next": "docs-health-portfolio-contagion.html",
+    "nextLabel": "Portfolio contagion",
+    "story": "docs-book-16.html",
+    "storyLabel": "Ch 16 · Reputation signals"
+  },
+  "docs-health-portfolio-contagion.html": {
+    "track": "spec",
+    "book": "Network Health",
+    "hub": "docs-health.html",
+    "part": "Part III — Signals & exposure",
+    "partPos": 2,
+    "partTotal": 2,
+    "pos": 5,
+    "total": 6,
+    "prev": "docs-health-signals.html",
+    "prevLabel": "Signals",
+    "next": "docs-health-appendix-a-organ-hooks.html",
+    "nextLabel": "Appendix A — Organ hooks",
+    "nextPart": "Back matter",
+    "story": "docs-book-19.html",
+    "storyLabel": "Ch 19 · Gaming & defenses"
+  },
+  "docs-health-appendix-a-organ-hooks.html": {
+    "track": "spec",
+    "book": "Network Health",
+    "hub": "docs-health.html",
+    "part": "Back matter",
+    "partPos": 1,
+    "partTotal": 1,
+    "pos": 6,
+    "total": 6,
+    "prev": "docs-health-portfolio-contagion.html",
+    "prevLabel": "Portfolio contagion",
+    "prevPart": "Part III — Signals & exposure",
+    "story": "docs-book-22.html",
+    "storyLabel": "Ch 22 · Reading the chain"
+  },
+  "docs-flows-lifecycle.html": {
+    "track": "spec",
+    "book": "Flows",
+    "hub": "docs-flows.html",
+    "part": "Part I — Core cycle & gates",
+    "partPos": 1,
+    "partTotal": 4,
+    "pos": 1,
+    "total": 10,
+    "next": "docs-flows-gate-a.html",
+    "nextLabel": "The door (Gate A)",
+    "story": "docs-book-06.html",
+    "storyLabel": "Ch 6 · Three checks"
+  },
+  "docs-flows-gate-a.html": {
+    "track": "spec",
+    "book": "Flows",
+    "hub": "docs-flows.html",
+    "part": "Part I — Core cycle & gates",
+    "partPos": 2,
+    "partTotal": 4,
+    "pos": 2,
+    "total": 10,
+    "prev": "docs-flows-lifecycle.html",
+    "prevLabel": "Audit lifecycle",
+    "next": "docs-flows-vulnerability.html",
+    "nextLabel": "Vulnerability disclosure",
+    "story": "docs-book-06.html#gate-a",
+    "storyLabel": "Ch 6 · Three checks"
+  },
+  "docs-flows-vulnerability.html": {
+    "track": "spec",
+    "book": "Flows",
+    "hub": "docs-flows.html",
+    "part": "Part I — Core cycle & gates",
+    "partPos": 3,
+    "partTotal": 4,
+    "pos": 3,
+    "total": 10,
+    "prev": "docs-flows-gate-a.html",
+    "prevLabel": "The door (Gate A)",
+    "next": "docs-flows-mutex.html",
+    "nextLabel": "Audit mutex",
+    "story": "docs-book-06.html#gate-c",
+    "storyLabel": "Ch 6 · Three checks"
+  },
+  "docs-flows-mutex.html": {
+    "track": "spec",
+    "book": "Flows",
+    "hub": "docs-flows.html",
+    "part": "Part I — Core cycle & gates",
+    "partPos": 4,
+    "partTotal": 4,
+    "pos": 4,
+    "total": 10,
+    "prev": "docs-flows-vulnerability.html",
+    "prevLabel": "Vulnerability disclosure",
+    "next": "docs-flows-spec-arbiter.html",
+    "nextLabel": "Spec arbiter",
+    "nextPart": "Part II — Overlays",
+    "story": "docs-book-11.html",
+    "storyLabel": "Ch 11 · The break path"
+  },
+  "docs-flows-spec-arbiter.html": {
+    "track": "spec",
+    "book": "Flows",
+    "hub": "docs-flows.html",
+    "part": "Part II — Overlays",
+    "partPos": 1,
+    "partTotal": 4,
+    "pos": 5,
+    "total": 10,
+    "prev": "docs-flows-mutex.html",
+    "prevLabel": "Audit mutex",
+    "prevPart": "Part I — Core cycle & gates",
+    "next": "docs-flows-spec-gap.html",
+    "nextLabel": "Spec-gap overlay",
+    "story": "docs-book-12.html",
+    "storyLabel": "Ch 12 · Overlays"
+  },
+  "docs-flows-spec-gap.html": {
+    "track": "spec",
+    "book": "Flows",
+    "hub": "docs-flows.html",
+    "part": "Part II — Overlays",
+    "partPos": 2,
+    "partTotal": 4,
+    "pos": 6,
+    "total": 10,
+    "prev": "docs-flows-spec-arbiter.html",
+    "prevLabel": "Spec arbiter",
+    "next": "docs-flows-integrity-review.html",
+    "nextLabel": "Integrity review",
+    "story": "docs-book-12.html",
+    "storyLabel": "Ch 12 · Overlays"
+  },
+  "docs-flows-integrity-review.html": {
+    "track": "spec",
+    "book": "Flows",
+    "hub": "docs-flows.html",
+    "part": "Part II — Overlays",
+    "partPos": 3,
+    "partTotal": 4,
+    "pos": 7,
+    "total": 10,
+    "prev": "docs-flows-spec-gap.html",
+    "prevLabel": "Spec-gap overlay",
+    "next": "docs-structural.html",
+    "nextLabel": "Structural upgrades",
+    "story": "docs-book-12.html",
+    "storyLabel": "Ch 12 · Overlays"
+  },
+  "docs-structural.html": {
+    "track": "spec",
+    "book": "Flows",
+    "hub": "docs-flows.html",
+    "part": "Part II — Overlays",
+    "partPos": 4,
+    "partTotal": 4,
+    "pos": 8,
+    "total": 10,
+    "prev": "docs-flows-integrity-review.html",
+    "prevLabel": "Integrity review",
+    "next": "docs-flows-mainnet-gates.html",
+    "nextLabel": "Mainnet gates",
+    "nextPart": "Part III — Launch",
+    "story": "docs-book-10.html",
+    "storyLabel": "Ch 10 · Issuance & positive blocks"
+  },
+  "docs-flows-mainnet-gates.html": {
+    "track": "spec",
+    "book": "Flows",
+    "hub": "docs-flows.html",
+    "part": "Part III — Launch",
+    "partPos": 1,
+    "partTotal": 1,
+    "pos": 9,
+    "total": 10,
+    "prev": "docs-structural.html",
+    "prevLabel": "Structural upgrades",
+    "prevPart": "Part II — Overlays",
+    "next": "docs-flows-appendix-a.html",
+    "nextLabel": "Appendix A — Module wiring",
+    "nextPart": "Back matter",
+    "story": "docs-book-20.html",
+    "storyLabel": "Ch 20 · What we defer"
+  },
+  "docs-flows-appendix-a.html": {
+    "track": "spec",
+    "book": "Flows",
+    "hub": "docs-flows.html",
+    "part": "Back matter",
+    "partPos": 1,
+    "partTotal": 1,
+    "pos": 10,
+    "total": 10,
+    "prev": "docs-flows-mainnet-gates.html",
+    "prevLabel": "Mainnet gates",
+    "prevPart": "Part III — Launch"
+  },
+  "docs-integration-integrator-hub.html": {
+    "track": "spec",
+    "book": "Integration",
+    "hub": "docs-integration.html",
+    "part": "Part I — Hub & quickstarts",
+    "partPos": 1,
+    "partTotal": 2,
+    "pos": 1,
+    "total": 13,
+    "next": "docs-integration-quickstarts.html",
+    "nextLabel": "Quickstarts",
+    "story": "docs-book-07.html",
+    "storyLabel": "Ch 7 · The fingerprint"
+  },
+  "docs-integration-quickstarts.html": {
+    "track": "spec",
+    "book": "Integration",
+    "hub": "docs-integration.html",
+    "part": "Part I — Hub & quickstarts",
+    "partPos": 2,
+    "partTotal": 2,
+    "pos": 2,
+    "total": 13,
+    "prev": "docs-integration-integrator-hub.html",
+    "prevLabel": "Integrator hub",
+    "next": "docs-integration-bob-card.html",
+    "nextLabel": "Bob card",
+    "nextPart": "Part II — Presentation layer",
+    "story": "docs-book-22.html",
+    "storyLabel": "Ch 22 · Reading the chain"
+  },
+  "docs-integration-bob-card.html": {
+    "track": "spec",
+    "book": "Integration",
+    "hub": "docs-integration.html",
+    "part": "Part II — Presentation layer",
+    "partPos": 1,
+    "partTotal": 3,
+    "pos": 3,
+    "total": 13,
+    "prev": "docs-integration-quickstarts.html",
+    "prevLabel": "Quickstarts",
+    "prevPart": "Part I — Hub & quickstarts",
+    "next": "docs-integration-spec-scope-and-quality.html",
+    "nextLabel": "Scope, spec-quality & fleet",
+    "story": "docs-book-22.html",
+    "storyLabel": "Ch 22 · Reading the chain"
+  },
+  "docs-integration-spec-scope-and-quality.html": {
+    "track": "spec",
+    "book": "Integration",
+    "hub": "docs-integration.html",
+    "part": "Part II — Presentation layer",
+    "partPos": 2,
+    "partTotal": 3,
+    "pos": 4,
+    "total": 13,
+    "prev": "docs-integration-bob-card.html",
+    "prevLabel": "Bob card",
+    "next": "docs-integration-protocol-ui-spec.html",
+    "nextLabel": "Protocol UI spec",
+    "story": "docs-book-16.html",
+    "storyLabel": "Ch 16 · Reputation signals"
+  },
+  "docs-integration-protocol-ui-spec.html": {
+    "track": "spec",
+    "book": "Integration",
+    "hub": "docs-integration.html",
+    "part": "Part II — Presentation layer",
+    "partPos": 3,
+    "partTotal": 3,
+    "pos": 5,
+    "total": 13,
+    "prev": "docs-integration-spec-scope-and-quality.html",
+    "prevLabel": "Scope, spec-quality & fleet",
+    "next": "docs-integration-wallets-and-verification.html",
+    "nextLabel": "Wallets, re-run & verifier seam",
+    "nextPart": "Part III — Verification & telemetry",
+    "story": "docs-book-21.html",
+    "storyLabel": "Ch 21 · What each actor sees"
+  },
+  "docs-integration-wallets-and-verification.html": {
+    "track": "spec",
+    "book": "Integration",
+    "hub": "docs-integration.html",
+    "part": "Part III — Verification & telemetry",
+    "partPos": 1,
+    "partTotal": 3,
+    "pos": 6,
+    "total": 13,
+    "prev": "docs-integration-protocol-ui-spec.html",
+    "prevLabel": "Protocol UI spec",
+    "prevPart": "Part II — Presentation layer",
+    "next": "docs-integration-artifact-registry.html",
+    "nextLabel": "Artifact registry",
+    "story": "docs-book-07.html",
+    "storyLabel": "Ch 7 · The fingerprint"
+  },
+  "docs-integration-artifact-registry.html": {
+    "track": "spec",
+    "book": "Integration",
+    "hub": "docs-integration.html",
+    "part": "Part III — Verification & telemetry",
+    "partPos": 2,
+    "partTotal": 3,
+    "pos": 7,
+    "total": 13,
+    "prev": "docs-integration-wallets-and-verification.html",
+    "prevLabel": "Wallets, re-run & verifier seam",
+    "next": "docs-integration-claim-scorecard.html",
+    "nextLabel": "Claim-resolution scorecard",
+    "story": "docs-book-09.html",
+    "storyLabel": "Ch 9 · The audit cycle"
+  },
+  "docs-integration-claim-scorecard.html": {
+    "track": "spec",
+    "book": "Integration",
+    "hub": "docs-integration.html",
+    "part": "Part III — Verification & telemetry",
+    "partPos": 3,
+    "partTotal": 3,
+    "pos": 8,
+    "total": 13,
+    "prev": "docs-integration-artifact-registry.html",
+    "prevLabel": "Artifact registry",
+    "next": "docs-integration-settlement-vs-signal.html",
+    "nextLabel": "Settlement vs signal",
+    "nextPart": "Part IV — Economic signals (not settlement)",
+    "story": "docs-book-16.html",
+    "storyLabel": "Ch 16 · Reputation signals"
+  },
+  "docs-integration-settlement-vs-signal.html": {
+    "track": "spec",
+    "book": "Integration",
+    "hub": "docs-integration.html",
+    "part": "Part IV — Economic signals (not settlement)",
+    "partPos": 1,
+    "partTotal": 4,
+    "pos": 9,
+    "total": 13,
+    "prev": "docs-integration-claim-scorecard.html",
+    "prevLabel": "Claim-resolution scorecard",
+    "prevPart": "Part III — Verification & telemetry",
+    "next": "docs-integration-bounty-bands.html",
+    "nextLabel": "Bounty bands",
+    "story": "docs-book-16.html",
+    "storyLabel": "Ch 16 · Reputation signals"
+  },
+  "docs-integration-bounty-bands.html": {
+    "track": "spec",
+    "book": "Integration",
+    "hub": "docs-integration.html",
+    "part": "Part IV — Economic signals (not settlement)",
+    "partPos": 2,
+    "partTotal": 4,
+    "pos": 10,
+    "total": 13,
+    "prev": "docs-integration-settlement-vs-signal.html",
+    "prevLabel": "Settlement vs signal",
+    "next": "docs-integration-assurance-tiers.html",
+    "nextLabel": "Assurance tiers",
+    "story": "docs-book-14.html",
+    "storyLabel": "Ch 14 · Bounties & pricing"
+  },
+  "docs-integration-assurance-tiers.html": {
+    "track": "spec",
+    "book": "Integration",
+    "hub": "docs-integration.html",
+    "part": "Part IV — Economic signals (not settlement)",
+    "partPos": 3,
+    "partTotal": 4,
+    "pos": 11,
+    "total": 13,
+    "prev": "docs-integration-bounty-bands.html",
+    "prevLabel": "Bounty bands",
+    "next": "docs-integration-ripe-slot-indicator.html",
+    "nextLabel": "Ripe-slot indicator",
+    "story": "docs-book-16.html",
+    "storyLabel": "Ch 16 · Reputation signals"
+  },
+  "docs-integration-ripe-slot-indicator.html": {
+    "track": "spec",
+    "book": "Integration",
+    "hub": "docs-integration.html",
+    "part": "Part IV — Economic signals (not settlement)",
+    "partPos": 4,
+    "partTotal": 4,
+    "pos": 12,
+    "total": 13,
+    "prev": "docs-integration-assurance-tiers.html",
+    "prevLabel": "Assurance tiers",
+    "next": "docs-integration-appendix-a-organ-tests.html",
+    "nextLabel": "Appendix A — Organ tests & gas baselines",
+    "nextPart": "Back matter"
+  },
+  "docs-integration-appendix-a-organ-tests.html": {
+    "track": "spec",
+    "book": "Integration",
+    "hub": "docs-integration.html",
+    "part": "Back matter",
+    "partPos": 1,
+    "partTotal": 1,
+    "pos": 13,
+    "total": 13,
+    "prev": "docs-integration-ripe-slot-indicator.html",
+    "prevLabel": "Ripe-slot indicator",
+    "prevPart": "Part IV — Economic signals (not settlement)"
+  },
+  "docs-problem.html": {
+    "track": "spec",
+    "book": "Problem",
+    "hub": "docs-notebook.html"
+  },
+  "docs-mechanism.html": {
+    "track": "spec",
+    "book": "Mechanism",
+    "hub": "docs-notebook.html"
+  },
+  "docs-contract.html": {
+    "track": "spec",
+    "book": "Contract API",
+    "hub": "docs-notebook.html"
+  },
+  "docs-fingerprint.html": {
+    "track": "spec",
+    "book": "Fingerprint",
+    "hub": "docs-notebook.html"
+  },
+  "docs-book.html": {
+    "track": "book",
+    "isHub": true
+  },
+  "docs-notebook.html": {
+    "track": "spec",
+    "book": "The Notebook",
+    "hub": "docs-notebook.html",
+    "isHub": true
+  },
+  "docs.html": {
+    "track": "docs"
+  },
+  "docs-participants.html": {
+    "track": "spec",
+    "book": "Participants",
+    "hub": "docs-participants.html",
+    "isHub": true
+  },
+  "docs-economy.html": {
+    "track": "spec",
+    "book": "The AUDIT Economy",
+    "hub": "docs-economy.html",
+    "isHub": true
+  },
+  "docs-health.html": {
+    "track": "spec",
+    "book": "Network Health",
+    "hub": "docs-health.html",
+    "isHub": true
+  },
+  "docs-flows.html": {
+    "track": "spec",
+    "book": "Flows",
+    "hub": "docs-flows.html",
+    "isHub": true
+  },
+  "docs-integration.html": {
+    "track": "spec",
+    "book": "Integration",
+    "hub": "docs-integration.html",
+    "isHub": true
+  }
+}

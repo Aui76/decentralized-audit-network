@@ -1,0 +1,546 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Manage an audit — protocol actions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="site.css?v=5"></head>
+<body class="page-tool">
+<div class="layout layout-tool">
+  <nav class="side">
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink" href="quickstart.html">Quickstart</a>
+    <a class="navlink" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+  <main>
+<div class="wrap">
+  <h1>Manage an audit</h1>
+  <p class="sub">Actions on the cell · Base Sepolia · your wallet signs every transaction.</p>
+
+  <div class="card banner">
+    <b>Same rules as posting.</b> This page builds transactions; <b>your wallet</b> sends them, after showing
+    the <b>decoded calldata</b>. It holds no keys. Testnet only. Every action also has a <span class="mono">cast</span> equivalent.
+  </div>
+
+  <div class="card">
+    <h2>1 · Wallet</h2>
+    <div id="wallet-root"></div>
+    <label>AuditCell address</label>
+    <input id="cell" placeholder="Phase B — set AuditCell address">
+  </div>
+
+  <div class="card" id="register">
+    <h2>Register as an auditor</h2>
+    <p class="tiny">One-time — join the pool so you can be assigned audits. Permissionless; balance must meet position hold (<code>(N−1) × 1 AUDIT</code>; first auditor: 0).</p>
+    <div class="row" style="margin-top:6px"><button class="sec" id="regload">Check status</button></div>
+    <div class="kv" id="reginfo" style="display:none">
+      <div class="k">in pool</div><div class="v" id="r_inqueue"></div>
+      <div class="k">your AUDIT</div><div class="v" id="r_bal"></div>
+      <div class="k">hold required</div><div class="v" id="r_need"></div>
+      <div class="k">eligible</div><div class="v" id="r_elig"></div>
+    </div>
+    <div id="hero_register" class="sign-hero sign-hero--idle"></div>
+    <details class="sign-full"><summary>Full calldata</summary><pre id="cd_register">check your status first…</pre></details>
+    <button id="btn_register" disabled data-requires-wallet>Sign register</button>
+  </div>
+
+  <div class="card" id="registertool">
+    <h2>Register a tool <span class="tiny" style="font-weight:400">(tool author)</span></h2>
+    <p class="tiny">Register a deterministic checker so protocols can name it and auditors can run it. Provide its tool id (the AUDIT_TOOL_V1 hash). Choose <b>verdict tool</b> (default) or <b>spec-validation tool</b> (Gate A). Permissionless, one transaction.</p>
+    <label>Tool id (bytes32)</label>
+    <input id="rt_id" placeholder="0x… the AUDIT_TOOL_V1 hash of your tool">
+    <label class="row" style="gap:8px;align-items:center;font-size:16px;color:var(--fg);margin-top:8px"><input type="checkbox" id="rt_spec" style="width:auto"> spec-validation tool (Gate A) — leave unchecked for a verdict tool</label>
+    <div class="row" style="margin-top:8px"><button class="sec" id="rt_check">Check status</button></div>
+    <div class="kv" id="rt_info" style="display:none">
+      <div class="k">registered</div><div class="v" id="rt_reg"></div>
+      <div class="k">kind</div><div class="v" id="rt_kind"></div>
+    </div>
+    <div id="hero_regtool" class="sign-hero sign-hero--idle"></div>
+    <details class="sign-full"><summary>Full calldata</summary><pre id="cd_regtool">enter a tool id…</pre></details>
+    <button id="btn_regtool" disabled data-requires-wallet>Sign register tool</button>
+  </div>
+
+  <div class="card">
+    <h2>2 · Your audit</h2>
+    <label>Audit id</label>
+    <input id="auditId" placeholder="e.g. 8">
+    <div class="row" style="margin-top:10px"><button class="sec" id="load">Load audit</button></div>
+    <div class="kv" id="info" style="display:none">
+      <div class="k">state</div><div class="v" id="i_state"></div>
+      <div class="k">protocol</div><div class="v" id="i_protocol"></div>
+      <div class="k">assigned auditor</div><div class="v" id="i_auditor"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>3 · Accept your auditor</h2>
+    <p class="tiny">Available only while the audit is <b>Assigned</b> and you are its protocol. Accepting starts the auditor's review.
+      If you do nothing, after the decision window anyone may auto-accept (<span class="mono">advanceProtocolDecision</span>) so it can't stall.</p>
+    <div id="hero_accept" class="sign-hero sign-hero--idle"></div>
+    <details class="sign-full"><summary>Full calldata</summary><pre id="cd_accept">load an audit first…</pre></details>
+    <button id="btn_accept" disabled data-requires-wallet>Sign accept</button>
+  </div>
+
+  <div class="card">
+    <h2>Accept your assignment <span class="tiny" style="font-weight:400">(auditor)</span></h2>
+    <p class="tiny">For the <b>assigned auditor</b>. Re-run the spec check to get its errors root, then accept — that starts your review. Or decline within the window, no penalty. Available while the audit is <b>Assigned</b> and you are its auditor.</p>
+    <label>Spec errors root (from re-running the spec check)</label>
+    <input id="specErrors" value="0x781f8f2ec1a776740197b3a18452031254b7bf02b49544ce7a5ec35816c814d8">
+    <p class="tiny">Default is the published value for withdraw-credits v1.1 — confirm it by running the spec tool yourself before signing.</p>
+    <div id="hero_aaccept" class="sign-hero sign-hero--idle"></div>
+    <details class="sign-full"><summary>Full calldata</summary><pre id="cd_aaccept">load an audit first…</pre></details>
+    <div class="row">
+      <button id="btn_aaccept" disabled data-requires-wallet>Accept</button>
+      <button class="sec" id="btn_decline" disabled data-requires-wallet>Decline</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Submit your verdict <span class="tiny" style="font-weight:400">(auditor)</span></h2>
+    <p class="tiny">For the assigned auditor, after accepting. <b>Run the tool on the contract</b> to compute the result root, then submit pass or fail. Available while the audit is <b>In review</b> and you are its auditor.</p>
+    <label>Verdict tool id</label>
+    <input id="vtool" value="0xd485f0578dcf1925aa28cfb312584a4a172c4f5da7f05bde4c078c992b598456">
+    <label>Result root (from running the tool)</label>
+    <input id="vroot" placeholder="0x… the resultRoot your run produced">
+    <div id="hero_verdict" class="sign-hero sign-hero--idle"></div>
+    <details class="sign-full"><summary>Full calldata</summary><pre id="cd_verdict">load an audit first…</pre></details>
+    <div class="row">
+      <button id="btn_pass" disabled data-requires-wallet>Submit PASS</button>
+      <button class="sec" id="btn_fail" disabled data-requires-wallet>Submit FAIL</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>4 · Confirm</h2>
+    <p class="tiny">Available once the audit is <b>Passed — window open</b> and the challenge window has elapsed (harness window is short; mainnet 14 days). Confirm pays the auditor and settles. This call is permissionless.</p>
+    <div id="hero_confirm" class="sign-hero sign-hero--idle"></div>
+    <details class="sign-full"><summary>Full calldata</summary><pre id="cd_confirm">load an audit first…</pre></details>
+    <button id="btn_confirm" disabled data-requires-wallet>Sign confirm</button>
+  </div>
+
+  <div class="card">
+    <h2>5 · Open a dispute</h2>
+    <p class="tiny">If a bug is claimed (state <b>Claimed</b>) and you are the protocol, open a dispute re-audit on the original contract. Protocol-funded: the dispute bounty must be <b>≥ 50% of the original bounty</b> (the cell enforces it). Two transactions: approve, then open.</p>
+    <label>Dispute bounty (AUDIT)</label>
+    <input id="disputeBounty" placeholder="≥ 50% of the original bounty">
+    <div id="hero_disp_approve" class="sign-hero sign-hero--idle"></div>
+    <button id="btn_disp_approve" disabled data-requires-wallet>1 · Approve</button>
+    <div id="hero_disp_open" class="sign-hero sign-hero--idle" style="margin-top:12px"></div>
+    <button id="btn_disp_open" disabled data-requires-wallet>2 · Open dispute</button>
+    <details class="sign-full"><summary>Full calldata (both steps)</summary><pre id="cd_dispute">load a Claimed audit first…</pre></details>
+  </div>
+
+  <div class="card">
+    <h2>File a bug claim <span class="tiny" style="font-weight:400">(bug-hunter)</span></h2>
+    <p class="tiny">For a registered auditor who is <b>not</b> this audit's protocol or original auditor. Run a tool that <b>fails</b> on the contract to get its result root, then file. Available while the audit is <b>Passed — window open</b>, <b>Audited</b>, or <b>Settled</b>. Filing escrows a stake (the larger of 50% of the bounty or the floor). Two transactions: approve, then file.</p>
+    <label>Verdict tool id (must be a declared tool)</label>
+    <input id="ctool" value="0xd485f0578dcf1925aa28cfb312584a4a172c4f5da7f05bde4c078c992b598456">
+    <label>Result root — FAIL (from running the tool)</label>
+    <input id="croot" placeholder="0x… the FAIL resultRoot your run produced">
+    <label>Stake to approve (AUDIT)</label>
+    <input id="cstake" placeholder="≥ the claim stake">
+    <div id="hero_claim_approve" class="sign-hero sign-hero--idle"></div>
+    <button id="btn_claim_approve" disabled data-requires-wallet>1 · Approve stake</button>
+    <div id="hero_claim_file" class="sign-hero sign-hero--idle" style="margin-top:12px"></div>
+    <button id="btn_claim_file" disabled data-requires-wallet>2 · File claim</button>
+    <details class="sign-full"><summary>Full calldata (both steps)</summary><pre id="cd_claim">load an eligible audit first…</pre></details>
+    <div class="hr"></div>
+    <div class="log" id="log"></div>
+  </div>
+
+  <div class="card">
+    <h2>Don't trust this page? Use the terminal</h2>
+    <pre id="castblock">load an audit to generate the cast command…</pre>
+  </div>
+
+  <p class="tiny">Flow: <a href="protocol.html">Protocol quickstart</a> · Post: <a href="post.html">Post a bounty</a> · Track: <a href="explorer.html">Explorer</a></p>
+</div>
+  </main>
+</div>
+
+<script src="status-labels.js"></script>
+<script src="wallet-bar.js"></script>
+<script src="sign-hero.js"></script>
+<script>
+/* keccak256 (pure JS, validated keccak("abc")=0x4e03657a…) */
+const M=(1n<<64n)-1n;
+const RC=[0x1n,0x8082n,0x800000000000808An,0x8000000080008000n,0x808Bn,0x80000001n,0x8000000080008081n,0x8000000000008009n,0x8An,0x88n,0x80008009n,0x8000000An,0x8000808Bn,0x800000000000008Bn,0x8000000000008089n,0x8000000000008003n,0x8000000000008002n,0x8000000000000080n,0x800An,0x800000008000000An,0x8000000080008081n,0x8000000000008080n,0x80000001n,0x8000000080008008n];
+const RHO=[0,1,62,28,27,36,44,6,55,20,3,10,43,25,39,41,45,15,21,8,18,2,61,56,14];
+const rot=(x,n)=>n===0n?x:((x<<n)|(x>>(64n-n)))&M;
+function keccak(input){let S=new Array(25).fill(0n);const rate=136;const len=input.length,pl=Math.ceil((len+1)/rate)*rate;const p=new Uint8Array(pl);p.set(input);p[len]^=1;p[pl-1]^=0x80;
+ for(let o=0;o<pl;o+=rate){for(let i=0;i<rate/8;i++){let l=0n;for(let j=0;j<8;j++)l|=BigInt(p[o+i*8+j])<<(8n*BigInt(j));S[i]^=l;}
+  for(let r=0;r<24;r++){const C=[0,1,2,3,4].map(x=>S[x]^S[x+5]^S[x+10]^S[x+15]^S[x+20]);const D=[0,1,2,3,4].map(x=>C[(x+4)%5]^rot(C[(x+1)%5],1n));for(let x=0;x<5;x++)for(let y=0;y<5;y++)S[x+5*y]^=D[x];const B=new Array(25).fill(0n);for(let x=0;x<5;x++)for(let y=0;y<5;y++)B[y+5*((2*x+3*y)%5)]=rot(S[x+5*y],BigInt(RHO[x+5*y]));for(let x=0;x<5;x++)for(let y=0;y<5;y++)S[x+5*y]=B[x+5*y]^((~B[(x+1)%5+5*y])&B[(x+2)%5+5*y])&M;S[0]^=RC[r];}}
+ const out=new Uint8Array(32);for(let i=0;i<4;i++){let l=S[i];for(let j=0;j<8;j++)out[i*8+j]=Number((l>>(8n*BigInt(j)))&0xffn);}return out;}
+const TE=new TextEncoder();
+const hx=u=>"0x"+[...u].map(b=>b.toString(16).padStart(2,"0")).join("");
+const fromHex=h=>{h=(h||"").replace(/^0x/,"");if(h.length%2)h="0"+h;const a=new Uint8Array(h.length/2);for(let i=0;i<a.length;i++)a[i]=parseInt(h.substr(i*2,2),16);return a;};
+const w=()=>new Uint8Array(32);
+const u256=v=>{const b=w();let x=BigInt(v);for(let i=31;i>=0;i--){b[i]=Number(x&0xffn);x>>=8n;}return b;};
+function abiEncode(types,vals){const out=[];for(let i=0;i<types.length;i++){out.push(u256(vals[i]));}const n=out.reduce((s,x)=>s+x.length,0),o=new Uint8Array(n);let p=0;for(const x of out){o.set(x,p);p+=x.length;}return o;}
+const sel=sig=>hx(keccak(TE.encode(sig)).slice(0,4));
+const calldata=(sig,types,vals)=>sel(sig)+(types.length?hx(abiEncode(types,vals)).slice(2):"");
+const lastAddr=h=>"0x"+(h||"").replace(/^0x/,"").slice(24);
+const lastU=h=>BigInt(h||"0x0");
+const fmtAudit=wei=>{wei=BigInt(wei);const i=wei/10n**18n,f=(wei%10n**18n).toString().padStart(18,"0").replace(/0+$/,"");return f?`${i}.${f}`:`${i}`;};
+function disputeWei(){const s=($("disputeBounty").value||"").trim();if(!/^\d+(\.\d+)?$/.test(s))return null;const[i,f=""]=s.split(".");return BigInt(i)*10n**18n+BigInt((f+"0".repeat(18)).slice(0,18)||"0");}
+function weiFrom(elId){const s=($(elId).value||"").trim();if(!/^\d+(\.\d+)?$/.test(s))return null;const[i,f=""]=s.split(".");return BigInt(i)*10n**18n+BigInt((f+"0".repeat(18)).slice(0,18)||"0");}
+// claimVulnerability(uint256,bytes32,bytes32,bytes) with empty proof — hand-encoded (dynamic bytes)
+function claimData(id,tool,root){const word=v=>hx(u256(v)).slice(2);return sel("claimVulnerability(uint256,bytes32,bytes32,bytes)")+word(id)+word(BigInt(tool))+word(BigInt(root))+word(128)+word(0);}
+
+const St=MembraneStatus;
+let loaded=null, tokenAddr="0x85Cf688DEA5E4b68bb289345a667C3c173087120", pendingDeepLoad=null;
+const $=id=>document.getElementById(id);
+const log=(m,cls)=>{const d=document.createElement("div");if(cls)d.className=cls;d.innerHTML=m;$("log").prepend(d);};
+const W=MembraneWallet;
+const req=(method,params)=>W.req(method,params);
+const ethCall=(to,data)=>req("eth_call",[{to,data},"latest"]);
+const eq=(a,b)=>(a||"").toLowerCase()===(b||"").toLowerCase();
+const H=MembraneSignHero;
+function heroIdle(id,msg){H.fill(id,{idle:msg});}
+function heroReady(id,fn,args,to,toLabel,note){H.arm(id,{fn,args,to,toLabel,note});}
+
+W.init({
+  root:"#wallet-root",
+  onMultWallet:m=>log(m),
+  onChange:()=>{
+    document.querySelectorAll("[data-requires-wallet]").forEach(b=>{ b.dataset.walletLock="1"; });
+    refreshRegTool();
+    if(loaded) refreshActionButtons();
+    else W.syncSignButtons();
+    tryDeepLoad();
+  }
+});
+document.querySelectorAll("[data-requires-wallet]").forEach(b=>{ b.dataset.walletLock="1"; });
+W.syncSignButtons();
+heroIdle("hero_register","Check your auditor status first.");
+heroIdle("hero_regtool","Enter a tool id.");
+heroIdle("hero_accept","Load an audit first.");
+heroIdle("hero_aaccept","Load an audit first.");
+heroIdle("hero_verdict","Load an audit first.");
+heroIdle("hero_confirm","Load an audit first.");
+heroIdle("hero_disp_approve","Load a Claimed audit first.");
+heroIdle("hero_disp_open","Load a Claimed audit first.");
+heroIdle("hero_claim_approve","Load an eligible audit first.");
+heroIdle("hero_claim_file","Load an eligible audit first.");
+refreshRegTool();
+
+function refreshActionButtons(){
+  if(!loaded) return;
+  const {id,cell,st,protocol}=loaded;
+  const isProto=W.account&&eq(W.account,protocol);
+  const wr=W.isReady();
+  const ready=st===2&&isProto;
+  const confirmReady=st===4;
+  $("btn_accept").disabled=!(ready&&wr);
+  $("btn_confirm").disabled=!(confirmReady&&wr);
+  if(ready&&wr) heroReady("hero_accept","protocolAcceptAuditor(uint256)",`id = ${id}`,cell,"AuditCell");
+  else heroIdle("hero_accept",ready?"Connect wallet on Base Sepolia first.":"Load an Assigned audit where you are the protocol.");
+  if(confirmReady&&wr) heroReady("hero_confirm","confirmAudit(uint256)",`id = ${id}`,cell,"AuditCell");
+  else heroIdle("hero_confirm",confirmReady?"Connect wallet on Base Sepolia first.":"Available once the audit is Passed — window open.");
+  refreshAcceptAuditor();
+  refreshVerdict();
+  refreshDispute();
+  refreshClaim();
+  rebuildCast();
+}
+
+$("load").onclick=loadAudit;
+
+async function loadAudit(){
+  if(!W.account){log('<span class="danger">connect a wallet first.</span>');return;}
+  const cell=$("cell").value.trim(),id=($("auditId").value||"").trim();
+  if(!/^\d+$/.test(id)){log('<span class="danger">enter a numeric audit id.</span>');return;}
+  try{
+    const st=Number(lastU(await ethCall(cell,calldata("auditStateOf(uint256)",["uint256"],[id]))));
+    const protocol=lastAddr(await ethCall(cell,calldata("auditProtocolOf(uint256)",["uint256"],[id])));
+    const auditor=lastAddr(await ethCall(cell,calldata("auditAuditorOf(uint256)",["uint256"],[id])));
+    loaded={id,cell,st,protocol,auditor};
+    $("info").style.display="grid";
+    $("i_state").innerHTML=St.humanPillHtml(st)+(st===2?'  <span class="pill warn">your decision</span>':"");
+    $("i_protocol").textContent=protocol;
+    $("i_auditor").textContent=(/^0x0+$/.test(auditor)?"(none yet)":auditor);
+    const isProto=W.account&&eq(W.account,protocol);
+    const ready=st===2&&isProto;
+    const confirmReady=st===4;
+    if(!isProto) log('<span class="warnc">connected wallet is not this audit’s protocol — you can read but not accept.</span>');
+    if(st!==2) log('state is <b>'+St.detailState(st)+'</b>; protocol-accept applies only while the audit is <b>Assigned</b> (In review — waiting for you).');
+    $("cd_accept").textContent=ready
+      ? `function protocolAcceptAuditor(uint256)\n  id = ${id}\n\nto:   ${cell} (AuditCell)\ndata: ${calldata("protocolAcceptAuditor(uint256)",["uint256"],[id])}`
+      : "not available for this audit/wallet right now.";
+    $("cd_confirm").textContent=confirmReady
+      ? `function confirmAudit(uint256)\n  id = ${id}\n\nto:   ${cell} (AuditCell)\ndata: ${calldata("confirmAudit(uint256)",["uint256"],[id])}`
+      : "available only while Passed — window open.";
+    refreshActionButtons();
+  }catch(e){log('<span class="danger">load failed: '+(e.message||e)+'</span>');}
+}
+
+function tryDeepLoad(){
+  if(!pendingDeepLoad||!W.isReady()) return;
+  pendingDeepLoad=null;
+  loadAudit();
+}
+
+(function(){
+  try{
+    const p=new URLSearchParams(location.search);
+    const q=p.get("audit")||p.get("id");
+    if(q&&/^\d+$/.test(q)){
+      $("auditId").value=q;
+      pendingDeepLoad=q;
+      const card=$("auditId").closest(".card");
+      if(card) card.scrollIntoView({behavior:"smooth",block:"start"});
+    }
+  }catch(e){}
+})();
+setTimeout(tryDeepLoad,400);
+
+function refreshAcceptAuditor(){
+  const ok=loaded&&loaded.st===2&&W.account&&eq(W.account,loaded.auditor);
+  const er=($("specErrors").value||"").trim();
+  const valid=/^0x[0-9a-fA-F]{64}$/.test(er);
+  const wr=W.isReady();
+  $("cd_aaccept").textContent = ok
+    ? `function acceptAudit(uint256,bytes32)\n  id             = ${loaded.id}\n  specErrorsRoot = ${er||"(enter root)"}\n  to:   ${loaded.cell}\n  data: ${valid?calldata("acceptAudit(uint256,bytes32)",["uint256","bytes32"],[loaded.id,er]):"(enter a valid 32-byte root)"}\n\nfunction declineAudit(uint256)  id = ${loaded.id}\n  data: ${calldata("declineAudit(uint256)",["uint256"],[loaded.id])}`
+    : "available only when the audit is Assigned and you are the assigned auditor.";
+  $("btn_aaccept").disabled=!(ok&&valid&&wr);
+  $("btn_decline").disabled=!(ok&&wr);
+  if(ok&&valid&&wr) heroReady("hero_aaccept","acceptAudit(uint256,bytes32)",`id = ${loaded.id} · specErrorsRoot = ${er}`,loaded.cell,"AuditCell");
+  else if(ok&&wr) heroIdle("hero_aaccept","Enter a valid 32-byte spec errors root.");
+  else heroIdle("hero_aaccept","Load an Assigned audit where you are the assigned auditor.");
+}
+
+function refreshVerdict(){
+  const ok=loaded&&loaded.st===3&&W.account&&eq(W.account,loaded.auditor);
+  const tool=($("vtool").value||"").trim();
+  const root=($("vroot").value||"").trim();
+  const valid=/^0x[0-9a-fA-F]{64}$/.test(tool)&&/^0x[0-9a-fA-F]{64}$/.test(root);
+  const wr=W.isReady();
+  $("cd_verdict").textContent = ok
+    ? `PASS → provePass(uint256,bytes32,bytes32)   FAIL → proveFail(uint256,bytes32,bytes32)\n  id         = ${loaded.id}\n  toolId     = ${tool||"(enter tool id)"}\n  resultRoot = ${root||"(enter result root)"}\n  to:   ${loaded.cell}\n  PASS data: ${valid?calldata("provePass(uint256,bytes32,bytes32)",["uint256","bytes32","bytes32"],[loaded.id,tool,root]):"(enter valid tool id + result root)"}\n  FAIL data: ${valid?calldata("proveFail(uint256,bytes32,bytes32)",["uint256","bytes32","bytes32"],[loaded.id,tool,root]):"(…)"}`
+    : "available only when the audit is In review and you are the assigned auditor.";
+  $("btn_pass").disabled=!(ok&&valid&&wr);
+  $("btn_fail").disabled=!(ok&&valid&&wr);
+  if(ok&&valid&&wr) heroReady("hero_verdict","provePass / proveFail (uint256,bytes32,bytes32)",`id = ${loaded.id} · toolId = ${tool} · resultRoot = ${root}`,loaded.cell,"AuditCell","Pick PASS or FAIL below — same args, different function in MetaMask.");
+  else if(ok) heroIdle("hero_verdict","Enter valid tool id and result root.");
+  else heroIdle("hero_verdict","Load an In review audit where you are the assigned auditor.");
+}
+
+function refreshDispute(){
+  const ok=loaded&&loaded.st===7&&W.account&&eq(W.account,loaded.protocol);
+  const wei=disputeWei();
+  const wr=W.isReady();
+  if(ok&&wei!=null&&wei>0n){
+    const apr=calldata("approve(address,uint256)",["address","uint256"],[loaded.cell,wei]);
+    const opn=calldata("openDisputeReaudit(uint256,uint256)",["uint256","uint256"],[loaded.id,wei]);
+    $("cd_dispute").textContent=
+`Two transactions — dispute bounty must be ≥ 50% of the original (cell enforces).
+1) approve(address,uint256)
+   spender = ${loaded.cell}
+   amount  = ${wei}  (${fmtAudit(wei)} AUDIT)
+   to: ${tokenAddr}
+   data: ${apr}
+2) openDisputeReaudit(uint256,uint256)
+   originalId    = ${loaded.id}
+   disputeBounty = ${wei}
+   to: ${loaded.cell}
+   data: ${opn}`;
+    $("btn_disp_approve").disabled=!wr;$("btn_disp_open").disabled=!wr;
+    if(wr){
+      heroReady("hero_disp_approve","approve(address,uint256)",`spender = ${loaded.cell} · amount = ${fmtAudit(wei)} AUDIT`,tokenAddr,"AUDIT token");
+      heroReady("hero_disp_open","openDisputeReaudit(uint256,uint256)",`originalId = ${loaded.id} · disputeBounty = ${fmtAudit(wei)} AUDIT`,loaded.cell,"AuditCell");
+    }else{
+      heroIdle("hero_disp_approve","Connect wallet on Base Sepolia first.");
+      heroIdle("hero_disp_open","Complete step 1 (approve) first.");
+    }
+  }else{
+    $("cd_dispute").textContent = ok ? "enter a dispute bounty (AUDIT)…" : "available only when the audit is Claimed and you are its protocol.";
+    $("btn_disp_approve").disabled=true;$("btn_disp_open").disabled=true;
+    heroIdle("hero_disp_approve",ok?"Enter a dispute bounty (AUDIT).":"Load a Claimed audit where you are the protocol.");
+    heroIdle("hero_disp_open",ok?"Enter a dispute bounty (AUDIT).":"Load a Claimed audit where you are the protocol.");
+  }
+}
+
+function refreshClaim(){
+  const ok=loaded&&[4,5,6].includes(loaded.st)&&W.account&&!eq(W.account,loaded.protocol)&&!eq(W.account,loaded.auditor);
+  const tool=($("ctool").value||"").trim(),root=($("croot").value||"").trim();
+  const stake=weiFrom("cstake");
+  const validTR=/^0x[0-9a-fA-F]{64}$/.test(tool)&&/^0x[0-9a-fA-F]{64}$/.test(root);
+  const wr=W.isReady();
+  if(ok){
+    $("cd_claim").textContent=
+`Two transactions.
+1) approve(address,uint256)
+   spender = ${loaded.cell}
+   amount  = ${stake!=null?stake+"  ("+fmtAudit(stake)+" AUDIT)":"(enter stake)"}
+   to: ${tokenAddr}
+   data: ${stake!=null?calldata("approve(address,uint256)",["address","uint256"],[loaded.cell,stake]):"(enter stake)"}
+2) claimVulnerability(uint256,bytes32,bytes32,bytes)
+   id         = ${loaded.id}
+   toolId     = ${tool||"(tool id)"}
+   resultRoot = ${root||"(FAIL root)"}
+   proof      = 0x
+   to: ${loaded.cell}
+   data: ${validTR?claimData(loaded.id,tool,root):"(enter valid tool id + FAIL result root)"}`;
+    $("btn_claim_approve").disabled=!(wr&&stake!=null&&stake>0n);
+    $("btn_claim_file").disabled=!(wr&&validTR);
+    if(wr&&stake!=null&&stake>0n) heroReady("hero_claim_approve","approve(address,uint256)",`spender = ${loaded.cell} · amount = ${fmtAudit(stake)} AUDIT`,tokenAddr,"AUDIT token");
+    else heroIdle("hero_claim_approve",stake!=null&&stake>0n?"Connect wallet on Base Sepolia first.":"Enter stake to approve.");
+    if(wr&&validTR) heroReady("hero_claim_file","claimVulnerability(uint256,bytes32,bytes32,bytes)",`id = ${loaded.id} · toolId = ${tool} · resultRoot = ${root}`,loaded.cell,"AuditCell");
+    else heroIdle("hero_claim_file",validTR?"Approve stake first (step 1).":"Enter valid tool id and FAIL result root.");
+  }else{
+    $("cd_claim").textContent="available only while the audit is Passed / Audited / Settled, and you are not its protocol or original auditor.";
+    $("btn_claim_approve").disabled=true;$("btn_claim_file").disabled=true;
+    heroIdle("hero_claim_approve","Load an eligible audit first.");
+    heroIdle("hero_claim_file","Load an eligible audit first.");
+  }
+}
+
+function rebuildCast(){
+  if(!loaded){return;}
+  const {id,cell,st,protocol,auditor}=loaded;
+  const isProto=W.account&&eq(W.account,protocol);
+  const isAuditor=W.account&&eq(W.account,auditor);
+  const lines=["export RPC=https://sepolia.base.org ; export PK=0x<your_key>"];
+  if(st===2&&isProto) lines.push(`cast send ${cell} "protocolAcceptAuditor(uint256)" ${id} --rpc-url $RPC --private-key $PK`);
+  if(st===2&&isAuditor){const er=($("specErrors").value||"").trim();
+    if(/^0x[0-9a-fA-F]{64}$/.test(er)) lines.push(`cast send ${cell} "acceptAudit(uint256,bytes32)" ${id} ${er} --rpc-url $RPC --private-key $PK`);
+    lines.push(`cast send ${cell} "declineAudit(uint256)" ${id} --rpc-url $RPC --private-key $PK`);
+  }
+  if(st===3&&isAuditor){const t=($("vtool").value||"").trim(),r=($("vroot").value||"").trim();
+    if(/^0x[0-9a-fA-F]{64}$/.test(t)&&/^0x[0-9a-fA-F]{64}$/.test(r))
+      lines.push(`cast send ${cell} "provePass(uint256,bytes32,bytes32)" ${id} ${t} ${r} --rpc-url $RPC --private-key $PK   # or proveFail`);
+  }
+  if(st===4) lines.push(`cast send ${cell} "confirmAudit(uint256)" ${id} --rpc-url $RPC --private-key $PK`);
+  if(st===7&&isProto){const wei=disputeWei();if(wei!=null&&wei>0n){
+    lines.push(`cast send ${tokenAddr} "approve(address,uint256)" ${cell} ${wei} --rpc-url $RPC --private-key $PK`);
+    lines.push(`cast send ${cell} "openDisputeReaudit(uint256,uint256)" ${id} ${wei} --rpc-url $RPC --private-key $PK`);
+  }}
+  if([4,5,6].includes(st)&&W.account&&!eq(W.account,protocol)&&!eq(W.account,auditor)){const t=($("ctool").value||"").trim(),r=($("croot").value||"").trim(),stk=weiFrom("cstake");
+    if(stk!=null&&stk>0n) lines.push(`cast send ${tokenAddr} "approve(address,uint256)" ${cell} ${stk} --rpc-url $RPC --private-key $PK`);
+    if(/^0x[0-9a-fA-F]{64}$/.test(t)&&/^0x[0-9a-fA-F]{64}$/.test(r)) lines.push(`cast send ${cell} "claimVulnerability(uint256,bytes32,bytes32,bytes)" ${id} ${t} ${r} 0x --rpc-url $RPC --private-key $PK`);
+  }
+  if(lines.length===1) lines.push("# no action available for this audit's current state and wallet");
+  $("castblock").textContent=lines.join("\n");
+}
+
+async function sendTx(label,tx,okMsg){
+  if(!W.account){log('<span class="danger">connect a wallet first.</span>');return;}
+  if(!W.isRealMetaMask()){log('<span class="danger">Real MetaMask not connected — disable other wallet extensions.</span>');return;}
+  W.wlog("Checking network before "+label+"…");
+  if(!await W.ensureBaseSepolia(true)){log('<span class="danger">Switch MetaMask to Base Sepolia first.</span>');await W.refreshNet();return;}
+  try{
+    log(`<b>${label}</b> — requesting signature… <span class="tiny">match the decoded args to your wallet.</span>`);
+    const h=await req("eth_sendTransaction",[{from:W.account,to:tx.to,data:tx.data,value:"0x0"}]);
+    log(`${label} sent: <a target="_blank" href="https://sepolia.basescan.org/tx/${h}">${h.slice(0,14)}…</a> — waiting…`);
+    const rec=await waitReceipt(h);
+    if(rec.status==="0x1") log(`<span class="good">${okMsg}</span>`);
+    else log(`<span class="danger">${label} reverted.</span> Check the tx on basescan.`);
+  }catch(e){log(`<span class="danger">${label} failed: ${(e.data&&e.data.message)||e.message||e}</span>`);}
+}
+async function waitReceipt(h){for(let i=0;i<120;i++){const r=await req("eth_getTransactionReceipt",[h]);if(r)return r;await new Promise(s=>setTimeout(s,2500));}throw new Error("receipt timeout");}
+
+$("regload").onclick=async()=>{
+  if(!W.account){log('<span class="danger">connect a wallet first.</span>');return;}
+  const cell=$("cell").value.trim();
+  try{
+    const rec=(await ethCall(cell,calldata("auditors(address)",["address"],[W.account]))||"").replace(/^0x/,"").match(/.{64}/g)||[];
+    const inQueue=(rec[5]||"").endsWith("1");
+    const bal=BigInt(await ethCall(tokenAddr,calldata("balanceOf(address)",["address"],[W.account]))||"0x0");
+    const need=BigInt(await ethCall(cell,calldata("requiredHold(address)",["address"],[W.account]))||"0x0");
+    const elig=BigInt(await ethCall(cell,calldata("isEligible(address)",["address"],[W.account]))||"0x0")===1n;
+    $("reginfo").style.display="grid";
+    $("r_inqueue").textContent=inQueue?"yes — already registered":"no";
+    $("r_bal").textContent=fmtAudit(bal)+" AUDIT";
+    $("r_need").textContent=fmtAudit(need)+" AUDIT";
+    $("r_elig").textContent=elig?"yes":"no";
+    const ready=!inQueue&&bal>=need;
+    $("cd_register").textContent=ready
+      ? `function register()\n  (no arguments)\n\nto:   ${cell} (AuditCell)\ndata: ${calldata("register()",[],[])}`
+      : inQueue ? "you are already in the pool." : `need ${fmtAudit(need)} AUDIT to hold a queue spot; you have ${fmtAudit(bal)}.`;
+    $("btn_register").disabled=!(ready&&W.isReady());
+    if(ready&&W.isReady()) heroReady("hero_register","register()","(no arguments)",cell,"AuditCell");
+    else heroIdle("hero_register",inQueue?"Already in the pool.":`Need ${fmtAudit(need)} AUDIT; you have ${fmtAudit(bal)}.`);
+  }catch(e){log('<span class="danger">status check failed: '+(e.message||e)+'</span>');}
+};
+$("btn_register").onclick=()=>sendTx("register",{to:$("cell").value.trim(),data:calldata("register()",[],[])},"registered ✓ — you're in the pool. You'll be offered audits as they're posted. Reload to refresh.");
+
+function regToolData(){const id=($("rt_id").value||"").trim();return calldata("registerTool(bytes32,bool)",["bytes32","bool"],[id,$("rt_spec").checked?1:0]);}
+function refreshRegTool(){
+  const id=($("rt_id").value||"").trim();const valid=/^0x[0-9a-fA-F]{64}$/.test(id);
+  const cell=$("cell").value.trim();
+  $("cd_regtool").textContent=valid
+    ? `function registerTool(bytes32,bool)\n  toolId               = ${id}\n  isSpecValidationTool = ${$("rt_spec").checked}\n\nto:   ${cell} (AuditCell)\ndata: ${regToolData()}`
+    : "enter a valid 32-byte tool id…";
+  $("btn_regtool").disabled=!(valid&&W.isReady());
+  if(valid&&W.isReady()) heroReady("hero_regtool","registerTool(bytes32,bool)",`toolId = ${id} · spec tool = ${$("rt_spec").checked}`,cell,"AuditCell");
+  else heroIdle("hero_regtool",valid?"Connect wallet on Base Sepolia first.":"Enter a valid 32-byte tool id.");
+}
+$("rt_check").onclick=async()=>{
+  if(!W.account){log('<span class="danger">connect a wallet first.</span>');return;}
+  const cell=$("cell").value.trim(),id=($("rt_id").value||"").trim();
+  if(!/^0x[0-9a-fA-F]{64}$/.test(id)){log('<span class="danger">enter a valid 32-byte tool id.</span>');return;}
+  try{
+    const res=(await ethCall(cell,calldata("tools(bytes32)",["bytes32"],[id]))||"").replace(/^0x/,"").match(/.{64}/g)||[];
+    const isSpec=(res[1]||"").endsWith("1"), exists=(res[4]||"").endsWith("1");
+    $("rt_info").style.display="grid";
+    $("rt_reg").textContent=exists?"yes — already registered":"no";
+    $("rt_kind").textContent=exists?(isSpec?"spec-validation tool":"verdict tool"):"—";
+    if(exists){$("btn_regtool").disabled=true;}else{refreshRegTool();}
+  }catch(e){log('<span class="danger">check failed: '+(e.message||e)+'</span>');}
+};
+$("btn_regtool").onclick=()=>{const id=($("rt_id").value||"").trim();if(!/^0x[0-9a-fA-F]{64}$/.test(id))return;
+  sendTx("registerTool",{to:$("cell").value.trim(),data:regToolData()},"tool registered ✓ — protocols can now name it and auditors can run it.");};
+document.getElementById("rt_id").addEventListener("input",refreshRegTool);
+document.getElementById("rt_spec").addEventListener("change",refreshRegTool);
+
+$("btn_accept").onclick=()=>{if(!loaded)return;sendTx("protocolAcceptAuditor",{to:loaded.cell,data:calldata("protocolAcceptAuditor(uint256)",["uint256"],[loaded.id])},"auditor accepted ✓ — the audit moves to In review (auditor working). Reload to refresh.");};
+$("btn_confirm").onclick=()=>{if(!loaded)return;sendTx("confirmAudit",{to:loaded.cell,data:calldata("confirmAudit(uint256)",["uint256"],[loaded.id])},"confirmed ✓ — auditor paid, audit settled (InBlock). Reload to refresh.");};
+
+$("btn_aaccept").onclick=()=>{const er=($("specErrors").value||"").trim();if(!loaded||!/^0x[0-9a-fA-F]{64}$/.test(er))return;
+  sendTx("acceptAudit",{to:loaded.cell,data:calldata("acceptAudit(uint256,bytes32)",["uint256","bytes32"],[loaded.id,er])},"accepted ✓ — your review has started. Run the tool, then submit your verdict. Reload to refresh.");};
+$("btn_decline").onclick=()=>{if(!loaded)return;
+  sendTx("declineAudit",{to:loaded.cell,data:calldata("declineAudit(uint256)",["uint256"],[loaded.id])},"declined ✓ — released cleanly. Reload to refresh.");};
+document.getElementById("specErrors").addEventListener("input",()=>{refreshAcceptAuditor();rebuildCast();});
+
+$("btn_pass").onclick=()=>{const t=($("vtool").value||"").trim(),r=($("vroot").value||"").trim();if(!loaded||!/^0x[0-9a-fA-F]{64}$/.test(t)||!/^0x[0-9a-fA-F]{64}$/.test(r))return;
+  sendTx("provePass",{to:loaded.cell,data:calldata("provePass(uint256,bytes32,bytes32)",["uint256","bytes32","bytes32"],[loaded.id,t,r])},"PASS submitted ✓ — the challenge period begins. Confirm after it closes. Reload to refresh.");};
+$("btn_fail").onclick=()=>{const t=($("vtool").value||"").trim(),r=($("vroot").value||"").trim();if(!loaded||!/^0x[0-9a-fA-F]{64}$/.test(t)||!/^0x[0-9a-fA-F]{64}$/.test(r))return;
+  sendTx("proveFail",{to:loaded.cell,data:calldata("proveFail(uint256,bytes32,bytes32)",["uint256","bytes32","bytes32"],[loaded.id,t,r])},"FAIL submitted ✓ — this opens the bug/dispute path on the contract. Reload to refresh.");};
+document.getElementById("vtool").addEventListener("input",()=>{refreshVerdict();rebuildCast();});
+document.getElementById("vroot").addEventListener("input",()=>{refreshVerdict();rebuildCast();});
+
+$("btn_disp_approve").onclick=async()=>{const wei=disputeWei();if(!loaded||wei==null)return;
+  await sendTx("approve",{to:tokenAddr,data:calldata("approve(address,uint256)",["address","uint256"],[loaded.cell,wei])},"approved ✓ — now open the dispute.");};
+$("btn_disp_open").onclick=async()=>{const wei=disputeWei();if(!loaded||wei==null)return;
+  await sendTx("openDisputeReaudit",{to:loaded.cell,data:calldata("openDisputeReaudit(uint256,uint256)",["uint256","uint256"],[loaded.id,wei])},"dispute opened ✓ — an independent auditor is assigned on the original contract. Reload to refresh.");};
+document.getElementById("disputeBounty").addEventListener("input",()=>{refreshDispute();rebuildCast();});
+
+$("btn_claim_approve").onclick=()=>{const stake=weiFrom("cstake");if(!loaded||stake==null||stake<=0n)return;
+  sendTx("approve",{to:tokenAddr,data:calldata("approve(address,uint256)",["address","uint256"],[loaded.cell,stake])},"stake approved ✓ — now file the claim.");};
+$("btn_claim_file").onclick=()=>{const tool=($("ctool").value||"").trim(),root=($("croot").value||"").trim();if(!loaded||!/^0x[0-9a-fA-F]{64}$/.test(tool)||!/^0x[0-9a-fA-F]{64}$/.test(root))return;
+  sendTx("claimVulnerability",{to:loaded.cell,data:claimData(loaded.id,tool,root)},"claim filed ✓ — the audit is paused. Track it here; the protocol may open a dispute re-check. Reload to refresh.");};
+["ctool","croot","cstake"].forEach(idn=>document.getElementById(idn).addEventListener("input",()=>{refreshClaim();rebuildCast();}));
+
+(async()=>{
+  try{
+    const r=await fetch("../deployments/84532-cell.json");
+    if(r.ok){const j=await r.json();if(j.AuditCell)$("cell").value=j.AuditCell;if(j.CellToken)tokenAddr=j.CellToken;
+      if(j.AuditCell)log('<span class="tiny good">Live cell addresses loaded ✓</span>');}
+    else{const pr=await fetch("../predecessor/deployments/84532-harness.json");if(pr.ok){const j=await pr.json();if(j.AuditCell)$("cell").value=j.AuditCell;if(j.CellToken)tokenAddr=j.CellToken;}}
+  }catch(e){log('<span class="tiny warnc">Set cell + token manually (live: ../deployments/84532-cell.json).</span>');}
+  const t=hx(keccak(TE.encode("abc")));
+  if(t!=="0x4e03657aea45a94fc7d47ba826c8d667c0d1e6e33a64a036ec44f58fa12d6c45")log('<span class="danger">keccak self-test FAILED — do not use.</span>');
+})();
+</script>
+
+<script src="your-links.js?v=5"></script>
+<script src="membrane-rail.js?v=2"></script>
+<script src="motion.js?v=1"></script>
+</body>
+</html>

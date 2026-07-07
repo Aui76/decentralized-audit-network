@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>!function(){try{var k="membrane_nav_session",s=sessionStorage.getItem(k);document.documentElement.classList.add(s?"nav-session":"cold-load");if(!s)sessionStorage.setItem(k,"1")}catch(e){}}();</script>
+<title>Mechanism · Mechanism · Audit Cell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css?v=5">
+</head>
+<body class="page-prose">
+<div class="layout layout-docs">
+
+  <nav>
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink" href="quickstart.html">Quickstart</a>
+    <a class="navlink on" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+
+  <main>
+    <div class="inner">
+
+      <div class="doc-layer-row">
+        <a href="docs-notebook.html" class="doc-layer doc-layer-spec">The Notebook</a>
+        <span class="doc-layer doc-layer-spec">Spec · Mechanism</span>
+      </div>
+      <h1>Mechanism</h1>
+      <p class="doc-q">How** do the <a href="docs-problem.html">design constraints</a> land in architecture — layers, loop, gates, and what may <strong>not</strong> move money?</p>
+      <p><strong>Story:</strong> <a href="docs-book-02.html">Book ch  2 — The idea</a></p>
+      <p>The <strong>Audit Cell</strong> replaces an audit <strong>opinion</strong> with a <strong>result anyone can reproduce</strong>: a named tool, a written spec, pinned bytecode, and a binary pass/fail committed on-chain. No firm desk, no committee, no discretionary payout.</p>
+      <p>Procedure depth: Flows book · layer doctrine: Modular architecture.</p>
+      <h2 id="what-lives-here-vs-elsewhere">What lives here vs elsewhere</h2>
+      <table class="doc-table"><thead><tr><th>Axis</th><th>Role</th><th>Start here</th></tr></thead><tbody><tr><td><strong>Problem leaf</strong></td><td>Requirements any valid mechanism must meet</td><td><a href="docs-problem.html">Design constraints</a></td></tr><tr><td><strong>This leaf (Mechanism)</strong></td><td>Architecture — layers, loop, gates, signal rule</td><td>Below</td></tr><tr><td><strong>Flows book</strong></td><td>Integrator procedure — state machine, modules</td><td><a href="docs-flows-lifecycle.html">Audit lifecycle</a></td></tr><tr><td><strong>Participants book</strong></td><td>Who acts · assignment · O3 tags</td><td><a href="docs-participants-roles.html">Roles</a></td></tr><tr><td><strong>Economy book</strong></td><td>Settlement — mint, escrow, payout</td><td><a href="docs-economy-value-vs-signal.html">Value vs signal</a></td></tr></tbody></table>
+      <h2 id="thesis-one-line">Thesis (one line)</h2>
+      <p>Same tool + same pinned code + same spec on file → <strong>same answer</strong> for any party; pay and slash follow <strong>replay</strong>, not reputation.</p>
+      <h2 id="three-layers-l0-l1-l2">Three layers (L0 / L1 / L2)</h2>
+      <p>The stack splits so <strong>settled truth stays small</strong> and everything else can evolve without rewriting what the network already paid on.</p>
+      <table class="doc-table"><thead><tr><th>Layer</th><th>What it is</th><th>What it may do</th></tr></thead><tbody><tr><td><strong>L0 — Cell</strong></td><td>Immutable settlement core</td><td>Audit state, escrow, pass/fail commitments, challenge window → confirm, pay/slash by fixed rules</td></tr><tr><td><strong>L1 — Satellites</strong></td><td>Wired modules beside the cell</td><td>Touch settled truth through <strong>defined seams</strong> — spec void, integrity void, assignment draw, claim/dispute settlement, structural adopt</td></tr><tr><td><strong>L2 — Organs</strong></td><td>Replaceable readers and surfaces</td><td>Bob cards, phase tags, contagion, FMEA, membrane UI — <strong>alarm and present only</strong></td></tr></tbody></table>
+      <p><strong>O</strong> = deployed contract under audit (<strong>bytecode pinned at submit</strong>). <strong>Placement test:</strong> <em>Does this feature change what the cell treats as settled for an `auditId`?</em></p>
+      <table class="doc-table"><thead><tr><th>If it changes…</th><th>Examples</th></tr></thead><tbody><tr><td><strong>Audit state</strong></td><td>Assign, window, <code>InBlock</code>, <code>Claimed</code>, <code>Exploited</code>, <code>Invalidated</code></td></tr><tr><td><strong>Verdict</strong></td><td>Pass/fail binding on <strong>O</strong></td></tr><tr><td><strong>Payout</strong></td><td>Escrow release, confirm mint, discoverer pay, slash</td></tr></tbody></table>
+      <table class="doc-table"><thead><tr><th>Answer</th><th>Default home</th></tr></thead><tbody><tr><td><strong>No</strong> — alarm, label, read-only</td><td><strong>L2</strong> — do not grow <code>AuditCell</code></td></tr><tr><td><strong>Yes</strong></td><td><strong>L1</strong> satellite (or <strong>L0</strong> only when the core cycle requires it)</td></tr></tbody></table>
+      <p>Bob hints, bounty-band labels, and reputation reads are <strong>L2</strong>. Spec invalidation, witness settlement, and dyad-aware assignment wiring are <strong>L1/L0</strong>.</p>
+      <h2 id="constraints-on-chain-expression">Constraints → on-chain expression</h2>
+      <p>Maps <a href="docs-problem.html#required-properties">required properties</a>:</p>
+      <table class="doc-table"><thead><tr><th>Property</th><th>On-chain expression</th></tr></thead><tbody><tr><td><strong>Binary</strong></td><td><code>provePass</code> / <code>proveFail</code> only — no partial grades</td></tr><tr><td><strong>Machine-checkable</strong></td><td><code>resultRoot</code> + pinned tool version; anyone re-runs</td></tr><tr><td><strong>Permissionless</strong></td><td>Register, join pool, claim — no approver desk</td></tr><tr><td><strong>Skin in the game</strong></td><td>Auditor paid at <code>confirmAudit</code>, <strong>after</strong> challenge window on PASS</td></tr><tr><td><strong>Self-funding</strong></td><td>Mint on confirmed positive blocks; exploits pay from <strong>escrow reserves</strong></td></tr><tr><td><strong>Accumulating</strong></td><td>Tool use counts toward canonization; public toolkit grows</td></tr><tr><td><strong>Judgment-free</strong></td><td>Assignment, claim eligibility, payout — from on-chain inputs + tool replay</td></tr></tbody></table>
+      <h2 id="core-loop">Core loop</h2>
+      <table class="doc-table"><thead><tr><th>Stage</th><th>Meaning</th></tr></thead><tbody><tr><td><strong>Submit</strong></td><td>Protocol locks bounty; declares spec (<strong>Gate A</strong> digest); pins bytecode</td></tr><tr><td><strong>Assign</strong></td><td>Eligible auditor drawn from pool (assignment module / CRD policy)</td></tr><tr><td><strong>Accept</strong></td><td>Auditor re-runs declared spec; digest must match before verdict</td></tr><tr><td><strong>Verdict</strong></td><td>Binary pass or fail committed (<strong>Gate B</strong>)</td></tr><tr><td><strong>Window</strong></td><td>On PASS, challenge window (<code>auditWindow</code>) — claims allowed</td></tr><tr><td><strong>Confirm</strong></td><td>Window closes clean → positive block mints to auditor</td></tr></tbody></table>
+      <p>Full state machine: <a href="docs-flows-lifecycle.html">Audit lifecycle</a>.</p>
+      <h2 id="two-outcomes-on-one-row">Two outcomes on one row</h2>
+      <table class="doc-table"><thead><tr><th>Path</th><th>End state</th></tr></thead><tbody><tr><td><strong>PASS</strong></td><td>Code clears spec on file; survives window; auditor minted; tools credited toward canon</td></tr><tr><td><strong>FAIL / exploit</strong></td><td>Claim + independent re-audit; if FAIL <strong>reproduces</strong> on pin → <code>Exploited</code>, discoverer paid from <strong>reserves</strong> (no fresh mint); non-reproducing claim rejected</td></tr></tbody></table>
+      <p>Break path spec: <a href="docs-flows-vulnerability.html">Vulnerability disclosure</a>.</p>
+      <h2 id="three-gates-no-fourth-court">Three gates (no fourth court)</h2>
+      <p>Every audit decision routes through <strong>one</strong> gate question:</p>
+      <table class="doc-table"><thead><tr><th>Gate</th><th>Question</th><th>Mechanism</th></tr></thead><tbody><tr><td><strong>A — Spec</strong></td><td>Is the <strong>declared check</strong> auditable and re-runnable?</td><td>Declare at submit; re-run at accept; <a href="docs-flows-spec-arbiter.html">Spec arbiter</a> voids bad specs pre-mint</td></tr><tr><td><strong>B — Verdict</strong></td><td>Does <strong>pinned code</strong> pass the <strong>spec on file</strong>?</td><td>Auditor <code>provePass</code> / <code>proveFail</code> during <code>InAudit</code></td></tr><tr><td><strong>C — Claim</strong></td><td>Did PASS miss a <strong>reproducible</strong> fail?</td><td>Proof-bearing claim + dispute re-audit</td></tr></tbody></table>
+      <p>Protocol <strong>reject after assign</strong> caps <strong>who</strong> audits — not whether the spec or verdict is wrong (<a href="docs-flows-gate-a.html">Gate A</a> vs <a href="docs-flows-vulnerability.html">Gate C</a>).</p>
+      <h2 id="signal-vs-punishment">Signal vs punishment</h2>
+      <p>Off-chain hints (Bob card, contagion, phase tags) may <strong>alarm</strong> and route scrutiny. They <strong>do not</strong> auto-slash or auto-pay.</p>
+      <p>Punishment follows only when a registered tool produces a deterministic on-chain-verifiable result — integrity review, spec arbiter, or claim path (<a href="docs-flows-mutex.html">Audit mutex</a>).</p>
+      <h2 id="primary-product">Primary product</h2>
+      <p>The product is the <strong>toolkit</strong>: machine-checkable checks that <strong>canonize</strong> after verified on-chain use. Individual audits are how the set grows.</p>
+      <h2 id="what-the-mechanism-is-not">What the mechanism is not</h2>
+      <table class="doc-table"><thead><tr><th>Not this</th><th>Because</th></tr></thead><tbody><tr><td><strong>A court</strong></td><td>No human panel on code truth</td></tr><tr><td><strong>A marketplace</strong></td><td>Assignment is structural, not negotiated</td></tr><tr><td><strong>A reputation engine</strong></td><td>Reputation is read-only output of history</td></tr></tbody></table>
+      
+      <footer class="doc-page-foot"><a href="docs-notebook.html">← Notebook</a></footer>
+    </div>
+  </main>
+
+  <aside id="docRail" aria-label="You are here" hidden></aside>
+
+</div>
+<script src="motion.js?v=1"></script>
+<script src="your-links.js?v=5"></script>
+<script src="docs-rail.js?v=5"></script>
+</body>
+</html>

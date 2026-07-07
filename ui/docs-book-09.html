@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>!function(){try{var k="membrane_nav_session",s=sessionStorage.getItem(k);document.documentElement.classList.add(s?"nav-session":"cold-load");if(!s)sessionStorage.setItem(k,"1")}catch(e){}}();</script>
+<title>9 · The audit cycle · The Book · Audit Cell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css?v=5">
+</head>
+<body class="page-prose">
+<div class="layout layout-docs">
+
+  <nav>
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink" href="quickstart.html">Quickstart</a>
+    <a class="navlink on" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+
+  <main>
+    <div class="inner">
+
+      <div class="doc-layer-row">
+        <a href="docs-book.html" class="doc-layer doc-layer-story">The Book · III</a>
+        <span class="doc-layer doc-layer-story">Story · chapter 9</span>
+      </div>
+      <h1>The audit cycle</h1>
+      <p class="doc-q">What is <strong>one honest turn</strong> of an audit — from submit to confirm?</p>
+      
+      <div class="doc-bridge">
+        <p class="doc-bridge-lbl">Go deeper — notebook spec</p>
+        <ul>
+          <li><a href="docs-participants-roles.html">Roles</a></li>
+          <li><a href="docs-participants-assignment.html">Assignment (CRD)</a></li>
+          <li><a href="docs-flows-lifecycle.html">Audit lifecycle</a></li>
+          <li><a href="docs-integration-artifact-registry.html">Artifact registry</a></li>
+        </ul>
+      </div>
+      <h2 id="the-heartbeat">The heartbeat</h2>
+      <p><a href="docs-book-07.html">Chapter 7</a> and <a href="docs-book-08.html">8</a> named the object and the money.</p>
+      <table class="doc-table"><thead><tr><th>Step</th><th>Meaning</th></tr></thead><tbody><tr><td><strong>Submit</strong></td><td>Lock <strong>bounty</strong>; declare spec at <strong>the door (Gate A)</strong>; pin bytecode</td></tr><tr><td><strong>Assign</strong></td><td>Eligible auditor drawn from <strong>pool</strong></td></tr><tr><td><strong>Accept</strong></td><td>Re-run declared spec; match filing before <strong>the audit (Gate B)</strong></td></tr><tr><td><strong>Verdict</strong></td><td>Pass or fail with <strong>`resultRoot`</strong></td></tr><tr><td><strong>Window</strong></td><td>On pass, <strong>challenge window</strong> — payment waits</td></tr><tr><td><strong>Confirm</strong></td><td>Clean survival → <strong>positive block</strong> on <strong>success path (positive path)</strong></td></tr></tbody></table>
+      <p><strong>Not here:</strong> pool draw mechanics — <a href="docs-book-15.html">Chapter 15</a>. Break path detail — <a href="docs-book-11.html">Chapter 11</a>.</p>
+      <h2 id="boundary-with-the-break-path">Boundary with The break path</h2>
+      <table class="doc-table"><thead><tr><th>Layer</th><th><strong>This chapter (Ch 9)</strong></th><th><a href="docs-book-11.html">The break path (Ch 11)</a></th></tr></thead><tbody><tr><td><strong>Ends at</strong></td><td>Clean <strong>confirm</strong> → positive block</td><td>Reproduced miss after <strong>claimed</strong></td></tr><tr><td><strong>Gate</strong></td><td>A → B → window → confirm</td><td><strong>Gate C</strong> + dispute re-run</td></tr><tr><td><strong>Pay</strong></td><td>Mint on success path (intro)</td><td><strong>Reserves</strong> — not mint</td></tr><tr><td><strong>States</strong></td><td>Submitted … in block</td><td><strong>Claimed</strong> · <strong>Exploited</strong></td></tr></tbody></table>
+      <p>One loop spine; two outcomes.</p>
+      <h2 id="open-participation-fixed-rules">Open participation, fixed rules</h2>
+      <p>Researchers <strong>register</strong> into a rotating pool. No hiring desk — the gate is mechanical: procedure + proof.</p>
+      <table class="doc-table"><thead><tr><th>Rule</th><th>Meaning</th></tr></thead><tbody><tr><td>Role conflicts</td><td>Cannot audit own bounty; claimant ≠ original auditor</td></tr><tr><td><strong>Hold</strong></td><td>Scales with queue position — sybil resistance</td></tr><tr><td>First registrar</td><td>Zero tokens before any confirm existed — self-bootstrap once</td></tr></tbody></table>
+      <h2 id="states-strangers-can-read">States strangers can read</h2>
+      <p>Public states: submitted → assigned → in audit → awaiting window → confirmed. Each waiting state has permissionless <strong>liveness</strong> advance if someone goes silent.</p>
+      <p><strong>Claimed</strong> → <strong>challenge procedure (break path)</strong> on same pin. Overlays void pre-mint — still binary tool output.</p>
+      <h2 id="before-you-turn-the-page">Before you turn the page</h2>
+      <p><strong>Submit</strong> — lock bounty, declare spec, pin code.</p>
+      <p><strong>Verdict</strong> — binary pass or fail with fingerprint.</p>
+      <p><strong>Window</strong> — strangers probe before confirm.</p>
+      <p><strong>Confirm</strong> — clean survival → positive block.</p>
+      
+      <footer class="doc-page-foot"><a href="docs-book.html">← The Book</a> · <a href="docs.html">Docs</a></footer>
+    </div>
+  </main>
+
+  <aside id="docRail" aria-label="You are here" hidden></aside>
+
+</div>
+<script src="motion.js?v=1"></script>
+<script src="your-links.js?v=5"></script>
+<script src="docs-rail.js?v=5"></script>
+</body>
+</html>

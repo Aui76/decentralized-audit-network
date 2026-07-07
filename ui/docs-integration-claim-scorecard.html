@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>!function(){try{var k="membrane_nav_session",s=sessionStorage.getItem(k);document.documentElement.classList.add(s?"nav-session":"cold-load");if(!s)sessionStorage.setItem(k,"1")}catch(e){}}();</script>
+<title>Claim-resolution scorecard · Integration · Audit Cell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css?v=5">
+</head>
+<body class="page-prose">
+<div class="layout layout-docs">
+
+  <nav>
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink" href="quickstart.html">Quickstart</a>
+    <a class="navlink on" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+
+  <main>
+    <div class="inner">
+
+      <div class="doc-layer-row">
+        <a href="docs-integration.html" class="doc-layer doc-layer-spec">Integration</a>
+        <span class="doc-layer doc-layer-spec">Spec · reader</span>
+      </div>
+      <h1>Claim-resolution scorecard</h1>
+      <p class="doc-q">How do indexers score post-claim conduct** — without changing settlement?</p>
+      
+      <div class="doc-bridge doc-bridge-story">
+        <p class="doc-bridge-lbl">Story context</p>
+        <ul>
+          <li><a href="docs-book-16.html">Book ch 16 · Reputation signals</a></li>
+          <li><a href="docs-book-19.html">Book ch 19 · Gaming &amp; defenses</a></li>
+        </ul>
+      </div>
+      <p>Off-chain behavioral telemetry for post-claim dispute markets. Maps <strong>who funded the dispute</strong> × <strong>what reproduction on O showed</strong> per claim, then rolls up protocol seriousness bands.</p>
+      <p><strong>Not on-chain truth</strong> — interprets cell events + audit rows. Does not change settlement, slash, or payout. Alarm and reputation input only (PK-2 wash-dyad flirt aligns here).</p>
+      <h2 id="signal-vs-settlement">Signal vs settlement</h2>
+      <table class="doc-table"><thead><tr><th>Scorecard</th><th>Settlement</th></tr></thead><tbody><tr><td><code>behavioralCell</code>, seriousness bands</td><td><code>DiscovererPayoutResolved</code>, claim expire/vindicate</td></tr><tr><td>Fleet JSONL for maintainers</td><td>Escrow draws, discoverer pay formula</td></tr><tr><td>Optional UI beside Bob card</td><td>Bob card does not embed rows today</td></tr></tbody></table>
+      <h2 id="modules-cellindexer">Modules (<code>cell/indexer/</code>)</h2>
+      <table class="doc-table"><thead><tr><th>Module</th><th>Meaning</th></tr></thead><tbody><tr><td><code>deriveClaimResolutionScorecard.mjs</code></td><td>Per-claim row, protocol aggregate, report formatter</td></tr><tr><td><code>claimResolutionFleetRecord.mjs</code></td><td>Flat indexer input → lifecycle snapshot → fleet row</td></tr><tr><td><code>claimResolutionFleetLog.mjs</code></td><td>JSONL <code>append</code> / <code>report</code> CLI</td></tr></tbody></table>
+      <p>Cell oracle for events: <strong>`ClaimDisputeModule`</strong> + claim lifecycle (C7).</p>
+      <h2 id="per-claim-row">Per-claim row</h2>
+      <p><strong>Input:</strong> <code>ClaimLifecycleSnapshot</code> (from events + optional tx payer inference).</p>
+      <p><strong>Core output fields:</strong></p>
+      <table class="doc-table"><thead><tr><th>Field</th><th>Meaning</th></tr></thead><tbody><tr><td><code>disputeFunder</code></td><td><code>protocol</code> · <code>claimant</code> · <code>other</code> · <code>none</code></td></tr><tr><td><code>reproduceOutcome</code></td><td><code>pass_on_O</code> · <code>fail_on_O</code> · <code>none</code></td></tr><tr><td><code>resolution</code></td><td><code>vindicated</code> · <code>exploited_repro</code> · <code>exploited_expire</code> · <code>procedural_reject</code> · <code>pending</code> · <code>legacy_fix_cycle</code></td></tr><tr><td><code>behavioralCell</code></td><td><code>funder:reproduce:resolution</code> (e.g. <code>protocol:pass_on_O:vindicated</code>)</td></tr><tr><td><code>preVerdict</code></td><td>Who carried before reproduction closed (decline / fund / stall signals)</td></tr><tr><td><code>flags[]</code></td><td>Named seriousness flags (see below)</td></tr></tbody></table>
+      <p><strong>API:</strong> <code>deriveClaimScorecardRow(snapshot)</code> · <code>inferDisputeFunder(snap)</code> · <code>funderOutcomeCell(role, reproduce, kind)</code>.</p>
+      <h2 id="snapshot-builder">Snapshot builder</h2>
+      <p><code>buildClaimSnapshot(input)</code> accepts flat indexer fields:</p>
+      <table class="doc-table"><thead><tr><th>Field</th><th>Meaning</th></tr></thead><tbody><tr><td><code>resolutionEvent</code></td><td><code>ClaimVindicated</code> · <code>OriginalAuditExploited</code> · <code>ClaimExpired</code> · <code>ClaimRejectedProcedural</code> · <code>pending</code></td></tr><tr><td><code>disputeFunderRole</code></td><td>Inferred or explicit funder role</td></tr><tr><td><code>disputeFunderAddress</code> / <code>disputeAuditId</code></td><td>Dispute re-audit row</td></tr><tr><td><code>protocolDeclinedFunding</code></td><td>Protocol declined to fund dispute (proposal B)</td></tr><tr><td><code>protocolAuditorCompleted</code></td><td>On-chain dyad counter — repeat-dyad / wash signal</td></tr><tr><td><code>proceduralReject</code></td><td>Procedural reject only (proposal A)</td></tr></tbody></table>
+      <p>Golden snapshot: <code>fixtures/claim-resolution-gate0-v3-r6.json</code> (Gate0 R6 — protocol funded, PASS on O, claim vindicated).</p>
+      <h2 id="flags-selected">Flags (selected)</h2>
+      <table class="doc-table"><thead><tr><th>Flag</th><th>Meaning</th></tr></thead><tbody><tr><td><code>fund_homework_vindicated</code></td><td>Protocol funded + PASS repro</td></tr><tr><td><code>fund_homework_wrong</code></td><td>Protocol funded + FAIL repro</td></tr><tr><td><code>decline_homework_vindicated</code></td><td>Protocol declined + claimant/other carried + PASS</td></tr><tr><td><code>decline_homework_wrong</code></td><td>Declined + FAIL repro</td></tr><tr><td><code>expire_without_repro</code></td><td>Claim expired without reproduction</td></tr><tr><td><code>wash_dyad_flirt</code></td><td>Expire path + dyad flirt heuristics</td></tr><tr><td><code>repeat_dyad</code></td><td><code>protocolAuditorCompleted &gt; 0</code></td></tr><tr><td><code>decline_then_stall</code></td><td>Declined funding, nobody carried dispute</td></tr></tbody></table>
+      <h2 id="protocol-aggregate">Protocol aggregate</h2>
+      <p><code>aggregateProtocolScorecard(rows, { protocol?, period? })</code> → counts, rates, funder×outcome matrix, wash-dyad flirt score, <strong>seriousness band</strong>:</p>
+      <table class="doc-table"><thead><tr><th>Band</th><th>Meaning (heuristic sketch)</th></tr></thead><tbody><tr><td><code>serious</code></td><td>Low resolution gap, high repro rate, low expire-without-repro</td></tr><tr><td><code>wash_dyad_flirt</code></td><td>High expire rate + elevated wash score</td></tr><tr><td><code>lazy_or_evading</code></td><td>High gap, low repro</td></tr><tr><td><code>mixed</code></td><td>Between</td></tr><tr><td><code>no_claims</code></td><td>Empty cohort</td></tr></tbody></table>
+      <p><strong>Report:</strong> <code>formatProtocolScorecardReport(agg)</code> — CLI text for <code>claimResolutionFleetLog.mjs report</code>.</p>
+      <h2 id="fleet-jsonl">Fleet JSONL</h2>
+      <pre class="mono doc-pre">cd cell
+node indexer/claimResolutionFleetLog.mjs append fixtures/claim-resolution-gate0-v3-r6.json
+node indexer/claimResolutionFleetLog.mjs report --protocol 0xb0A35411b350038aCd79b9bEf455b77f03b9EC55</pre>
+      <p>Default log: <code>fixtures/claim-resolution-log-v0.jsonl</code>.</p>
+      <h2 id="tests">Tests</h2>
+      <pre class="mono doc-pre">cd cell &amp;&amp; npm run test:claim-scorecard
+cd cell &amp;&amp; npm run test:organs-o6</pre>
+      <p>Covers: funder×outcome cells, Gate0 R6 fixture, decline/carry paths, expire wash flirt, protocol aggregate bands, fleet log round-trip.</p>
+      <p><strong>Previous:</strong> <a href="docs-integration-artifact-registry.html">Artifact registry</a> · <strong>Next:</strong> <a href="docs-integration-settlement-vs-signal.html">Settlement vs signal</a></p>
+      
+      <footer class="doc-page-foot"><a href="docs-integration.html">← Integration</a> · <a href="docs-notebook.html">Notebook</a></footer>
+    </div>
+  </main>
+
+  <aside id="docRail" aria-label="You are here" hidden></aside>
+
+</div>
+<script src="motion.js?v=1"></script>
+<script src="your-links.js?v=5"></script>
+<script src="docs-rail.js?v=5"></script>
+</body>
+</html>

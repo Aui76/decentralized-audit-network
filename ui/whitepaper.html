@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Whitepaper · Resources · Audit Cell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css?v=5">
+</head>
+<body class="page-prose">
+<div class="layout layout-docs">
+
+  <nav>
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink" href="quickstart.html">Quickstart</a>
+    <a class="navlink on" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+
+  <main>
+    <div class="inner">
+      <p class="eyebrow"><a href="resources.html">Resources</a></p>
+
+      <h1>Reproducible Verdicts</h1>
+      <p class="subtitle">A neutral rail for security audits that settle by reproduction, not by trust.</p>
+
+      <p class="intro"><b>Abstract.</b> Every smart-contract audit today ends the same way — a report, a reputation, a verdict you have to believe — and none of it can be recomputed. This paper describes a network where the verdict is not an opinion someone signs but a fact anyone can reproduce: a finding settles escrow because an independent stranger ran the same registered tool on the same bytecode and reached the same answer, not because a firm vouched for it. Settlement follows reproduction. No arbiter decides, no signature is trusted, no name is taken on faith. What accumulates is not a stack of reports but a public, canonical toolkit of verification primitives — the network's real product, and in time the standard the industry checks itself against. The settlement core is small, carries no signatures of its own, is meant to stay frozen, and is already running end-to-end on a public chain.</p>
+
+      <hr>
+
+      <h2 id="the-trust-you-cant-remove">The trust you can't remove</h2>
+      <p>An audit is the one place in crypto where a system built to remove trust still runs on it. A protocol pays a firm; a document comes back; the world is asked to believe the name at the top. When it holds, it holds on reputation. When it fails, there is nothing underneath to check.</p>
+      <p>The gap is not bad actors — it is that the honest audit and the hollow one ship the same artifact: a promise. Nothing in the real one can be verified that the empty one cannot equally claim. Everyone downstream inherits it: whoever pays, whoever audits, whoever found the bug is left pointing at a name.</p>
+
+      <h2 id="one-move">One move</h2>
+      <p>So take the name out of it. The network makes one move, and everything else follows: it turns the verdict from something you believe into something you can recompute.</p>
+      <p>A verdict here is not a signature. It is a value — thirty-two bytes — produced by running a registered tool on the deployed bytecode under a declared spec. Run the same tool on the same code and the value is identical, for anyone, on any day. Payout is keyed to that value and to nothing else. The party holding the money cannot decide the outcome, and the party who found the truth does not need to be believed — only to produce the matching fact.</p>
+
+      <h2 id="the-mechanism">The mechanism</h2>
+      <p>That is the whole design; the rest is how it is made to happen. A protocol locks the reward in escrow before anyone looks, and pins two things: the contract, and the terms it is audited against. Those terms sit on a dial — at one end a precise invariant the code must hold, at the other an open invitation to find whatever the registered tool finds. Not knowing which bug you are hunting is a valid spec; what makes a finding reproducible was never that someone named it in advance, only that the tool and the inputs are pinned.</p>
+      <p>An auditor runs the tool and files the result; an independent party — not the protocol, not the original auditor — runs it again. Match, and escrow releases to the finder. No match, and the claim fails and the challenger's stake is slashed. No one adjudicates. The mechanism moves on reproduction alone, and settlement follows whoever can produce the matching fact — even against the will of whoever holds the money.</p>
+
+      <h2 id="the-fingerprint">The fingerprint</h2>
+      <p>Reproduction can only settle anything if it is exact. Everything rests on one commitment: two honest people who run the same check on the same contract must reach the same answer, exactly. The result of a run collapses to a single thirty-two-byte value, built from the exact tool at its exact version, the exact bytecode, the exact spec, the run environment, the verdict, and — on a failure — the specific findings. It deliberately excludes time, machine, and the identity of whoever ran it. Everything that would let two honest runs disagree is left out.</p>
+      <p>That small encoding carries the whole product. It is where non-discretionary payout physically lives, and it is the border of what the system will decide. The canonical form is fixed as <code>AUDIT_RESULT_V1</code>. Every tool the network will ever accept conforms to the same socket, and a cryptographic verifier, if one is ever built, would prove the same statement without changing anything else.</p>
+
+      <h2 id="the-real-product">The real product: an accumulating toolkit</h2>
+      <p>The socket is fixed so the toolkit can grow into it. The audits are not the product. The toolkit is.</p>
+      <p>Every audit cites the tools it ran, by their on-chain identity. A tool is registered by anyone, permissionlessly, and it earns nothing by decree — it earns standing by use. Each audit that clears its window with the tool cited adds to that tool's record, and once enough have, the tool is marked canonical. No committee votes. The canonical set grows one proven primitive at a time, and it only grows.</p>
+      <p>This is the part that compounds. A verdict is spent the moment it settles; a tool that catches a class of bug catches it in every audit that cites it afterward. The network does not improve because it piles up reports — it improves because it accumulates checks. Carried far enough, the canonical toolkit is not a feature of the network. It is the verification standard the industry reaches for, and the audits were only how it got built.</p>
+
+      <h2 id="what-it-refuses-to-settle">What it refuses to settle</h2>
+      <p>A claim that large earns its keep only by being honest about its edges. A serious instrument is defined as much by what it declines to touch: this one settles a single question — did the filed finding reproduce under the pinned tool, contract, and spec. It does not rank a bug's severity, judge whether it was in scope, or decide who filed first. Those are real disputes, and the core stays out of them.</p>
+      <p>Two limits are structural, and naming them is part of being honest about what the thing is. Reproducible is not correct: the fingerprint guarantees everyone gets the same answer from the same tool, not that the tool is any good. A weak checker is reproducibly weak, and reproducibly wrong is still wrong — whether a tool deserves trust is exactly what the accumulating record is for. The same holds for the spec. The system checks the spec it was handed, not whether that spec was the right one; a hollow spec, flawlessly checked, returns a hollow verdict. What the core guarantees is narrow and total — execution honesty, that the run claimed is the run that happened. The rest is reputation, and the network is built to grow it in the open.</p>
+
+      <h2 id="the-economic-engine">The economic engine</h2>
+      <p>Growing it in the open takes a fuel of its own. A token exists because the mechanism needs one unit that only its own work can create. AUDIT enters circulation through confirmed audits and nothing else: each audit that survives its challenge window mints one block, paid to the auditor. There is no premine — the first token is earned by the first audit — and after bootstrap the minting key is locked one way, so only the mechanism can ever issue supply.</p>
+      <p>Issuance follows work, not a countdown. A confirmed block mints an amount sized from recent activity — a slow average of the bounty-weighted volume the network is actually clearing — paced so it cannot outrun the liquidity backing it. Supply is not chased toward a fixed ceiling; it tracks how much real verification is happening, and when a burst looks manufactured the mint damps itself. Bugs are the sharp case: a discoverer is paid from reserves that earlier work already set aside, never from fresh supply. The most dangerous attack on any such system — stage a break, collect freshly printed reward, repeat — cannot mint here by construction.</p>
+      <p>Demand is as plain as issuance. To post a bounty, a protocol must hold the unit the network pays in; to audit, a participant must hold a stake that scales with their place in the queue. The token's value is not a claim about the worth of verification — it is the standing demand of everyone who needs the rail. Earned on one side, required on the other, gifted to no one.</p>
+
+      <h2 id="where-it-stands">Where it stands</h2>
+      <p>So much for the design; here is what has actually run. Reproduction settlement is closed, and it was closed by falsification, not assertion. On a public chain, planted flaws have been claimed, re-run by an independent party, and resolved with the finder paid from escrow and the payer unable to intervene — deliberately, repeatedly. Either a finding reproduces or it does not; on that binary the mechanism has already acted, live.</p>
+      <p>What is not yet cryptographic is the last link: the binding between an on-chain fingerprint and a genuine tool run. Today that rests on two things together — an independent re-runner who actually executes the tool, and a window in which anyone can reproduce a run and challenge it. The assumption is an honest majority over an open population given time to look, not trust in one actor at one moment. A zero-knowledge or trusted-execution verifier would harden that link into an unforgeable proof; it is worth building, and it is not required for the network to pay or withhold. Current deployments carry a demo, testnet-grade label — a statement about scale and stakes, not about whether settlement is real. It is.</p>
+
+      <h2 id="the-one-move-restated">The one move, restated</h2>
+      <p>Strip away the machinery and one move remains: a verdict stops being someone's word and becomes something anyone can recompute. From that single change the rest follows — the neutrality, the scope boundary, the toolkit that compounds, the token only work can mint. It does not make audits perfect, and it does not remove judgment from the places judgment belongs. It makes one outcome — reproduction on the pinned artifact — a fact the world can check for itself, instead of a promise it has to take.</p>
+
+      <span class="badge"><span class="live"></span> Live on Base Sepolia — full cycle end-to-end · demo/testnet-grade</span>
+
+      <footer class="doc-page-foot">
+        <a href="resources.html">← Resources</a> · <a href="docs.html">Docs</a> · <a href="docs-fingerprint.html">Fingerprint spec</a> · <a href="tokenomics.html">Tokenomics</a>
+      </footer>
+    </div>
+  </main>
+
+  <aside>
+    <div class="lbl">On this page</div>
+    <a href="#the-trust-you-cant-remove">The trust you can't remove</a>
+    <a href="#one-move">One move</a>
+    <a href="#the-mechanism">The mechanism</a>
+    <a href="#the-fingerprint">The fingerprint</a>
+    <a href="#the-real-product">The real product</a>
+    <a href="#what-it-refuses-to-settle">What it refuses to settle</a>
+    <a href="#the-economic-engine">The economic engine</a>
+    <a href="#where-it-stands">Where it stands</a>
+    <a href="#the-one-move-restated">The one move, restated</a>
+  </aside>
+
+</div>
+
+<script src="your-links.js?v=5"></script>
+<script src="membrane-rail.js?v=2"></script>
+<script src="motion.js?v=1"></script>
+</body>
+</html>

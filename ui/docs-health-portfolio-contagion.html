@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>!function(){try{var k="membrane_nav_session",s=sessionStorage.getItem(k);document.documentElement.classList.add(s?"nav-session":"cold-load");if(!s)sessionStorage.setItem(k,"1")}catch(e){}}();</script>
+<title>Portfolio contagion · Network Health · Audit Cell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css?v=5">
+</head>
+<body class="page-prose">
+<div class="layout layout-docs">
+
+  <nav>
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink" href="quickstart.html">Quickstart</a>
+    <a class="navlink on" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+
+  <main>
+    <div class="inner">
+
+      <div class="doc-layer-row">
+        <a href="docs-health.html" class="doc-layer doc-layer-spec">Network Health</a>
+        <span class="doc-layer doc-layer-spec">Spec · reader</span>
+      </div>
+      <h1>Portfolio contagion</h1>
+      <p class="doc-q">When does a confirmed exploit imply other InBlock audits are exposed** — and how does Bob dampen (not settle) the card?</p>
+      
+      <div class="doc-bridge doc-bridge-story">
+        <p class="doc-bridge-lbl">Story context</p>
+        <ul>
+          <li><a href="docs-book-19.html">Book ch 19 · Gaming &amp; defenses</a></li>
+          <li><a href="docs-book-22.html">Book ch 22 · Reading the chain</a></li>
+        </ul>
+      </div>
+      <p>Off-chain SIR-style model over <strong>InBlock</strong> audits that share FMEA spec-gap overlap with confirmed exploits. <strong>No on-chain contract.</strong> Indexer-only; optional Bob fuse when <code>portfolioContext</code> is supplied.</p>
+      <p>Module: <strong>`cell/indexer/deriveContagion.mjs`</strong> (O5 organ).</p>
+      <h2 id="flow-vs-stock">Flow vs stock</h2>
+      <table class="doc-table"><thead><tr><th>Dimension</th><th>Measures</th><th>Source</th></tr></thead><tbody><tr><td><strong>Flow</strong></td><td>Audit throughput, network heat</td><td><a href="docs-health-thermodynamics-and-flow.html">Network flow</a> · cell issuance + escrow</td></tr><tr><td><strong>Stock</strong></td><td>Latent gap overlap after an exploit</td><td><strong>`deriveContagion.mjs`</strong></td></tr></tbody></table>
+      <p>A portfolio can look flow-healthy while a vulnerability class is <strong>outbreaking</strong> (R₀ &gt; 1). Integrators need both; neither alone means &quot;safe.&quot;</p>
+      <h2 id="module-exports">Module exports</h2>
+      <table class="doc-table"><thead><tr><th>Export</th><th>Meaning</th></tr></thead><tbody><tr><td><code>derivePortfolioContagion(input)</code></td><td>Per-audit exposure + portfolio R₀</td></tr><tr><td><code>attachContagionToCard(card, contagion, auditId)</code></td><td>Advisory fields only</td></tr><tr><td><code>applyContagionToBobCard(card, contagion, auditId)</code></td><td>Portfolio fuse — dampens <code>outcome</code> / <code>action</code> / <code>confidence</code></td></tr><tr><td><code>UNCLASSIFIED_VULNERABILITY_CLASS</code></td><td>Matches cell unclassified FMEA bucket</td></tr><tr><td><code>PORTFOLIO_FUSE_FRAMING</code></td><td>Mandatory copy: priority re-audit candidate, not &quot;network unsafe&quot;</td></tr></tbody></table>
+      <p>Contagion reads <strong>`toolKnownGaps`</strong> from <strong>`FmeaRegistry`</strong> (claim exploits) + <strong>`SpecGapModule`</strong> (spec-gap adopt/concede) — merged at indexer tick. O4 scope symbols are separate.</p>
+      <h2 id="exposure-rule">Exposure rule</h2>
+      <p>An <strong>InBlock</strong> audit is exposed to class <strong>C</strong> when:</p>
+      <ol><li>Its <code>specToolId</code> lists <strong>C</strong> in <code>toolKnownGaps</code>, and</li><li><strong>C</strong> has a recent exploit on a <strong>different</strong> audit (same class, spec-gap overlap — not mere shared tool id), and</li><li>The audit is not the exploit source row itself.</li></ol>
+      <p>Exposure is <strong>class-local</strong>, not &quot;same tool as victim.&quot;</p>
+      <h2 id="r-per-class">R₀ per class</h2>
+      <p>For each class with recent exploits:</p>
+      <pre class="mono doc-pre">R₀ = (exploitCount × exposureCount) / reauditRate</pre>
+      <table class="doc-table"><thead><tr><th>R₀</th><th>Label</th><th>Meaning</th></tr></thead><tbody><tr><td>≤ 1</td><td>contained</td><td>Re-audits / gap closure keep pace</td></tr><tr><td>&gt; 1</td><td>outbreak</td><td>Exposed InBlock rows accumulate faster than re-audits</td></tr></tbody></table>
+      <p><code>portfolio.outbreakClasses</code> lists classes with R₀ &gt; 1. <code>portfolio.networkR0</code> is the max across outbreak (else max contained).</p>
+      <h2 id="bob-fuse">Bob fuse</h2>
+      <p>When <code>deriveBobCard</code> receives <code>portfolioContext</code>, it runs <code>derivePortfolioContagion</code> then <strong>`applyContagionToBobCard`</strong>:</p>
+      <table class="doc-table"><thead><tr><th>Condition</th><th>Card effect</th></tr></thead><tbody><tr><td>Outbreak exposure on this audit</td><td><code>CLEAN</code> → <code>WEAK</code>; <code>INVEST</code> → <code>WAIT</code>; <code>confidence</code> capped <code>LOW</code>; <code>reviewTier</code> → <code>watch</code>; pattern <code>portfolio-fuse</code></td></tr><tr><td>Advisory only (<code>reauditAdvisory</code>, no outbreak)</td><td>Softer dampers; implication notes overlap</td></tr><tr><td>Missing <code>portfolioContext</code></td><td><code>integratorWarnings</code>: <code>MISSING_PORTFOLIO_CONTEXT</code> — fuse skipped</td></tr></tbody></table>
+      <p>R₀ &gt; 1 means <strong>priority re-audit candidate for overlapping class</strong> — not global mint denial, auto-slash, or &quot;contract vulnerable.&quot;</p>
+      <p>Flow-side hints (<code>card.flow</code>) remain separate — <a href="docs-health-thermodynamics-and-flow.html">Network flow</a>.</p>
+      <h2 id="card-output-fields">Card output fields</h2>
+      <table class="doc-table"><thead><tr><th>Field</th><th>Meaning</th></tr></thead><tbody><tr><td><code>exposedClasses[]</code></td><td>Classes this audit shares via gap overlap</td></tr><tr><td><code>exposureScore</code></td><td>Count of distinct exposed classes</td></tr><tr><td><code>reauditAdvisory</code></td><td><code>exposureScore &gt;= exposureThreshold</code></td></tr><tr><td><code>portfolioContagion</code></td><td><code>{ vulnerabilityClassR0, outbreakClasses, containedClasses, networkR0 }</code></td></tr><tr><td><code>classLocalFuse</code></td><td>Per-class fuse when outbreak + this audit exposed</td></tr><tr><td><code>portfolioFuseActive</code></td><td>Outbreak fuse applied</td></tr></tbody></table>
+      <p>Input shape and tests: <a href="docs-health-appendix-a-organ-hooks.html">Appendix A — Organ hooks</a>.</p>
+      <p><strong>Previous:</strong> <a href="docs-health-signals.html">Signals</a> · <strong>Appendix:</strong> <a href="docs-health-appendix-a-organ-hooks.html">Appendix A — Organ hooks</a></p>
+      
+      <footer class="doc-page-foot"><a href="docs-health.html">← Network Health</a> · <a href="docs-notebook.html">Notebook</a></footer>
+    </div>
+  </main>
+
+  <aside id="docRail" aria-label="You are here" hidden></aside>
+
+</div>
+<script src="motion.js?v=1"></script>
+<script src="your-links.js?v=5"></script>
+<script src="docs-rail.js?v=5"></script>
+</body>
+</html>

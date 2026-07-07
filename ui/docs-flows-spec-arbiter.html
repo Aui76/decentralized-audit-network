@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>!function(){try{var k="membrane_nav_session",s=sessionStorage.getItem(k);document.documentElement.classList.add(s?"nav-session":"cold-load");if(!s)sessionStorage.setItem(k,"1")}catch(e){}}();</script>
+<title>Spec arbiter · Flows · Audit Cell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css?v=5">
+</head>
+<body class="page-prose">
+<div class="layout layout-docs">
+
+  <nav>
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink" href="quickstart.html">Quickstart</a>
+    <a class="navlink on" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+
+  <main>
+    <div class="inner">
+
+      <div class="doc-layer-row">
+        <a href="docs-flows.html" class="doc-layer doc-layer-spec">Flows</a>
+        <span class="doc-layer doc-layer-spec">Spec · reader</span>
+      </div>
+      <h1>Spec arbiter</h1>
+      <p class="doc-q">Was the <strong>Gate A filing</strong> (spec + PASS digest on file) <strong>wrong or non-auditable</strong> — and should the line be <strong>voided before</strong> any positive block mints?</p>
+      
+      <div class="doc-bridge doc-bridge-story">
+        <p class="doc-bridge-lbl">Story context</p>
+        <ul>
+          <li><a href="docs-book-12.html">Book ch 12 · Overlays</a></li>
+        </ul>
+      </div>
+      <p>The <strong>spec arbiter</strong> is the <strong>Gate A overlay</strong>: a permissionless challenge to the <strong>declared spec PASS binding</strong> while the audit row is still <strong>pre-mint</strong>. Settlement is binary tool replay — not a severity debate. The cell records digests and lane locks; <code>SpecArbiterModule</code> (L1 satellite) drives hooks into <code>AuditCell</code>.</p>
+      <p>Missed-bug fights on pinned code belong on <a href="docs-flows-vulnerability.html">Vulnerability disclosure</a> (Gate C). Gate A declare + re-run: <a href="docs-flows-gate-a.html">The door (Gate A)</a>. Lane lock: <a href="docs-flows-mutex.html">Audit mutex</a> (<strong>Spec</strong> lane).</p>
+      <p><strong>Module:</strong> <code>SpecArbiterModule.sol</code> · <strong>Cell hooks:</strong> <code>settlementSpecChallenge</code> lock / unlock / void.</p>
+      <h2 id="gate-a">Boundary with The door (Gate A)</h2>
+      <table class="doc-table"><thead><tr><th>Layer</th><th><a href="docs-flows-gate-a.html">The door (Gate A)</a></th><th>This chapter</th></tr></thead><tbody><tr><td><strong>Declare + re-run</strong></td><td><code>submitAudit</code> / <code>acceptAudit</code> digests</td><td>—</td></tr><tr><td><strong>Pre-mint challenge</strong></td><td>One-paragraph pointer</td><td>Full overlay: open, arbiter, void, liveness</td></tr><tr><td><strong>Gate C</strong></td><td>—</td><td>Missed bug on pinned code → ch 03</td></tr></tbody></table>
+      <h2 id="spec-challenge-vs-gate-c">Spec challenge vs Gate C</h2>
+      <table class="doc-table"><thead><tr><th>Fight</th><th>Question</th><th>When</th></tr></thead><tbody><tr><td><strong>Spec arbiter (Gate A overlay)</strong></td><td>Is the <strong>declaration</strong> invalid?</td><td>Pre-mint — typically <code>Submitted</code> … <code>AwaitingWindow</code></td></tr><tr><td><strong>Claim (Gate C)</strong></td><td>Does <strong>pinned code</strong> fail <strong>spec on file</strong>?</td><td>After provisional PASS path — claim window</td></tr></tbody></table>
+      <h2 id="where-it-sits-in-the-lifecycle">Where it sits in the lifecycle</h2>
+      <pre class="mono doc-pre">submitAudit (declare) ──► … pre-InBlock … ──► confirmAudit / Invalidated
+                              │
+                              └── challengeSpecInvalid  (Spec lane open)
+                                        │
+                    ┌───────────────────┼───────────────────┐
+                    ▼                   ▼                   ▼
+             declaration holds    Invalidated          liveness expiry
+             (challenge loses)    (challenge wins)       (see flow)</pre>
+      <p>Successful invalidation → <strong>`Invalidated`</strong>: bounty returned (per rules), artifact pin cleared, <strong>no</strong> positive block minted.</p>
+      <h2 id="who-runs-the-arbiter">Who runs the arbiter</h2>
+      <p>The assigned <strong>spec arbiter</strong> is the next eligible pool registrant at challenge open — <strong>not</strong>:</p>
+      <table class="doc-table"><thead><tr><th>Excluded</th><th>Reason</th></tr></thead><tbody><tr><td>Protocol</td><td>Submitted the spec at Gate A</td></tr><tr><td>Original auditor</td><td>Attested PASS at accept</td></tr><tr><td>Challenger</td><td>Has stake in the outcome</td></tr></tbody></table>
+      <p>Anyone may call <strong>`reassignSpecArbiter`</strong> if the drawn party is ineligible.</p>
+      <h2 id="flow">Flow</h2>
+      <pre class="mono doc-pre">challengeSpecInvalid(auditId, failErrorsRoot)
+        ↓
+assign spec arbiter (or SpecArbiterUnavailable)
+        ↓
+  ┌─ arbiter assigned ── declareSpecArbitrament(errorsRoot)
+  │       MATCH stored PASS digest → challenger slashed; audit continues
+  │       NO MATCH → invalidate; fee split; challenger stake refunded
+  ├─ arbiter silent ── expireSilentSpecArbiter
+  ├─ no arbiter ── protocol defendSpecChallenge(passRoot)  [fast path]
+  └─ no arbiter, window elapsed ── finalizeSpecChallenge → invalidate</pre>
+      <p><strong>Challenger files FAIL evidence</strong> (<code>failErrorsRoot</code>) against the declared spec binding. <strong>Defense / arbiter</strong> replays PASS (or FAIL) and compares to <strong>`specPassDigest`</strong> stored at submit.</p>
+      <p>While the <strong>Spec</strong> lane is open: blocks <code>acceptAudit</code>, in-audit verdict, <code>confirmAudit</code>, <code>claimVulnerability</code>, and new dispute spawns (<code>SpecChallengeActive</code>).</p>
+      <h2 id="outcomes">Outcomes</h2>
+      <table class="doc-table"><thead><tr><th>Result</th><th>Effect</th></tr></thead><tbody><tr><td>Declaration <strong>reproduced</strong> (PASS digest matches)</td><td>Challenge fails; challenger stake slashed (repeat rules may escalate); row continues</td></tr><tr><td>Declaration <strong>not reproduced</strong> / sustained invalidation</td><td>→ <code>Invalidated</code>; bounty return minus fee; artifact pin cleared</td></tr><tr><td>Protocol <strong>non-defense</strong> after window (no arbiter path)</td><td><code>finalizeSpecChallenge</code> may invalidate — auditor <code>failed++</code> <strong>not</strong> incremented (bad spec ≠ bad audit)</td></tr></tbody></table>
+      <h2 id="functions">Functions</h2>
+      <table class="doc-table"><thead><tr><th>Function</th><th>Caller</th><th>Meaning</th></tr></thead><tbody><tr><td><code>challengeSpecInvalid</code></td><td>Anyone</td><td>Post stake; open <strong>Spec</strong> lane; lock audit</td></tr><tr><td><code>defendSpecChallenge</code></td><td>Protocol</td><td>Replay PASS digest when no arbiter assigned (fast path)</td></tr><tr><td><code>declareSpecArbitrament</code></td><td>Assigned arbiter</td><td>Binary PASS/FAIL replay vs stored Gate A digest</td></tr><tr><td><code>reassignSpecArbiter</code></td><td>Anyone</td><td>Replace ineligible arbiter</td></tr><tr><td><code>expireSilentSpecArbiter</code></td><td>Anyone</td><td>Clear arbiter who missed declare window</td></tr><tr><td><code>finalizeSpecChallenge</code></td><td>Anyone</td><td>No-arbiter invalidation after challenge window</td></tr></tbody></table>
+      <h2 id="parameters-defaults">Parameters (defaults)</h2>
+      <table class="doc-table"><thead><tr><th>Parameter</th><th>Default</th><th>Meaning</th></tr></thead><tbody><tr><td><code>specChallengeStake</code></td><td>100 AUDIT</td><td>Challenger escrow</td></tr><tr><td><code>specChallengeWindow</code></td><td>2 days</td><td>Protocol defend / finalize window (no-arbiter path)</td></tr><tr><td><code>specArbiterDecisionWindow</code></td><td>7 days</td><td>Assigned arbiter must declare</td></tr><tr><td><code>specChallengeRepeatSlashBps</code></td><td>5000</td><td>Escalating slash on repeat defends same (address, audit)</td></tr><tr><td><code>specArbiterRewardBps</code> / challenger invalidation reward</td><td>5000 each</td><td>Fee split when arbiter FAIL invalidates line</td></tr></tbody></table>
+      <h2 id="cell-mutator">Cell mutator</h2>
+      <p><code>settlementSpecChallenge(auditId, op, challenger)</code> — callable only from wired module:</p>
+      <table class="doc-table"><thead><tr><th>op</th><th>Meaning</th></tr></thead><tbody><tr><td>0</td><td><strong>Lock</strong> — block confirm / claim / verdict on this row</td></tr><tr><td>1</td><td><strong>Unlock</strong> — challenge lost or cleared; row continues</td></tr><tr><td>2</td><td><strong>Void</strong> — refund claim stake if any, clear artifact pin, → <code>Invalidated</code></td></tr></tbody></table>
+      <p>Wiring: <a href="docs-flows-appendix-a.html">Appendix A — Module wiring</a>.</p>
+      <p><strong>Previous:</strong> <a href="docs-flows-mutex.html">Audit mutex</a> · <strong>Next:</strong> <a href="docs-flows-spec-gap.html">Spec-gap overlay</a></p>
+      
+      <footer class="doc-page-foot"><a href="docs-flows.html">← Flows</a> · <a href="docs-notebook.html">Notebook</a></footer>
+    </div>
+  </main>
+
+  <aside id="docRail" aria-label="You are here" hidden></aside>
+
+</div>
+<script src="motion.js?v=1"></script>
+<script src="your-links.js?v=5"></script>
+<script src="docs-rail.js?v=5"></script>
+</body>
+</html>

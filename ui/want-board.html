@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>What should we check next? · Audit Cell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css?v=5">
+<style>
+  .wb-query{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:16px 0 4px}
+  .wb-query input{flex:1;min-width:180px;padding:8px 10px}
+  .wb-query button[data-flag]{background:#0b0e13;color:var(--fg,#e6edf3);border:1px solid var(--border,#30363d)}
+  .wb-query button[data-flag].on{background:var(--acc,#3fb950);color:#06231a;border:1px solid var(--acc,#3fb950)}
+  .wb-row{display:grid;grid-template-columns:1fr 128px 138px;gap:16px;align-items:center;padding:15px 0;border-top:1px solid var(--border,#30363d)}
+  .wb-row:first-child{border-top:none}
+  .wb-facts{margin-top:7px;display:flex;gap:6px;flex-wrap:wrap}
+  .wb-chip{font-size:13px;font-weight:500;padding:3px 9px;border-radius:20px;border:1px solid var(--border,#30363d);color:var(--muted,#8b949e)}
+  .wb-chip.risk{color:#f85149;border-color:#f85149}
+  .wb-chip.pass{color:var(--acc,#3fb950);border-color:var(--acc,#3fb950)}
+  .wb-chip.live{color:#d29922;border-color:#d29922}
+  .wb-imp{text-align:center}
+  .wb-imp .score{font-size:26px;font-weight:700;line-height:1}
+  .wb-imp .bar{height:5px;border-radius:3px;background:#11161d;margin:6px 0 4px;overflow:hidden}
+  .wb-imp .fill{height:100%;border-radius:3px}
+  .wb-imp .lbl,.wb-dem .lbl{font-size:12px;color:var(--muted,#8b949e);text-transform:uppercase;letter-spacing:.05em}
+  .wb-dem{text-align:right}.wb-dem .num{font-size:22px;font-weight:700}.wb-dem .lbl{display:block;margin-bottom:7px}
+  .wb-fund{background:transparent;color:#d29922;border:1px solid #d29922;font-size:14px;padding:6px 11px;margin-top:8px;width:100%;border-radius:7px;cursor:pointer;text-decoration:none;display:inline-block;text-align:center;box-sizing:border-box}
+  .wb-note{font-size:17px;color:var(--muted,#8b949e);border-left:2px solid var(--border,#30363d);padding:3px 0 3px 12px;margin:14px 0 6px}
+  #status{margin-top:12px}
+</style>
+</head>
+<body>
+<div class="layout layout-docs">
+  <nav>
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink" href="quickstart.html">Quickstart</a>
+    <a class="navlink" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+
+  <main>
+    <div class="inner">
+      <p class="eyebrow">Free · no transaction · a wishlist, not a verdict</p>
+      <h1>What should we check next?</h1>
+      <p class="lede">A public wishlist for getting smart contracts security-checked. Worried about a contract? Point at it
+        and say <strong>"someone should check this"</strong> — free, one click, no wallet transaction. The board floats the
+        contracts most worth checking to the top — judged mostly by how much money is at risk — and your click is a
+        <strong>nudge</strong>, not the decision. When a contract rises high enough, someone funds a real audit.</p>
+
+      <div class="card" id="wallet-card">
+        <div id="wallet-root"></div>
+      </div>
+
+      <div class="card">
+        <p class="k" style="font-weight:500;margin:0 0 8px">Add a contract to the board</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <input type="text" id="addr" placeholder="0x… deployed contract address" style="flex:1;min-width:220px;padding:9px 11px;font-family:'JetBrains Mono',monospace;font-size:16px">
+          <button type="button" id="addBtn">Add to board</button>
+        </div>
+        <p class="k" style="margin:9px 0 0">Must be live on-chain — that's the only thing that can be reproduced later.</p>
+      </div>
+
+      <div class="wb-query">
+        <input type="text" id="search" placeholder="Search name or address…">
+        <button type="button" class="ghost" data-flag="unaudited" style="font-size:14px;padding:6px 11px">Unaudited only</button>
+        <button type="button" class="ghost" data-flag="risk" style="font-size:14px;padding:6px 11px">Resembles a known failure</button>
+        <label class="k" for="sort" style="margin-left:auto">Rank by</label>
+        <select id="sort" style="padding:8px 10px">
+          <option value="importance">Importance (facts-led)</option>
+          <option value="stakes">Value at risk</option>
+          <option value="demand">Demand</option>
+          <option value="new">Newest</option>
+        </select>
+      </div>
+
+      <div class="card" id="board"></div>
+      <div id="status"></div>
+
+      <p class="wb-note">
+        <strong>Your click is a nudge, not a verdict.</strong> The ranking is driven mostly by the facts in each row —
+        money at risk, who's exposed, whether it's been checked before. Adding a "want" is free and just says
+        "I'd like this looked at"; it proves nothing on its own. A real check only happens when someone funds an
+        audit on <a href="post.html">Post a bounty</a>.
+      </p>
+
+      <p class="k" style="margin:6px 0 0;font-size:17px;line-height:1.55">
+        * <strong>"Resembles a known failure"</strong> (the red tag) means this contract's code looks similar to code that
+        has been hacked or has failed before — the network keeps an on-chain memory of past bug types and flags matches.
+        It's a heads-up, not a verdict: a reason to look, not proof anything is wrong.
+        (Could also read as <em>"looks like code that's failed before"</em> or <em>"similar to a past exploit."</em>)
+      </p>
+
+      <p class="k" style="margin:8px 0 0;font-size:17px;line-height:1.55">
+        † <strong>What's on the board today:</strong> these are contracts the network has already audited
+        (<em>passed</em>) or is currently auditing (<em>live</em>) — the list is built from the network's own audit
+        records. A genuinely <em>unaudited</em> contract only appears when someone adds one above ("Add a contract").
+        So until the board is fed a source of un-checked deployments, "Unaudited only" will be nearly empty — a known
+        gap between what this page is <em>for</em> and where its data comes from, not a bug.
+      </p>
+
+      <footer class="doc-page-foot">Want-board · ranking from indexed view-model · settles nothing</footer>
+    </div>
+  </main>
+
+  <aside>
+    <div class="lbl">On this page</div>
+    <a href="#board">Ranked contracts</a>
+    <a href="ideas.html">How ideas become real</a>
+    <a href="explorer.html">Browse audits</a>
+  </aside>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/ethers@6.14.0/dist/ethers.umd.min.js"></script>
+<script src="view-model.js"></script>
+<script src="wallet-bar.js"></script>
+<script src="want-board-engine.js"></script>
+<script>
+(function(){
+  var M = window.__MODEL;
+  var boardFn = window.deriveWantBoard;
+  var feedFn = window.buildWantFeed;
+  var buildTyped = window.buildWantTypedData;
+  var verifyWant = window.verifyWant;
+  var buildStore = window.buildWantStore;
+  var W = window.MembraneWallet;
+
+  var sort = "importance";
+  var search = "";
+  var filter = {};
+  var extras = [];
+  var verifiedList = [];
+  var store = null;
+  var signing = false;
+
+  var STORE_KEY = "dan-want-store-v1";
+  var EXTRAS_KEY = "dan-want-extras-v1";
+
+  function esc(s){
+    return String(s == null ? "" : s).replace(/&/g,"&amp;").replace(/</g,"&lt;");
+  }
+  function short(a){ return a ? a.slice(0,6)+"..."+a.slice(-4) : "?"; }
+  function usd(v){
+    if(!v) return "$0 at risk";
+    return "$"+(v>=1e9?(v/1e9).toFixed(1)+"B":v>=1e6?(v/1e6).toFixed(0)+"M":v>=1e3?(v/1e3).toFixed(0)+"k":v)+" at risk";
+  }
+  function impColor(s){ return s>=70?"#f85149":s>=40?"#d29922":"var(--acc,#3fb950)"; }
+  function statusChip(s){
+    if(s==="passed") return '<span class="wb-chip pass">passed</span>';
+    if(s==="live") return '<span class="wb-chip live">audit live</span>';
+    return '<span class="wb-chip">unaudited</span>';
+  }
+  function setStatus(html){
+    document.getElementById("status").innerHTML = html ? '<div class="card"><p class="k">'+html+'</p></div>' : "";
+  }
+  function chainId(){ return M && M.meta && M.meta.chainId ? M.meta.chainId : 84532; }
+  function cellAddr(){ return M && M.meta && M.meta.cell ? M.meta.cell : "0x0000000000000000000000000000000000000000"; }
+
+  function loadLocal(){
+    var cid = chainId();
+    try{
+      verifiedList = JSON.parse(localStorage.getItem(STORE_KEY+"-"+cid) || "[]");
+    }catch(e){ verifiedList = []; }
+    try{
+      extras = JSON.parse(localStorage.getItem(EXTRAS_KEY+"-"+cid) || "[]");
+    }catch(e){ extras = []; }
+    store = buildStore(verifiedList);
+  }
+  function saveLocal(){
+    var cid = chainId();
+    localStorage.setItem(STORE_KEY+"-"+cid, JSON.stringify(verifiedList));
+    localStorage.setItem(EXTRAS_KEY+"-"+cid, JSON.stringify(extras));
+    store = buildStore(verifiedList);
+  }
+
+  function myWants(){
+    var out = new Set();
+    if(!W.account) return out;
+    var me = W.account.toLowerCase();
+    for(var i=0;i<verifiedList.length;i++){
+      var w = verifiedList[i];
+      if(w.wanter && w.wanter.toLowerCase() === me && w.active !== false) out.add(String(w.target).toLowerCase());
+    }
+    return out;
+  }
+
+  function contractsFeed(){
+    if(!M || typeof feedFn !== "function") return extras.slice();
+    return feedFn(M, extras);
+  }
+
+  function render(){
+    if(typeof boardFn !== "function"){
+      document.getElementById("board").innerHTML = '<div class="k" style="padding:22px 0">Missing engine. Run <span class="mono">npm run test:want-board</span>, then reload.</div>';
+      return;
+    }
+    if(!M){
+      document.getElementById("board").innerHTML = '<div class="k" style="padding:22px 0">Missing <span class="mono">view-model.js</span>. Run <span class="mono">npm run index</span>, then reload.</div>';
+      return;
+    }
+    var contracts = contractsFeed();
+    var rows = boardFn({ contracts: contracts, store: store, sort: sort, filter: filter, search: search });
+    var mine = myWants();
+    var el = document.getElementById("board");
+    if(!rows.length){
+      el.innerHTML = '<div class="k" style="padding:22px 0;text-align:center">No contracts match this query.</div>';
+      return;
+    }
+    el.innerHTML = rows.map(function(r){
+      var f = r.facts;
+      var signed = mine.has(String(r.contract).toLowerCase());
+      var fund = r.fundable
+        ? '<a class="wb-fund" href="post.html?target='+encodeURIComponent(r.contract)+'">Fund this audit &rarr;</a>'
+        : "";
+      var cta;
+      if(f.auditStatus === "unaudited"){
+        cta = '<button type="button" class="'+(signed?"ghost":"")+'" data-want="'+esc(r.contract)+'">'+(signed?"Revoke want":"Want this checked")+'</button>'+fund;
+      }else{
+        cta = '<a class="ghost" href="explorer.html" style="display:inline-block;padding:8px 12px">Watch audits &rarr;</a>';
+      }
+      return '<div class="wb-row">'
+        +'<div><div style="font-weight:600">'+esc(r.name||short(r.contract))+'</div>'
+        +'<div class="k mono" style="font-size:14px">'+esc(short(r.contract))+'</div>'
+        +'<div class="wb-facts">'
+        +'<span class="wb-chip" style="color:var(--text,#e6edf3)">'+usd(f.stakesUsd)+'</span>'
+        +'<span class="wb-chip">'+Number(f.holders).toLocaleString()+' exposed</span>'
+        +statusChip(f.auditStatus)
+        +(f.riskResemblance>0?'<span class="wb-chip risk">resembles known failure</span>':'')
+        +'</div></div>'
+        +'<div class="wb-imp"><div class="score" style="color:'+impColor(r.importance)+'">'+r.importance+'</div>'
+        +'<div class="bar"><div class="fill" style="width:'+r.importance+'%;background:'+impColor(r.importance)+'"></div></div>'
+        +'<div class="lbl">importance</div></div>'
+        +'<div class="wb-dem"><span class="num">'+f.distinctWanters+'</span><span class="lbl">want &middot; soft term</span>'+cta+'</div>'
+        +'</div>';
+    }).join("");
+  }
+
+  async function toggleWant(contract){
+    if(signing) return;
+    if(!W.account){
+      setStatus("Connect your wallet first — wanting needs one free signature.");
+      return;
+    }
+    if(!W.isReady()){
+      setStatus("Switch MetaMask to <b>Base Sepolia</b> before signing.");
+      return;
+    }
+    var active = !myWants().has(String(contract).toLowerCase());
+    var issuedAt = Math.floor(Date.now() / 1000);
+    var typed = buildTyped(chainId(), cellAddr(), contract, issuedAt, active);
+    signing = true;
+    setStatus(active ? "Approve the free <b>WantCheck</b> signature in MetaMask…" : "Approve revoke signature in MetaMask…");
+    try{
+      var sig = await W.req("eth_signTypedData_v4", [W.account, JSON.stringify(typed)]);
+      var rec = await verifyWant({
+        chainId: chainId(),
+        verifyingContract: cellAddr(),
+        target: contract,
+        issuedAt: issuedAt,
+        active: active,
+        signature: sig,
+        claimedWanter: W.account
+      });
+      if(!rec.ok){
+        setStatus("Signature could not be verified: "+esc(rec.reason));
+        return;
+      }
+      verifiedList.push({
+        chainId: chainId(),
+        verifyingContract: cellAddr(),
+        target: rec.target,
+        wanter: rec.wanter,
+        issuedAt: rec.issuedAt,
+        active: rec.active,
+        signature: sig
+      });
+      saveLocal();
+      setStatus(active ? "Want recorded for "+short(contract)+" — distinct address count updated." : "Want revoked for "+short(contract)+".");
+      render();
+    }catch(e){
+      if(e && (e.code === 4001 || String(e.message||"").indexOf("User rejected") >= 0)){
+        setStatus("Signature cancelled — no change.");
+      }else{
+        setStatus("Signing failed: "+esc(e.message||e));
+      }
+    }finally{
+      signing = false;
+    }
+  }
+
+  async function addContract(){
+    var el = document.getElementById("addr");
+    var v = el.value.trim();
+    if(!/^0x[a-fA-F0-9]{40}$/.test(v)){
+      el.style.borderColor = "#d29922";
+      setStatus("Enter a valid 0x address.");
+      return;
+    }
+    el.style.borderColor = "";
+    if(!W.eth()){
+      setStatus("Connect wallet to confirm the contract is deployed on-chain.");
+      return;
+    }
+    try{
+      var code = await W.req("eth_getCode", [v, "latest"]);
+      if(!code || code === "0x" || code.length < 4){
+        setStatus("No bytecode at that address — submitAudit needs a live deployment.");
+        return;
+      }
+    }catch(e){
+      setStatus("Could not read chain code: "+esc(e.message||e));
+      return;
+    }
+    var key = v.toLowerCase();
+    var feed = contractsFeed();
+    if(feed.some(function(c){ return String(c.contract).toLowerCase() === key; })){
+      setStatus("That contract is already on the board.");
+      el.value = "";
+      return;
+    }
+    extras.unshift({ contract: v, name: "Added contract "+short(v), stakesUsd: 0, holders: 0, auditStatus: "unaudited", riskResemblance: 0, addedAt: Date.now() });
+    saveLocal();
+    el.value = "";
+    setStatus("Added "+short(v)+" — facts will fill in as audits appear.");
+    render();
+  }
+
+  document.addEventListener("click", function(e){
+    var w = e.target.closest("[data-want]");
+    if(w){ toggleWant(w.getAttribute("data-want")); return; }
+    var fl = e.target.closest("[data-flag]");
+    if(fl){
+      var k = fl.getAttribute("data-flag");
+      filter = Object.assign({}, filter);
+      filter[k] = !filter[k];
+      fl.classList.toggle("on", !!filter[k]);
+      render();
+    }
+    if(e.target.id === "addBtn") addContract();
+  });
+  document.getElementById("search").addEventListener("input", function(e){ search = e.target.value; render(); });
+  document.getElementById("sort").addEventListener("change", function(e){ sort = e.target.value; render(); });
+
+  W.init({
+    root: "#wallet-root",
+    onChange: function(){ render(); }
+  });
+
+  loadLocal();
+  var params = new URLSearchParams(location.search);
+  var pre = params.get("contract") || params.get("target");
+  if(pre && /^0x[a-fA-F0-9]{40}$/i.test(pre)){
+    document.getElementById("addr").value = pre;
+  }
+  render();
+})();
+</script>
+
+<script src="your-links.js?v=5"></script>
+<script src="membrane-rail.js?v=2"></script>
+<script src="motion.js?v=1"></script>
+</body>
+</html>

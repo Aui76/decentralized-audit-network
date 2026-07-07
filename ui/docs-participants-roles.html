@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>!function(){try{var k="membrane_nav_session",s=sessionStorage.getItem(k);document.documentElement.classList.add(s?"nav-session":"cold-load");if(!s)sessionStorage.setItem(k,"1")}catch(e){}}();</script>
+<title>Roles · Participants · Audit Cell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css?v=5">
+</head>
+<body class="page-prose">
+<div class="layout layout-docs">
+
+  <nav>
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink" href="quickstart.html">Quickstart</a>
+    <a class="navlink on" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+
+  <main>
+    <div class="inner">
+
+      <div class="doc-layer-row">
+        <a href="docs-participants.html" class="doc-layer doc-layer-spec">Participants</a>
+        <span class="doc-layer doc-layer-spec">Spec · reader</span>
+      </div>
+      <h1>Roles</h1>
+      <p class="doc-q">Who<strong> can act on the network, </strong>what risk/gain<strong> each role carries, and </strong>where protocol integrators** attach at submit?</p>
+      
+      <div class="doc-bridge doc-bridge-story">
+        <p class="doc-bridge-lbl">Story context</p>
+        <ul>
+          <li><a href="docs-book-02.html">Book ch 2 · The idea</a></li>
+          <li><a href="docs-book-03.html">Book ch 3 · Toolkit as product</a></li>
+          <li><a href="docs-book-04.html">Book ch 4 · The core model</a></li>
+          <li><a href="docs-book-09.html">Book ch 9 · The audit cycle</a></li>
+          <li><a href="docs-book-11.html">Book ch 11 · The break path</a></li>
+          <li><a href="docs-book-13.html">Book ch 13 · Tools &amp; canonization</a></li>
+          <li><a href="docs-book-15.html">Book ch 15 · The pool</a></li>
+          <li><a href="docs-book-17.html">Book ch 17 · Binary by choice</a></li>
+          <li><a href="docs-book-21.html">Book ch 21 · What each actor sees</a></li>
+        </ul>
+      </div>
+      <p>Five roles operate the network. Each acts in its own interest; incentives align toward <strong>reproducible security</strong> — not toward a shared committee.</p>
+      <p>Assignment policy: <a href="docs-participants-assignment.html">Assignment (CRD)</a> · break path: <a href="docs-flows-vulnerability.html">Vulnerability disclosure</a>.</p>
+      <p><strong>Not here:</strong> pool draw mechanics, dyad cap, reject cap — <a href="docs-participants-assignment.html">Assignment (CRD)</a>. Bob phase tags and animation — <a href="docs-participants-participant-phases.html">Participant phases (O3)</a>.</p>
+      <h2 id="five-roles-summary">Five roles (summary)</h2>
+      <table class="doc-table"><thead><tr><th>Role</th><th>Job on the network</th><th>Pays / earns</th></tr></thead><tbody><tr><td><strong>Protocol</strong></td><td>Post contract, lock bounty, declare Gate A spec, accept/reject <strong>assignee</strong></td><td>Bounty held; gains reproducible PASS record</td></tr><tr><td><strong>Auditor</strong></td><td>Join pool, run tools, binary verdict, survive challenge window</td><td>Paid at <strong>confirm</strong>; <code>failed++</code> if exploit reproduces</td></tr><tr><td><strong>Tool author</strong></td><td>Register deterministic checker (verdict or spec-validation)</td><td><strong>CAN mint</strong> at canonical threshold</td></tr><tr><td><strong>Bug-hunter</strong></td><td>Prove missed bug with stake + witness during claim window</td><td>Paid from <strong>reserves</strong> if FAIL reproduces</td></tr><tr><td><strong>Observer</strong></td><td>Re-run tools without wallet — compare to on-chain record</td><td>None — verification only</td></tr></tbody></table>
+      <h2 id="protocol">Protocol</h2>
+      <p>Posts a contract and funds a bounty, naming the check that applies. Accepts the assigned auditor, rejects within the decision window, or stays silent (→ auto-accept).</p>
+      <p>*<em>Reject chooses </em>who<em> audits</em>* — never whether the spec or verdict is wrong.</p>
+      <table class="doc-table"><thead><tr><th></th><th></th></tr></thead><tbody><tr><td><strong>Risk</strong></td><td>Bounty held during audit; surfaced bug recorded against the contract in the open</td></tr><tr><td><strong>Gain</strong></td><td>Reproducible, timestamped record that the contract passed a <strong>specific</strong> check</td></tr></tbody></table>
+      <p>Integrator surface: § Protocol — integrator surface below.</p>
+      <h2 id="auditor">Auditor</h2>
+      <p>Joins the pool, is assigned, runs the named tool, submits binary verdict, waits out the challenge period.</p>
+      <table class="doc-table"><thead><tr><th></th><th></th></tr></thead><tbody><tr><td><strong>Risk</strong></td><td>Paid only at confirmation; proven miss → audit failed, reward never lands; record permanent</td></tr><tr><td><strong>Gain</strong></td><td>Confirmed pass earns mechanism reward; strong record raises future earnings</td></tr><tr><td><strong>Entry</strong></td><td>Permissionless <code>register()</code>. Hold: <code>(position − 1) × increment</code> (live 84532: <code>increment = 1 AUDIT</code> locked; <strong>first registrar: 0</strong>)</td></tr></tbody></table>
+      <p>Repeated silence → rotated out; re-registration open.</p>
+      <h2 id="tool-author">Tool author</h2>
+      <p>Registers a deterministic checker — verdict tool or <strong>spec-validation</strong> tool for Gate A.</p>
+      <table class="doc-table"><thead><tr><th></th><th></th></tr></thead><tbody><tr><td><strong>Risk</strong></td><td>Tool that passes later-exploited contract → <code>failedUses</code> on-chain</td></tr><tr><td><strong>Gain</strong></td><td>At <code>canonicalThreshold</code> uses (default <strong>10</strong>), auto-canonicalize + <strong>CAN mint</strong> to proposer — verifiable count, no admin discretion</td></tr></tbody></table>
+      <p>FMEA / class registry: <code>../../meta/fmea.md</code>.</p>
+      <h2 id="bug-hunter">Bug-hunter</h2>
+      <p>During the challenge period, proves a missed bug with a <strong>registered tool</strong>. Claim is <strong>proof</strong>, not allegation.</p>
+      <table class="doc-table"><thead><tr><th></th><th></th></tr></thead><tbody><tr><td><strong>Risk</strong></td><td>Stake forfeited if claim fails to reproduce</td></tr><tr><td><strong>Gain</strong></td><td>Independent re-check reproduces bug → payment from <strong>reserves</strong></td></tr><tr><td><strong>Eligibility</strong></td><td>Registered auditor; <strong>not</strong> protocol; <strong>not</strong> original auditor (post-PASS path)</td></tr></tbody></table>
+      <p>Procedure: <a href="docs-flows-vulnerability.html">Vulnerability disclosure</a>.</p>
+      <h2 id="observer">Observer</h2>
+      <p>Any party — <strong>no wallet required</strong> — re-runs the check on live code and compares to the recorded result. Reproduction is what makes a verdict <strong>proof</strong>, not marketing.</p>
+      <h2 id="protocol-integrator">Protocol — integrator surface</h2>
+      <p>Protocol posts contracts, locks bounty, declares Gate A spec, and accepts or rejects assigned auditors within bounded windows.</p>
+      <p><strong>Reject = who audits.</strong> Wrong spec → <a href="docs-flows-gate-a.html">Gate A</a>. Wrong PASS on code → <a href="docs-flows-vulnerability.html">Gate C</a>.</p>
+      <h3>Submit (<code>submitAudit</code>)</h3>
+      <table class="doc-table"><thead><tr><th>Input</th><th>Meaning</th></tr></thead><tbody><tr><td>Deployed address + <strong>codehash pin</strong></td><td>Target cannot drift mid-audit</td></tr><tr><td>Bounty (via <code>CellEscrow</code>)</td><td>Held until confirm, claim, or void</td></tr><tr><td>Verdict <strong>tool id</strong></td><td>Named check for audit phase (Gate B)</td></tr><tr><td>Gate A: <code>specHash</code>, <code>specToolId</code>, <code>specErrorsRoot</code></td><td>Declared spec PASS binding</td></tr></tbody></table>
+      <p>Reverts if spec tool missing, unregistered, or not spec-validation. Full API: <a href="docs-flows-gate-a.html">The door (Gate A)</a>.</p>
+      <p><strong>Assurance tier:</strong> flat window + standard claim stake on-chain. <strong>Standard</strong> / <strong>High</strong> are <strong>off-chain labels only</strong> (<a href="docs-integration-assurance-tiers.html">Assurance tiers</a>).</p>
+      <p>Artifact pin: <a href="docs-integration-artifact-registry.html">Artifact registry</a>.</p>
+      <h3>After assign</h3>
+      <table class="doc-table"><thead><tr><th>Action</th><th>Meaning</th></tr></thead><tbody><tr><td><strong>Accept</strong> (or silence → auto-accept)</td><td>Auditor may re-run spec and submit verdict</td></tr><tr><td><strong>`protocolRejectAuditor`</strong></td><td>Bounded rejects — stalls <strong>assignment</strong>, not truth</td></tr></tbody></table>
+      <table class="doc-table"><thead><tr><th>Use reject for…</th><th>Do <strong>not</strong> use reject for…</th></tr></thead><tbody><tr><td>Conflict of interest / independence</td><td>Bad spec → Gate A / <a href="docs-flows-spec-arbiter.html">Spec arbiter</a></td></tr><tr><td>Wrong skill fit</td><td>Wrong PASS → Gate C</td></tr><tr><td>Before <code>acceptAudit</code></td><td>Endless auditor shopping (cap + penalties)</td></tr></tbody></table>
+      <p>Cap mechanics: <a href="docs-participants-assignment.html#protocol-reject-cap">Assignment (CRD) § protocol-reject cap</a>.</p>
+      
+      <footer class="doc-page-foot"><a href="docs-participants.html">← Participants</a> · <a href="docs-notebook.html">Notebook</a></footer>
+    </div>
+  </main>
+
+  <aside id="docRail" aria-label="You are here" hidden></aside>
+
+</div>
+<script src="motion.js?v=1"></script>
+<script src="your-links.js?v=5"></script>
+<script src="docs-rail.js?v=5"></script>
+</body>
+</html>

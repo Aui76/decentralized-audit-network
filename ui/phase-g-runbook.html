@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Phase G runbook · Audit Cell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css?v=5">
+</head>
+<body>
+<div class="layout layout-docs">
+
+  <nav>
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink" href="quickstart.html">Quickstart</a>
+    <a class="navlink on" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+
+  <main>
+    <div class="inner">
+      <p class="eyebrow"><a href="docs-structural.html">Structural upgrades</a></p>
+      <h1>Phase G runbook</h1>
+      <p class="lede">Operator broadcast sequence for a full structural upgrade demo on Base Sepolia (84532). Reader overview: <a href="docs-structural.html">Structural upgrades →</a></p>
+
+      <p class="k-read"><strong>Cell:</strong> <span class="mono">0xB8BFC2dd2CDFF79e018479C8a97B6AeC1979ff6d</span> · <strong>Prereq:</strong> Phase F closed · Phase C target is the canonical baseline.</p>
+
+      <h2 id="steps">Broadcast steps</h2>
+      <div class="statgrid" style="margin-bottom:16px">
+        <span class="k">0</span><span><code>PhaseGSetup.s.sol</code> — protocol A</span>
+        <span class="k">fund</span><span><code>PhaseDFundActors</code> — auditor B → filer D (~80 AUDIT)</span>
+        <span class="k">fund</span><span><code>PhaseCFundProtocol</code> — auditor B → protocol A (40+ AUDIT)</span>
+        <span class="k">1</span><span><code>PhaseGFileGap.s.sol</code> — filer D (40 AUDIT stake)</span>
+        <span class="k">2</span><span><code>PhaseGGapAuditorFail.s.sol</code> — assigned gap auditor</span>
+        <span class="k">3</span><span><code>PhaseGSubmitFix.s.sol</code> — filer D (40 AUDIT)</span>
+        <span class="k">4</span><span><code>PhaseGFixAuditorPass.s.sol</code> — assigned fix auditor</span>
+        <span class="k">5</span><span><code>PhaseGFixConfirm.s.sol</code> — after ~10m min audit window</span>
+        <span class="k">6</span><span><code>PhaseGWorkSubmit.s.sol</code> — protocol A (40 AUDIT)</span>
+        <span class="k">7</span><span><code>PhaseGWorkAuditorPass.s.sol</code> — assigned work auditor</span>
+        <span class="k">8</span><span><code>PhaseGWorkConfirm.s.sol</code> — after ~10m wait</span>
+        <span class="k">9</span><span><code>PhaseGVoteAdopt.s.sol</code> — work auditor votes + adopt</span>
+        <span class="k">10</span><span><code>PhaseGPromote.s.sol</code> — after promotion duration</span>
+      </div>
+
+      <h2 id="proves">What this proves</h2>
+      <p><code>fileNetworkGap</code> → gap FAIL → <code>submitStructuralFix</code> → fix PASS + confirm → probation → jury work audit → <code>voteStructuralUpgrade</code> + <code>adoptStructuralUpgrade</code> (Probationary + UPG mint) → <code>promoteCanonicalToOfficial</code>.</p>
+
+      <h2 id="commands">Example command</h2>
+      <p class="k-read">From the frozen <span class="mono">cell/</span> repo with Foundry and env keys loaded:</p>
+      <pre class="cmd">cd cell
+$env:AUDIT_CELL = "0xB8BFC2dd2CDFF79e018479C8a97B6AeC1979ff6d"
+
+forge script script/phase-g/PhaseGSetup.s.sol:PhaseGSetup `
+  --rpc-url base_sepolia --private-key $env:PRIVATE_KEY --broadcast --slow</pre>
+      <p class="k-read">Fund filer D and protocol A before steps 1 and 6. Each auditor step uses the private key for the address logged as <span class="mono">gapAuditor</span> / <span class="mono">fixAuditor</span> / <span class="mono">workAuditor</span>. Artifact: <span class="mono">cell/deployments/phase-g-84532.json</span>. Log txs in <span class="mono">RealDeal/notebook/DEPLOYMENT-LOG.md</span>.</p>
+
+      <footer class="doc-page-foot">
+        <a href="docs-structural.html">← Structural upgrades</a> · <a href="concern.html">Concern router</a>
+      </footer>
+
+      <span class="badge"><span class="live"></span> Operator · Base Sepolia testnet</span>
+    </div>
+  </main>
+
+  <aside>
+    <div class="lbl">On this page</div>
+    <a href="#steps">Broadcast steps</a>
+    <a href="#proves">What it proves</a>
+    <a href="#commands">Commands</a>
+  </aside>
+
+</div>
+
+<script src="your-links.js?v=5"></script>
+<script src="membrane-rail.js?v=2"></script>
+<script src="motion.js?v=1"></script>
+</body>
+</html>

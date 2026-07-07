@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>!function(){try{var k="membrane_nav_session",s=sessionStorage.getItem(k);document.documentElement.classList.add(s?"nav-session":"cold-load");if(!s)sessionStorage.setItem(k,"1")}catch(e){}}();</script>
+<title>Integrity review · Flows · Audit Cell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css?v=5">
+</head>
+<body class="page-prose">
+<div class="layout layout-docs">
+
+  <nav>
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink" href="quickstart.html">Quickstart</a>
+    <a class="navlink on" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+
+  <main>
+    <div class="inner">
+
+      <div class="doc-layer-row">
+        <a href="docs-flows.html" class="doc-layer doc-layer-spec">Flows</a>
+        <span class="doc-layer doc-layer-spec">Spec · reader</span>
+      </div>
+      <h1>Integrity review</h1>
+      <p class="doc-q">Should this <strong>audit row</strong> be independently re-run — and if the reviewer’s FAIL <strong>sustains</strong>, should the line <strong>void</strong> before or after confirm rules apply?</p>
+      
+      <div class="doc-bridge doc-bridge-story">
+        <p class="doc-bridge-lbl">Story context</p>
+        <ul>
+          <li><a href="docs-book-12.html">Book ch 12 · Overlays</a></li>
+          <li><a href="docs-book-19.html">Book ch 19 · Gaming &amp; defenses</a></li>
+        </ul>
+      </div>
+      <p><strong>Integrity review</strong> is a paid, tool-gated <strong>re-check of the audit line</strong> on pinned contract <strong>O</strong> when process fraud or collusion is plausible enough to warrant independent scrutiny. Settlement follows <strong>binary tool replay</strong> (<code>integrityRunDigest</code>, <code>AUDIT_INTEGRITY_RUN_V1</code>) — not Bob hints alone.</p>
+      <p>Missed bugs within <strong>S</strong> → <a href="docs-flows-vulnerability.html">Vulnerability disclosure</a> (Gate C). Bad <strong>declaration</strong> → <a href="docs-flows-spec-arbiter.html">Spec arbiter</a>. Fail <strong>outside S</strong> → <a href="docs-flows-spec-gap.html">Spec-gap overlay</a>. Lane lock: <a href="docs-flows-mutex.html">Audit mutex</a> (<strong>Integrity</strong> lane).</p>
+      <p><strong>Module:</strong> <code>IntegrityReviewModule.sol</code> · <strong>Off-chain hint:</strong> Bob <code>integrityReviewSuggested</code> — <strong>advisory only</strong>; a human/opener must call <code>openIntegrityReview</code> (<a href="docs-health-thermodynamics-and-flow.html">Network flow</a>).</p>
+      <p>Integrity escrow bucket: <a href="docs-economy-escrow-architecture.html#integrity-escrow-bucket">Escrow architecture</a>.</p>
+      <h2 id="integrity-vs-other-overlays">Integrity vs other overlays</h2>
+      <table class="doc-table"><thead><tr><th>Situation</th><th>Path</th><th>Question</th></tr></thead><tbody><tr><td>Wrong <strong>declared spec</strong> (Gate A)</td><td>Spec arbiter</td><td>Was the filing valid?</td></tr><tr><td><strong>Code fails S</strong> after PASS</td><td>Gate C claim</td><td>Missed bug on pin?</td></tr><tr><td>Fail <strong>outside declared S</strong></td><td>Spec-gap</td><td>Record <strong>P ∉ S</strong> without rewriting PASS</td></tr><tr><td>Line <strong>smells wrong</strong> (wash, collusion, pass cannot stand)</td><td><strong>Integrity review</strong></td><td>Does independent re-check FAIL the line?</td></tr></tbody></table>
+      <p>Hints <strong>alarm</strong>; only registered tool proof <strong>punishes</strong> (<a href="docs-flows-mutex.html#triangle-alarm">Audit mutex § triangle alarm</a>).</p>
+      <h2 id="hint-vs-open-l2-vs-l1">Hint vs open (L2 vs L1)</h2>
+      <table class="doc-table"><thead><tr><th>Layer</th><th>Role</th></tr></thead><tbody><tr><td><strong>L2 (Bob / indexers)</strong></td><td>Flag patterns — never auto-open review or slash</td></tr><tr><td><strong>L1 (this module)</strong></td><td>Paid open, verdict, contest, void — settlement-touching</td></tr><tr><td><strong>L0 cell</strong></td><td><code>integrityReviewLocked</code>, sustained void mutator</td></tr></tbody></table>
+      <h2 id="where-it-sits-integrity-lane">Where it sits (Integrity lane)</h2>
+      <pre class="mono doc-pre">Bob hint (optional) ──► openIntegrityReview(O) ──► Integrity lane locked
+                              │
+                              ├── submitIntegrityVerdict (PASS / FAIL)
+                              ├── protocol contest (optional)
+                              └── finalize / expire
+                                        │
+                    Cleared ──► line continues
+                    Sustained ──► Invalidated (void rules per state)</pre>
+      <p><strong>Eligible at open:</strong> <code>AwaitingWindow</code>, <code>InBlock</code> (and <code>Audited</code> where applicable).</p>
+      <p>While <strong>`Open`</strong> or <strong>`VerdictSubmitted`</strong>: blocks <code>confirmAudit</code> and <code>claimVulnerability</code> on <strong>O</strong>. <strong>Spec</strong> challenge and <strong>Integrity</strong> review <strong>exclude each other</strong> (<a href="docs-flows-mutex.html">Mutex</a>).</p>
+      <h2 id="overlay-states">Overlay states</h2>
+      <table class="doc-table"><thead><tr><th>Status</th><th>Meaning</th></tr></thead><tbody><tr><td><code>None</code></td><td>No review on this row</td></tr><tr><td><code>Open</code></td><td>Filing stake + audit bounty escrowed; confirm and claims <strong>blocked</strong></td></tr><tr><td><code>VerdictSubmitted</code></td><td>Reviewer declared PASS/FAIL + <code>resultRoot</code>; protocol contest window</td></tr><tr><td><code>Cleared</code></td><td>Final PASS; reviewer paid; line <strong>continues</strong></td></tr><tr><td><code>Sustained</code></td><td>Final FAIL; line <strong>voided</strong> on <strong>O</strong>; reviewer paid bounty + optional treasury match</td></tr><tr><td><code>Expired</code></td><td>No verdict in window; filing slashed; opener bounty refunded</td></tr></tbody></table>
+      <h2 id="flow">Flow</h2>
+      <pre class="mono doc-pre">openIntegrityReview(O, toolId, bountyAmount)
+        → lock row; optional integrity-bucket treasury match
+submitIntegrityVerdict(O, pass, resultRoot)
+contestIntegrityVerdict(O, …)     [protocol only]
+finalizeIntegrityReview(O)        → Cleared or Sustained void
+expireIntegrityReview(O)            → Expired; slash filing; refund bounty</pre>
+      <h2 id="outcomes">Outcomes</h2>
+      <table class="doc-table"><thead><tr><th>Result</th><th>Effect</th></tr></thead><tbody><tr><td>Reviewer <strong>PASS</strong> sustains</td><td>→ <code>Cleared</code>; confirm/claim unblock; reviewer paid from filing rules</td></tr><tr><td>Reviewer <strong>FAIL</strong> sustains</td><td>→ <code>Sustained</code>; <code>failed++</code>; artifact pin cleared; bounty return <strong>when pre-confirm rules apply</strong></td></tr><tr><td><strong>Expired</strong> (no verdict)</td><td>Filing slashed; opener bounty refunded; line unblocks</td></tr></tbody></table>
+      <h2 id="functions">Functions</h2>
+      <table class="doc-table"><thead><tr><th>Function</th><th>Meaning</th></tr></thead><tbody><tr><td><code>openIntegrityReview</code></td><td>Opener posts stake; escrows bounty slice; opens <strong>Integrity</strong> lane</td></tr><tr><td><code>submitIntegrityVerdict</code></td><td>Assigned reviewer posts binary PASS/FAIL + <code>resultRoot</code></td></tr><tr><td><code>contestIntegrityVerdict</code></td><td>Protocol disputes verdict (contest stake)</td></tr><tr><td><code>finalizeIntegrityReview</code></td><td>After windows — clear line or sustained void</td></tr><tr><td><code>expireIntegrityReview</code></td><td>Liveness — reviewer silent; Expired path</td></tr></tbody></table>
+      <h2 id="parameters-defaults">Parameters (defaults)</h2>
+      <table class="doc-table"><thead><tr><th>Parameter</th><th>Default</th><th>Meaning</th></tr></thead><tbody><tr><td><code>integrityFilingStake</code></td><td>100 AUDIT</td><td>Opener escrow</td></tr><tr><td><code>integrityReviewWindow</code></td><td>7 days</td><td>Reviewer must submit verdict</td></tr><tr><td><code>integrityContestWindow</code></td><td>2 days</td><td>Protocol may contest</td></tr><tr><td><code>integrityContestStake</code></td><td>500 AUDIT</td><td>Protocol contest bond</td></tr><tr><td><code>integrityMatchBps</code></td><td>0</td><td>Optional treasury match from integrity bucket on sustained FAIL</td></tr></tbody></table>
+      <h2 id="cell-mutator">Cell mutator</h2>
+      <p><code>settlementIntegrityReview(auditId, op)</code> — module-only:</p>
+      <table class="doc-table"><thead><tr><th>op</th><th>Meaning</th></tr></thead><tbody><tr><td>0</td><td><strong>Lock</strong> — block confirm / claim on this row</td></tr><tr><td>1</td><td><strong>Unlock</strong> — review cleared or abandoned</td></tr><tr><td>2</td><td><strong>Sustained void</strong> — bounty return if not <code>InBlock</code>; <code>failed++</code>; clear pin; → <code>Invalidated</code></td></tr></tbody></table>
+      <p>Wiring: <a href="docs-flows-appendix-a.html">Appendix A — Module wiring</a>.</p>
+      <h2 id="inblock-sustained-fail-d-2">InBlock sustained FAIL (D-2)</h2>
+      <p><strong>No positive-block mint recall</strong> after <code>InBlock</code> — by design. Mint already landed in auditor free balance; on-chain recall is evadable.</p>
+      <p><strong>Teeth that remain:</strong> pre-mint window still blocks confirm via lock; sustained FAIL increments <strong>`failed++`</strong>, clears artifact pin, and applies exclusion — <strong>recall-proof</strong>. Same rule testnet ↔ mainnet.</p>
+      <p>Integrators: treat sustained FAIL on an <strong>`InBlock`</strong> row as a <strong>failed line for reputation and pin</strong>, not as “undo the mint.”</p>
+      <p><strong>Previous:</strong> <a href="docs-flows-spec-gap.html">Spec-gap overlay</a> · <strong>Next:</strong> <a href="docs-structural.html">Structural upgrades</a></p>
+      
+      <footer class="doc-page-foot"><a href="docs-flows.html">← Flows</a> · <a href="docs-notebook.html">Notebook</a></footer>
+    </div>
+  </main>
+
+  <aside id="docRail" aria-label="You are here" hidden></aside>
+
+</div>
+<script src="motion.js?v=1"></script>
+<script src="your-links.js?v=5"></script>
+<script src="docs-rail.js?v=5"></script>
+</body>
+</html>

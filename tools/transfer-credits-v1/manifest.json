@@ -1,0 +1,15 @@
+{
+  "toolName": "transfer-credits",
+  "toolVersion": "1.0.0",
+  "entrypoint": "encodeResult(address,uint256,uint256)",
+  "toolArtifactHash": "0x390f7f7742a2419d6ddd8f9dc9afffacbdef7e41b861d6c295ec147e3a73fbed",
+  "toolId": "0xaa281e1d54308b520023044ae0f41651147d32cf5c06d024f70a706a45ac2f36",
+  "specHash": "0xf65ea3fe3696728a39fa9d98304bdcd728ac012f6b471d549fb8f8ab0318f6fc",
+  "contextRoot": "0xa99d357b8d390221bec7d1201654be91a67a9a5d09c31236ed56c4fa0459b471",
+  "invariantId": "0xfa34d13f750e39bf1d99e9fac26d5337cf7e8f8d01b12d0971f0f28bac3d18c0",
+  "implementation": "../cell/contracts/tools/TransferCreditsV1.sol",
+  "harness": "../cell/script/tools/RegisterTransferCreditsTool.s.sol",
+  "toolArtifactHashNote": "Declared TOOL_ARTIFACT_HASH slot = 0 at build; recompute via ComputeTransferCreditsTool.s.sol",
+  "registeredOnLiveCell": "2026-06-24",
+  "registerTxsNote": "See RealDeal/notebook/DEPLOYMENT-LOG.md tutorial-trick section (txs 0x21703732…, 0xd1faf254…)"
+}

@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>!function(){try{var k="membrane_nav_session",s=sessionStorage.getItem(k);document.documentElement.classList.add(s?"nav-session":"cold-load");if(!s)sessionStorage.setItem(k,"1")}catch(e){}}();</script>
+<title>One token, three movements · The AUDIT Economy · Audit Cell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css?v=5">
+</head>
+<body class="page-prose">
+<div class="layout layout-docs">
+
+  <nav>
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink" href="quickstart.html">Quickstart</a>
+    <a class="navlink on" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+
+  <main>
+    <div class="inner">
+
+      <div class="doc-layer-row">
+        <a href="docs-economy.html" class="doc-layer doc-layer-spec">The AUDIT Economy</a>
+        <span class="doc-layer doc-layer-spec">Spec · reader</span>
+      </div>
+      <h1>One token, three movements</h1>
+      <p class="doc-q">Where does AUDIT come from, where does it sit, and who gets paid** — in one pipeline?</p>
+      
+      <div class="doc-bridge doc-bridge-story">
+        <p class="doc-bridge-lbl">Story context</p>
+        <ul>
+          <li><a href="docs-book-04.html">Book ch 4 · The core model</a></li>
+          <li><a href="docs-book-08.html">Book ch 8 · Value &amp; escrow</a></li>
+        </ul>
+      </div>
+      <p><strong>AUDIT</strong> moves through three settlement motions on every audit row:</p>
+      <pre class="mono doc-pre">MINT  →  HOLD  →  PAY</pre>
+      <h2 id="three-movements">Three movements</h2>
+      <table class="doc-table"><thead><tr><th>Movement</th><th>Meaning</th><th>Key refs</th></tr></thead><tbody><tr><td><strong>Mint</strong></td><td>New supply on <strong>positive block</strong> (confirmed PASS) + secondary CAN/UPG paths</td><td><a href="docs-economy-the-positive-block.html">Positive block</a> · <a href="docs-economy-where-mint-splits.html">Where mint splits</a></td></tr><tr><td><strong>Hold</strong></td><td>Bounty locked at submit; treasury slice fills <strong>reserves</strong> at confirm</td><td><a href="docs-economy-escrow-architecture.html">Escrow architecture</a></td></tr><tr><td><strong>Pay</strong></td><td>Auditor at <strong>confirm</strong>; discoverer from <strong>reserves</strong> on reproduced claim</td><td><a href="docs-economy-the-auditors-reward.html">Auditor</a> · <a href="docs-economy-the-discoverers-reward.html">Discoverer</a></td></tr></tbody></table>
+      <p><strong>Discoverer pay is never mint.</strong> Abandoned claims → deadline path (stake slash, no auditor <code>failed</code>).</p>
+      <h2 id="the-one-rule">The one rule</h2>
+      <p>New supply: survived audit confirm, structural adoption (UPG), or tool canonization (CAN) — <strong>not</strong> discoverer payout. No discretionary inflation after genesis; minter locked one-way to <code>IssuanceModule</code>.</p>
+      <p>Signals (bands, tiers, phase tags) are <strong>not</strong> this pipeline — <a href="docs-economy-value-vs-signal.html">Value vs signal</a>.</p>
+      <p><strong>Next:</strong> <a href="docs-economy-value-vs-signal.html">Value vs signal</a></p>
+      
+      <footer class="doc-page-foot"><a href="docs-economy.html">← The AUDIT Economy</a> · <a href="docs-notebook.html">Notebook</a></footer>
+    </div>
+  </main>
+
+  <aside id="docRail" aria-label="You are here" hidden></aside>
+
+</div>
+<script src="motion.js?v=1"></script>
+<script src="your-links.js?v=5"></script>
+<script src="docs-rail.js?v=5"></script>
+</body>
+</html>

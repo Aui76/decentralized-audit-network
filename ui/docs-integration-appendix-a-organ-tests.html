@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>!function(){try{var k="membrane_nav_session",s=sessionStorage.getItem(k);document.documentElement.classList.add(s?"nav-session":"cold-load");if(!s)sessionStorage.setItem(k,"1")}catch(e){}}();</script>
+<title>Appendix A — Organ tests &amp; gas baselines · Integration · Audit Cell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css?v=5">
+</head>
+<body class="page-prose">
+<div class="layout layout-docs">
+
+  <nav>
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink" href="quickstart.html">Quickstart</a>
+    <a class="navlink on" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+
+  <main>
+    <div class="inner">
+
+      <div class="doc-layer-row">
+        <a href="docs-integration.html" class="doc-layer doc-layer-spec">Integration</a>
+        <span class="doc-layer doc-layer-spec">Spec · reader</span>
+      </div>
+      <h1>Appendix A — Organ tests &amp; gas baselines</h1>
+      <p class="doc-q">Which npm / forge commands prove each organ** — and what are gas ceilings?</p>
+      
+      <p>Implementation pointers for O1–O9. Hub context: <a href="docs-integration-integrator-hub.html">Integrator hub</a>.</p>
+      <h2 id="verify-commands-cell-bench">Verify commands (cell bench)</h2>
+      <pre class="mono doc-pre">cd cell &amp;&amp; forge test --summary          # cell + satellites
+cd cell &amp;&amp; npm run test:bob-fixtures     # Bob golden rows
+cd cell &amp;&amp; npm run test:organs-o1        # ids / eip712
+cd cell &amp;&amp; npm run test:organs-o3        # phases + bob
+cd cell &amp;&amp; npm run test:organs-o4        # scope / spec-quality
+cd cell &amp;&amp; npm run test:organs-o5        # contagion fuse
+cd cell &amp;&amp; npm run test:organs-o6        # claim scorecard
+cd cell &amp;&amp; npm run test:organs-o7        # spec-quality fleet
+cd cell &amp;&amp; npm run test:organs-o8        # bounty bands
+cd cell &amp;&amp; npm run test:organs-o9        # artifact registry QA</pre>
+      <p>Cathedral oracle: dan-core <code>testnet/</code> cross-checks monolith fixtures until cutover — see <code>../../operator/runbooks/CUTOVER-RUNBOOK.md</code>.</p>
+      <h2 id="gas-regression-baselines">Gas regression baselines</h2>
+      <p>FIFO queue gas ceilings and refresh policy. Cathedral oracle: dan-core <code>QueueGasStress.t.sol</code>.</p>
+      <h3>Ceilings (reference — cathedral suite)</h3>
+      <table class="doc-table"><thead><tr><th>Path</th><th>Ceiling</th><th>Queue depth</th></tr></thead><tbody><tr><td>Submit + assign</td><td>2_200_000</td><td>24</td></tr><tr><td>Confirm (churn)</td><td>3_200_000</td><td>24</td></tr></tbody></table>
+      <p>Cell-specific stress tests may differ after cutover — re-capture on target chain hardware before mainnet sign-off.</p>
+      <h3>Capture actuals</h3>
+      <pre class="mono doc-pre">cd dan-core/testnet
+forge test --match-test test_log_fifo_gas_baselines -vv</pre>
+      <p>Bump ceiling constants only with measured regression + PR justification.</p>
+      <h3>Policy</h3>
+      <ul><li>Do <strong>not</strong> chase single-digit gas savings in hot paths without measured need.</li><li>LP-cap stress: <code>LpCapScaleCell.t.sol</code> / <code>LpCapScale.t.sol</code>, not this appendix.</li><li>Update this appendix when cell runbook adopts new ceilings.</li></ul>
+      <p><strong>Previous:</strong> <a href="docs-integration-ripe-slot-indicator.html">Ripe-slot indicator</a> · Book home</p>
+      
+      <footer class="doc-page-foot"><a href="docs-integration.html">← Integration</a> · <a href="docs-notebook.html">Notebook</a></footer>
+    </div>
+  </main>
+
+  <aside id="docRail" aria-label="You are here" hidden></aside>
+
+</div>
+<script src="motion.js?v=1"></script>
+<script src="your-links.js?v=5"></script>
+<script src="docs-rail.js?v=5"></script>
+</body>
+</html>

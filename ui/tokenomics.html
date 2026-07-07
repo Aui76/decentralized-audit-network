@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tokenomics · Resources · Audit Cell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="site.css?v=5"></head>
+<body class="page-prose">
+<div class="layout layout-docs">
+
+  <nav>
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink" href="quickstart.html">Quickstart</a>
+    <a class="navlink on" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+
+  <main>
+    <div class="inner">
+      <p class="eyebrow"><a href="resources.html">Resources</a></p>
+      <h1>Tokenomics</h1>
+      <p class="subtitle">Supply is a function of verified work. Here is the function.</p>
+
+      <p class="intro"><b>AUDIT</b> is the network's unit, and it has one law: it is created only by audits that survive scrutiny. There is no schedule, no cap, and no discretionary issuance. Everything below is that law written out — the mint sized from real activity, the split it pays into, the reserves that fund bug payouts without printing, and the demand that makes the unit worth holding.</p>
+
+      <hr>
+
+      <h2 id="issuance">How a block is minted</h2>
+      <p>Every confirmed audit — one that passed, then went its whole challenge window with no one breaking it — mints exactly one block. The reward is not drawn from "what's left until a cap." It is sized from how much verified work the network is actually clearing, and then paced so it cannot outrun the liquidity behind it:</p>
+      <pre><code>reward = min( emaSlow · 0.25 ,  lpBalance · 0.05 )     — while liquidity is on the book
+reward =      emaSlow · 0.25                           — before any liquidity exists
+reward → reward · 0.80                                 — if the activity burst looks manufactured</code></pre>
+      <p>The first number is a quarter of the activity signal — how much verified work the network is clearing. The second is a liquidity brake: the mint can't exceed a small slice of the pool behind the token, so supply grows only as fast as the market backing it. The block pays whichever is smaller. And if activity spikes far above the slow trend — the mark of a faked burst — the reward is trimmed, so manufactured volume earns less, not more. Nothing here points at a maximum supply, because there isn't one.</p>
+
+      <h2 id="signal">The activity signal</h2>
+      <p>The signal the mint reads from, <code>emaSlow</code>, is a slow running average of the bounties flowing through the network — but weighted by each poster's credibility, not the raw amount posted. A bounty moves the signal only as much as the poster's standing has earned:</p>
+      <pre><code>emaSlow    ← EMA( credBounty )
+credBounty = ( nEff · protoMean  +  10 · netMean ) / ( nEff + 10 )</code></pre>
+      <p>A brand-new address barely moves the signal — its bounties get pulled back toward the network average. Only a track record built with many different, established partners (the <code>nEff</code> in the formula) lets a protocol's own volume start to count. That is what blocks the obvious cheat — a single operator posting bounties among their own wallets to pump the mint. Self-dealing never builds a history of distinct partners, so the weighting keeps that volume discounted.</p>
+
+      <h2 id="split">Where each block goes</h2>
+      <p>A single confirmed block mints in three directions at once. The auditor's reward is the base; the other two are sized from it:</p>
+      <pre><code>auditor    reward
+treasury   1.00 · reward   →  75.1% liquidity  +  24.9% escrow reserves
+founder    0.0305 · reward  (≤ 15,000,000 AUDIT ever; released × min(1, audits / 1000))</code></pre>
+      <p>The treasury share matches the auditor's one-for-one and splits inside the escrow: most of it deepens the liquidity pool (capped at 15% of supply), the rest locks into reserves under a 180-day timelock before aging into liquidity. The founder slice is deliberately small, hard-capped at fifteen million tokens for the life of the network, and released only in proportion to audits actually completed — it accrues as the network works, never as a genesis grant.</p>
+
+      <h2 id="reserves">Bugs pay from reserves, never from mint</h2>
+      <p>When a discoverer reproduces a bug on a contract that passed, they are paid — but not with new supply. The payout is drawn from the escrow reserves that earlier blocks already set aside:</p>
+      <pre><code>boost  = 1 + 4 · max(0, failed − found) / (successful + failed + found)   ∈ [1×, 5×]
+payout = min( bounty · boost ,  max( 0.05 · escrow ,  0.50 · bounty ) )
+stake  = 0.20 · bounty      (posted to file a claim; refunded on resolution)
+
+Δsupply | bug  =  0</code></pre>
+      <p>The reward scales with the original bounty and with the assigned auditor's record — a worse track record directs more hunter attention, up to five times the bounty — but it is bounded by a fraction of the reserves and a floor on the bounty. Because failures spend reserves instead of minting, the most dangerous attack on any issuing system — stage a break, collect freshly printed reward, repeat — cannot print here. It is closed by construction, not by vigilance.</p>
+
+      <h2 id="hold">The cost of a seat</h2>
+      <p>Auditors are drawn from an open pool; <code>register()</code> is permissionless. What keeps the pool from being flooded by sock puppets is a hold that rises with each seat taken:</p>
+      <pre><code>hold(N) = (N − 1) · 1 AUDIT</code></pre>
+      <p>The first auditor to register needs nothing — which is the only honest answer at genesis, when no tokens exist yet. Each later seat needs one more token already minted by real work, so the cost of standing up an army of identities grows with the army. The rule bootstraps itself and prices Sybils in the same line.</p>
+
+      <h2 id="genesis">Genesis and the mint lock</h2>
+      <p>There is no premine. The first AUDIT in existence is earned by the genesis audit clearing its window — the same path every later token takes. Once the network is running, the minting key is locked one way and permanently: from then on, only the wired issuance module can create supply, and only along the function above.</p>
+
+      <h2 id="uncapped">Why there is no hard cap</h2>
+      <p>A fixed ceiling is a guess about a network's eventual size, and both ways of guessing fail. Set it low and a working network throttles against a wall it should never have hit; set it high and the number means nothing. An activity-led mint needs no such guess: it issues in proportion to verification actually happening, expands when real work expands, and quiets when work quiets. Inflation is held down not by a ceiling but by four things at once — only confirmed work mints, the liquidity brake caps each block, manufactured spikes are damped, and every failure path spends reserves instead of printing. The supply is unbounded the way a tally is unbounded: there is no largest value it is allowed to reach — only however much verified work has actually happened.</p>
+
+      <h2 id="other">Two more mint paths</h2>
+      <p>Two rare paths also mint, both mechanism-gated and neither touching bug payouts: when a verification tool crosses its canonical-use threshold, its author receives a one-time canonization mint; when a structural upgrade is adopted, its proposer receives an adoption mint. That is the entire supply story.</p>
+
+      <h2 id="demand">Where demand comes from</h2>
+      <p>Issuance is only half of it. The unit is needed on both sides of the rail: to post a bounty a protocol must hold the token the network pays in, and to audit a participant must hold the position-scaled stake above. The token's value is not a claim about what an audit is "worth" in the abstract — it is the standing demand of everyone who needs to use the rail at all. Earned on one side, required on the other, and gifted to no one.</p>
+
+      <h2 id="params">Parameters (current defaults)</h2>
+      <p>The equations above are fixed; these values are the live testnet defaults that fill them in. This table is the one place they live — the authoritative, correct-on-change source is the <a href="docs-economy.html">economy spec</a>.</p>
+      <pre><code>emaToMintBps            2500     activity → mint rate (0.25)
+mintLpCapBps             500     liquidity brake (0.05 of pool)
+manipulationMintScaleBps 8000     damping on flagged spikes (0.80)
+kProtocol                 10     credibility blend weight
+treasuryShareBps       10000     treasury mint vs auditor (1.00×)
+  · LP / escrow    7510 / 2490     split inside the treasury (75.1% / 24.9%)
+  · LP cap               1500     liquidity ≤ 15% of supply
+  · escrow timelock  180 days
+founderShareBps          305     founder mint (3.05%), cap 15,000,000 AUDIT, release target 1000 audits
+increment              1 AUDIT     hold-curve step
+maxBoostFactor             4     discoverer boost ceiling (→ 5×)
+discoveryCapBps          500     payout ≤ 5% of reserves
+discoveryFloorBps       5000     payout ≥ 50% of bounty
+claimStakeBps           2000     claim stake (20% of bounty)</code></pre>
+
+      <span class="badge"><span class="live"></span> Testnet · Base Sepolia — test funds only</span>
+
+      <footer class="doc-page-foot">
+        <a href="resources.html">← Resources</a> · <a href="docs-economy.html">Economy spec</a> · <a href="whitepaper.html">Whitepaper</a>
+      </footer>
+    </div>
+  </main>
+
+  <aside>
+    <div class="lbl">On this page</div>
+    <a href="#issuance">How a block is minted</a>
+    <a href="#signal">The activity signal</a>
+    <a href="#split">Where each block goes</a>
+    <a href="#reserves">Bugs pay from reserves</a>
+    <a href="#hold">The cost of a seat</a>
+    <a href="#genesis">Genesis &amp; mint lock</a>
+    <a href="#uncapped">Why there is no hard cap</a>
+    <a href="#other">Two more mint paths</a>
+    <a href="#demand">Where demand comes from</a>
+    <a href="#params">Parameters</a>
+  </aside>
+
+</div>
+
+<script src="your-links.js?v=5"></script>
+<script src="membrane-rail.js?v=2"></script>
+<script src="motion.js?v=1"></script>
+</body>
+</html>

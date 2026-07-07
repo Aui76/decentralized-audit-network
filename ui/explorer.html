@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Life — audit cell explorer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="site.css?v=5"></head>
+<body class="page-explorer">
+<div class="layout layout-tool">
+  <nav class="side">
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink" href="quickstart.html">Quickstart</a>
+    <a class="navlink" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+  <main>
+<div class="wrap">
+  <div id="head"></div>
+  <div id="panel-browse">
+    <div class="rolebar" id="auditFilters"></div>
+    <div class="row" id="auditPicker" style="margin:2px 0 12px">
+      <button type="button" class="copy" id="prevAudit" style="margin-top:0" title="Previous audit">←</button>
+      <select id="auditSelect" style="width:auto;min-width:320px"></select>
+      <button type="button" class="copy" id="nextAudit" style="margin-top:0" title="Next audit">→</button>
+      <span class="k" id="pickHint"></span>
+    </div>
+    <div id="detail"></div>
+  </div>
+  <footer class="doc-page-foot" id="foot"></footer>
+</div>
+  </main>
+</div>
+
+<script src="./status-labels.js"></script>
+<script src="./view-model.js"></script>
+<script type="module" src="./verify-browser.mjs"></script>
+<script>
+(function(){
+  var S=window.MembraneStatus;
+  var KIND={audit:['#21262d','#adb6c0'],fix:['#3a1a2a','#f178b6'],dispute:['#21193a','#b39df0']};
+  var KINDLBL={audit:'audit',fix:'fix (patched contract)',dispute:'dispute (independent re-check)'};
+  var M=window.__MODEL;
+  var cur=0, claimableOnly=false;
+  var head=document.getElementById('head');
+  var list=document.getElementById('list'), det=document.getElementById('detail'), foot=document.getElementById('foot');
+
+  if(!M){ head.innerHTML='<div class="card">No audit data yet. Check back after audits are posted on testnet.</div>'; return; }
+
+  function esc(s){ return s==null?'—':String(s); }
+  function shorth(h){ return !h?'—':(h.length>14?h.slice(0,8)+'…'+h.slice(-4):h); }
+  function ago(ts){ var t=Date.parse(ts); if(isNaN(t)) return ''; var s=Math.max(0,Math.floor((Date.now()-t)/1000)); if(s<60) return s+'s ago'; var m=Math.floor(s/60); if(m<60) return m+'m ago'; var h=Math.floor(m/60); if(h<24) return h+'h ago'; return Math.floor(h/24)+'d ago'; }
+  function humanPill(state){ return S.humanPillHtml(state); }
+  function pill(t,m,label){ var c=m[t]||['#21262d','#adb6c0']; return '<span class="pill" style="background:'+c[0]+';color:'+c[1]+'">'+(label||t)+'</span>'; }
+  function copyBlock(text){ return '<pre class="cmd">'+esc(text)+'</pre><button type="button" class="copy" data-copy="'+encodeURIComponent(text)+'">Copy</button>'; }
+  function advTerm(title, inner){ return '<details class="adv-term"><summary>'+title+'</summary><div class="adv-body">'+inner+'</div></details>'; }
+  function claimableAudits(){ return M.audits.filter(function(a){ return a.claimable; }); }
+  function childrenOf(id){ return M.audits.filter(function(a){ return a.linkedAuditId===id; }); }
+  function linkJump(id, label){
+    return '<button type="button" class="copy jump-audit" data-id="'+id+'" style="margin:0;padding:0;border:0;background:none;color:var(--acc);cursor:pointer;font:inherit;font-family:var(--sans)">'+label+'</button>';
+  }
+  function wireJumpButtons(root){
+    if(!root) return;
+    Array.prototype.forEach.call(root.querySelectorAll('.jump-audit'), function(btn){
+      btn.onclick=function(e){
+        e.stopPropagation();
+        cur=+btn.dataset.id;
+        if(!filteredAudits().some(function(x){ return x.id===cur; })) curFilter='all';
+        syncAuditUrl(cur);
+        renderBrowse();
+      };
+    });
+  }
+
+  function copyMono(full, display){
+    if(full==null||full===''||full==='—') return esc(display!=null?display:full);
+    var d=display!=null?display:full;
+    return '<button type="button" class="copy-mono" data-copy="'+encodeURIComponent(String(full))+'" title="Click to copy">'+esc(d)+'</button>';
+  }
+  function syncAuditUrl(id){
+    try{
+      var p=new URLSearchParams(location.search);
+      p.set('id', String(id));
+      p.delete('tab');
+      var q=p.toString();
+      history.replaceState(null,'',location.pathname+(q?'?'+q:''));
+    }catch(e){}
+  }
+
+  function detailLinks(a){
+    return '<div class="k detail-links" style="margin-bottom:10px">'
+      +(a.explorer&&a.explorer.target?'<a href="'+a.explorer.target+'" target="_blank">target on Basescan ↗</a> · ':'')
+      +'<a href="'+M.meta.explorer.cell+'" target="_blank">cell ↗</a> · '
+      +'<a class="link-jump-in" href="concern.html?id='+a.id+'">Find your step →</a></div>';
+  }
+
+  document.addEventListener('click', function(e){
+    var b=e.target.closest('.copy,.copy-mono');
+    if(!b) return;
+    var t=decodeURIComponent(b.getAttribute('data-copy')||'');
+    if(!t) return;
+    var was=b.textContent;
+    navigator.clipboard.writeText(t).then(function(){
+      b.textContent=b.classList.contains('copy-mono')?'copied': 'Copied';
+      b.classList.add('ok');
+      setTimeout(function(){
+        b.textContent=b.classList.contains('copy-mono')?was:'Copy';
+        b.classList.remove('ok');
+      }, 1500);
+    });
+  });
+
+  function renderHead(){
+    head.innerHTML='<p style="font-size:14px;letter-spacing:.08em;text-transform:uppercase;color:var(--tx3);margin:0 0 8px">Browse audits</p>'
+      +'<div class="row" style="justify-content:space-between;align-items:flex-start">'
+      +'<h1 style="font-size:30px;font-weight:600;letter-spacing:-.01em;margin:0 0 6px">Explorer</h1>'
+      +'<div class="row"><span class="pill" style="background:#10311b;color:#3fb950">● live'+(ago(M.meta.generatedAt)?' · snapshot '+ago(M.meta.generatedAt):'')+'</span>'
+      +'<span class="pill" style="background:var(--bd);color:var(--tx2)">Base Sepolia · '+M.meta.chainId+'</span>'
+      +'<span class="pill" title="Testnet mode: audit results are declared and re-checked by re-running the tool off-chain, not yet by an on-chain verifier." style="background:#33270f;color:#e3b341">'+esc(M.meta.trustMode)+'</span></div></div>'
+      +'<div class="mono" style="margin:4px 0 10px"><a href="'+M.meta.explorer.cell+'" target="_blank">'+esc(M.meta.cell)+'</a></div>'
+      +'<p class="lede" style="margin:2px 0 14px">A live list of every audit on the network. Click a row to see what was checked, whether it passed, and what happened.</p>'+'<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px">'
+      +'<div class="stat" title="Total audits ever posted on the network"><span class="k">audits</span><b>'+M.meta.audits+'</b></div>'
+      +'<div class="stat" title="Audits anyone can still challenge right now"><span class="k">open to challenge</span><b>'+(M.meta.claimableCount||0)+'</b></div>'
+      +'<div class="stat" title="Successful audits that minted a reward"><span class="k">reward blocks</span><b>'+M.meta.positiveBlocks+'</b></div>'
+      +'<div class="stat" title="How long an audit can be challenged after it passes"><span class="k">challenge window</span><b style="font-size:16px">'+M.meta.auditWindowSec+'s</b></div>'
+      +'<div class="stat" title="Whether an on-chain proof-checker is wired in (testnet: unset, results are re-run off-chain instead)"><span class="k">auto-verifier</span><b style="font-size:16px;font-family:var(--mono)">'+(M.meta.claimVerifier&&M.meta.claimVerifier!=='0x0000000000000000000000000000000000000000'?'set':'unset')+'</b></div></div>'
+      +'<p class="k" style="margin:12px 0 0">Before an audit exists: <a href="want-board.html">What should we check next?</a>. After one exists: pick a row, then <strong>Find your step →</strong>.</p>';
+  }
+
+  function card(a){
+    var tag=a.claimable?pill('claimable',['#10243a','#6cb0f5']):'';
+    var linkHint='';
+    if(a.linkedAuditId!=null) linkHint='<span class="k" style="grid-column:1/-1;margin-top:4px">↳ '+KINDLBL[a.kind]+' on '+linkJump(a.linkedAuditId,'#'+a.linkedAuditId)+'</span>';
+    var kids=childrenOf(a.id);
+    if(kids.length) linkHint+='<span class="k" style="grid-column:1/-1;margin-top:4px">↳ '+kids.map(function(k){ return linkJump(k.id,'#'+k.id+' '+KINDLBL[k.kind]); }).join(' · ')+'</span>';
+    return '<div class="card audit" data-id="'+a.id+'"><div class="row" style="justify-content:space-between;margin-bottom:8px">'
+      +'<div class="row"><b style="font-weight:500">#'+a.id+'</b>'+pill(a.kind,KIND,KINDLBL[a.kind])+tag+'</div>'+humanPill(a.state)+'</div>'
+      +'<div style="display:grid;grid-template-columns:auto 1fr;gap:4px 10px;font-size:16px">'
+      +'<span class="k">target</span><span class="mono">'+shorth(a.target)+'</span>'
+      +'<span class="k">bounty</span><span>'+esc(a.bounty)+' AUDIT</span>'
+      +'<span class="k">claim</span><span class="mono">'+(a.claim?shorth(a.claim.claimant)+' · '+(a.claim.resolved?'resolved':'open'):'—')+'</span>'
+      +linkHint
+      +'</div></div>';
+  }
+
+  function disputeDocLink(){
+    return '<a href="docs-disputes.html#recheck" class="helplink" target="_blank" rel="noopener">Why is that? ↗</a>';
+  }
+  function hasDisputeLink(a){
+    if(a.linkedAuditId!=null&&a.kind==='dispute') return true;
+    return childrenOf(a.id).some(function(k){ return k.kind==='dispute'; });
+  }
+
+  function relatedBlock(a){
+    var lines=[];
+    if(a.linkedAuditId!=null){
+      lines.push((KINDLBL[a.kind]||a.kind)+' re-check of audit '+linkJump(a.linkedAuditId,'#'+a.linkedAuditId)+' · same pinned contract');
+    }
+    childrenOf(a.id).forEach(function(k){
+      lines.push(linkJump(k.id,'#'+k.id)+' · '+(KINDLBL[k.kind]||k.kind)+' · '+S.labelFor(k.state));
+    });
+    if(!lines.length) return '';
+    var head='<div class="k" style="margin-bottom:6px;font-weight:500;display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 10px">'
+      +'<span>Linked audits</span>';
+    if(hasDisputeLink(a)) head+=disputeDocLink();
+    head+='</div>';
+    return '<div class="related-audits" style="margin-bottom:12px;padding:10px 12px;border:1px solid var(--bd);border-radius:8px;background:var(--panel)">'
+      +head
+      +lines.map(function(l){ return '<div class="tiny" style="margin:4px 0">'+l+'</div>'; }).join('')
+      +'</div>';
+  }
+
+  // Ledger key contract: membraneYourVerifications = { [auditId]: { verdict, root, at } }.
+  // your-links.js?v=5 (batch re-verify) writes this same shape — change it in both places or not at all.
+  var VKEY='membraneYourVerifications';
+  function verLedger(){ try{ var v=JSON.parse(localStorage.getItem(VKEY)||'{}'); return v&&typeof v==='object'?v:{}; }catch(e){ return {}; } }
+  function verRecord(id,r){ try{ var l=verLedger(); l[String(id)]={verdict:r.verdict,root:r.onchain,at:Date.now()}; localStorage.setItem(VKEY,JSON.stringify(l)); }catch(e){} }
+  function verLine(id){ var v=verLedger()[String(id)]; return v?('reproduced by you · '+new Date(v.at).toLocaleDateString()+' · '+v.verdict+' ✓'):''; }
+
+  function reproduceBlock(a){
+    return '<div class="row" style="gap:12px;margin:0 0 10px">'
+      +'<button type="button" class="copy" id="btnRepro" style="margin-top:0">Reproduce it now — in this tab</button>'
+      +'<span class="k repro-you" id="reproYou">'+esc(verLine(a.id))+'</span>'
+      +'</div><div id="reproOut" class="repro-out hide"></div>';
+  }
+
+  function renderRepro(r){
+    var st=r.selfTest.map(function(t){ return '<div class="mono" style="font-size:13px">'+esc(t.name)+' '+(t.ok?'<span class="good">MATCH ✓</span>':'<span class="danger">MISMATCH ✗</span>')+'</div>'; }).join('');
+    var head='<div class="k" style="font-weight:500;margin-bottom:4px">Self-test (encoding correctness)</div>'+st;
+    if(!r.ok) return head+'<div class="danger" style="margin-top:8px">'+esc(r.error||('failed at '+r.stage))+'</div>';
+    var line=r.verdict
+      ?'<div class="good" style="font-weight:600">VERIFIED ✓ — the on-chain root is the honest '+r.verdict+' encoding of the live bytecode under the canonical spec+tool.</div>'
+      :'<div class="danger" style="font-weight:600">MISMATCH ✗ — the on-chain root binds neither PASS nor FAIL of this bytecode/spec. Investigate (wrong target, tampering, or a different tool).</div>';
+    return head
+      +'<div class="statgrid" style="margin:10px 0">'
+      +'<span class="k">artifactHash (live)</span><span>'+copyMono(r.artifactHash,shorth(r.artifactHash))+'</span>'
+      +'<span class="k">root if PASS</span><span>'+copyMono(r.rootPASS,shorth(r.rootPASS))+'</span>'
+      +'<span class="k">root if FAIL</span><span>'+copyMono(r.rootFAIL,shorth(r.rootFAIL))+'</span>'
+      +'<span class="k">on-chain root</span><span>'+copyMono(r.onchain,shorth(r.onchain))+'</span>'
+      +'</div>'+line
+      +'<p class="k" style="margin:8px 0 0;font-size:13px">Level A: encoding + live-bytecode binding, re-derived in your tab with read-only RPC calls. Re-executing the tool itself (Level B) needs the harness — <a href="docs-verify.html">verify guide</a>.</p>';
+  }
+
+  function wireRepro(a){
+    var btn=document.getElementById('btnRepro');
+    if(!btn||!a) return;
+    btn.onclick=async function(){
+      var out=document.getElementById('reproOut');
+      out.classList.remove('hide');
+      if(!window.MembraneVerify){
+        out.innerHTML='<span class="k">In-tab verify needs the site served (start.bat / npm run serve). The CLI works everywhere: <span class="mono">node verify.mjs '+a.id+'</span></span>';
+        return;
+      }
+      btn.disabled=true; var was=btn.textContent; btn.textContent='Reproducing…';
+      out.innerHTML='<span class="k">self-test → live bytecode → recompute roots → compare…</span>';
+      try{
+        var r=await MembraneVerify.reproduce({rpcUrl:M.meta.rpcUrl||'https://sepolia.base.org',cell:M.meta.cell,auditId:a.id,target:a.target});
+        out.innerHTML=renderRepro(r);
+        if(r.ok&&r.verdict){ verRecord(a.id,r); var y=document.getElementById('reproYou'); if(y) y.textContent=verLine(a.id); if(window.MembraneYourAudits) MembraneYourAudits.refresh(); }
+      }catch(e){
+        out.innerHTML='<span class="danger">RPC error: '+esc(e.message)+'</span>';
+      }
+      btn.disabled=false; btn.textContent=was;
+    };
+  }
+
+  function lifecycleRail(state){
+    // fill-the-sequence rail — same grammar as the wallet bar's Connect → Network → Ready
+    var name=(typeof state==='number')?S.stateName(state):String(state);
+    var inReview=(name==='Submitted'||name==='Assigned'||name==='InAudit');
+    var windowOpen=(name==='AwaitingWindow');
+    var settled=(name==='Audited'||name==='InBlock');
+    var branch=null;
+    if(name==='Claimed') branch=['Disputed','warn'];
+    else if(name==='Exploited') branch=['Bug confirmed ✗','bad'];
+    else if(name==='Invalidated') branch=['Void',''];
+    function chip(label,cls){ return '<span class="wstep'+(cls?' '+cls:'')+'">'+label+'</span>'; }
+    var arrow='<span class="wstep-arrow">→</span>';
+    var c4;
+    if(branch) c4=chip(branch[0],branch[1]+' on');
+    else if(settled) c4=chip('Settled ✓','on done');
+    else c4=chip('Settled','');
+    return '<div class="wallet-steps" style="margin:2px 0 12px">'
+      +chip('Posted','done')+arrow
+      +chip('In review',inReview?'on':'done')+arrow
+      +chip('Window',windowOpen?'on done':(settled?'done':''))+arrow
+      +c4+'</div>';
+  }
+
+  function statusBlock(a){
+    var linkedVal=a.linkedAuditId!=null?linkJump(a.linkedAuditId,'#'+a.linkedAuditId+' (original)'):'—';
+    var rows=[
+      ['kind', a.kind, false],
+      ['state', S.detailState(a.state), false],
+      ['verdict', a.verdictLabel?(a.verdictLabel+(/pass/i.test(a.verdictLabel)?' (contract met the declared check)':/fail/i.test(a.verdictLabel)?' (contract broke the declared check)':'')):'—', false],
+      ['resultRoot', a.resultRoot, true],
+      ['linked audit', linkedVal, 'html'],
+      ['caseRoot', a.caseRoot, true]
+    ];
+    if(a.claim){
+      rows.push(['claim root', a.claim.resultRoot, true]);
+      rows.push(['claimant', a.claim.claimant, true]);
+    }
+    return '<div class="statgrid" style="margin-bottom:12px">'
+      +rows.map(function(r){
+        var val;
+        if(r[2]==='html') val=r[1];
+        else if(r[2]===true && r[1]) val=copyMono(r[1], shorth(r[1]));
+        else val=esc(r[1]);
+        return '<span class="k">'+r[0]+'</span><span>'+val+'</span>';
+      }).join('')
+      +'</div>';
+  }
+
+  function detail(a){
+    var tl=(a.timeline||[]).map(function(e){
+      return '<div class="tl"><span class="dot"></span><div><div style="font-size:16px;font-weight:500">'+esc(e.label)
+        +(e.tx?' <a href="https://sepolia.basescan.org/tx/'+e.tx+'" target="_blank">tx ↗</a>':'')+'</div><div class="k">'+esc(e.detail)+'</div></div></div>';
+    }).join('') || '<div class="k">No events indexed.</div>';
+    var jumpOrig='';
+    if(a.reproduce&&a.reproduce.linkedOriginalId!=null){
+      jumpOrig='<button type="button" class="copy" id="goOrig" style="margin-top:8px">View original audit #'+a.reproduce.linkedOriginalId+'</button>';
+    }
+    return '<div class="card">'+detailLinks(a)
+      +'<div class="row" style="justify-content:space-between;margin-bottom:8px"><b style="font-weight:500">audit #'+a.id+'</b>'
+      +'<span class="row" style="gap:8px"><button type="button" class="copy" id="watchToggle" style="margin-top:0"></button>'+humanPill(a.state)+'</span></div>'
+      +lifecycleRail(a.state)
+      +relatedBlock(a)
+      +'<div class="k" style="margin-bottom:6px;font-weight:500">Status</div>'
+      +'<p class="k" style="margin:0 0 8px;font-size:14px">The "roots" below are fingerprints of the check, click any to copy. You only need them if you are re-running the audit yourself.</p>'
+      +statusBlock(a)
+      +reproduceBlock(a)
+      +'<div class="k" style="margin-bottom:6px;font-weight:500">Timeline</div>'
+      +tl
+      +jumpOrig+'</div>';
+  }
+
+  function stName(a){ return typeof a.state==='number'?S.stateName(a.state):String(a.state); }
+  var FILTERS=[
+    {id:'all',label:'All',test:function(){ return true; }},
+    {id:'settled',label:'Settled',test:function(a){ var n=stName(a); return n==='Audited'||n==='InBlock'; }},
+    {id:'window',label:'Window',test:function(a){ return stName(a)==='AwaitingWindow'; }},
+    {id:'review',label:'In review',test:function(a){ var n=stName(a); return n==='Submitted'||n==='Assigned'||n==='InAudit'; }},
+    {id:'disputed',label:'Disputed',test:function(a){ return stName(a)==='Claimed'||a.kind==='dispute'; }},
+    {id:'bug',label:'Bug ✗',test:function(a){ return stName(a)==='Exploited'; }},
+    {id:'claimable',label:'Open to challenge',test:function(a){ return !!a.claimable; }}
+  ];
+  var curFilter='all';
+
+  function filteredAudits(){
+    var f=FILTERS.find(function(x){ return x.id===curFilter; })||FILTERS[0];
+    return M.audits.filter(f.test);
+  }
+
+  function renderFilters(){
+    var bar=document.getElementById('auditFilters');
+    bar.innerHTML=FILTERS.map(function(f){
+      var n=M.audits.filter(f.test).length;
+      return '<button type="button" class="rolepill'+(f.id===curFilter?' on':'')+'" data-f="'+f.id+'">'+f.label+' · '+n+'</button>';
+    }).join('');
+    Array.prototype.forEach.call(bar.querySelectorAll('.rolepill'), function(b){
+      b.onclick=function(){ curFilter=b.dataset.f; renderBrowse(); };
+    });
+  }
+
+  function pickerLabel(a){
+    return '#'+a.id+' · '+(KINDLBL[a.kind]||a.kind)+' · '+S.labelFor(a.state);
+  }
+
+  function renderBrowse(){
+    renderFilters();
+    var shown=filteredAudits();
+    if(!shown.some(function(x){ return x.id===cur; }) && shown.length) cur=shown[0].id;
+    var sel=document.getElementById('auditSelect');
+    sel.innerHTML=shown.map(function(x){ return '<option value="'+x.id+'">'+esc(pickerLabel(x))+'</option>'; }).join('')
+      ||'<option value="">no audits match this filter</option>';
+    if(shown.length) sel.value=String(cur);
+    sel.onchange=function(){ cur=+sel.value; syncAuditUrl(cur); renderBrowse(); };
+    var idx=shown.findIndex(function(x){ return x.id===cur; });
+    document.getElementById('pickHint').textContent=shown.length?((idx+1)+' of '+shown.length):'';
+    var step=function(d){ return function(){ if(!shown.length) return; var i=(idx+d+shown.length)%shown.length; cur=shown[i].id; syncAuditUrl(cur); renderBrowse(); }; };
+    document.getElementById('prevAudit').onclick=step(-1);
+    document.getElementById('nextAudit').onclick=step(1);
+    var a=M.audits.find(function(x){ return x.id===cur; });
+    det.innerHTML=a?detail(a):'';
+    var goO=document.getElementById('goOrig');
+    if(goO) goO.onclick=function(){
+      if(a&&a.reproduce&&a.reproduce.linkedOriginalId!=null){
+        cur=a.reproduce.linkedOriginalId;
+        if(!filteredAudits().some(function(x){ return x.id===cur; })) curFilter='all';
+        syncAuditUrl(cur); renderBrowse();
+      }
+    };
+    wireWatch(a);
+    yaMarkSeen(a);
+    wireRepro(a);
+    wireJumpButtons(det);
+    wireJumpButtons(list);
+  }
+
+  function yaItems(){ try{ var r=JSON.parse(localStorage.getItem('membraneYourAudits')||'[]'); return Array.isArray(r)?r:[]; }catch(e){ return []; } }
+  function yaMarkSeen(a){
+    // opening an audit here counts as looking at it — the watchlist's
+    // "changed since your last look" baseline (lastState) moves to what you saw
+    if(!a) return;
+    try{
+      var items=yaItems();
+      var it=items.find(function(x){ return String(x.id)===String(a.id); });
+      var nm=(typeof a.state==='number'?S.stateName(a.state):String(a.state));
+      if(it&&nm&&it.lastState!==nm){ it.lastState=nm; localStorage.setItem('membraneYourAudits', JSON.stringify(items.slice(0,24))); }
+    }catch(e){ /* best-effort */ }
+  }
+  function wireWatch(a){
+    var wt=document.getElementById('watchToggle');
+    if(!wt||!a) return;
+    var sync=function(){
+      var on=yaItems().some(function(x){ return String(x.id)===String(a.id); });
+      wt.textContent=on?'Watching ✓':'☆ Watch';
+      wt.title=on?'Remove from Your audits (right panel)':'Add to Your audits — an advisory card that follows this line';
+    };
+    sync();
+    wt.onclick=function(){
+      if(window.MembraneYourAudits){ MembraneYourAudits.toggle(a.id, a.state); }
+      else{
+        var items=yaItems();
+        var i=items.findIndex(function(x){ return String(x.id)===String(a.id); });
+        if(i>=0) items.splice(i,1);
+        else items.push({ id:Number(a.id), lastState:(typeof a.state==='number'?S.stateName(a.state):String(a.state)), addedAt:Date.now() });
+        localStorage.setItem('membraneYourAudits', JSON.stringify(items.slice(0,24)));
+      }
+      sync();
+    };
+  }
+
+  function initialAuditId(){
+    try{
+      var p=new URLSearchParams(location.search);
+      var q=p.get('id');
+      if(q!=null&&/^\d+$/.test(q)) return +q;
+      var h=(location.hash||'').replace(/^#/,'');
+      if(/^audit-\d+$/.test(h)) return +h.replace('audit-','');
+      if(/^\d+$/.test(h)) return +h;
+    }catch(e){}
+    return null;
+  }
+
+  if(M.audits.length){
+    var startId=initialAuditId();
+    if(startId!=null&&M.audits.some(function(x){ return x.id===startId; })) cur=startId;
+    else cur=M.audits[0].id;
+    syncAuditUrl(cur);
+  }
+  foot.textContent='Read-only audit record · Find your step for next steps · snapshot '+esc(M.meta.generatedAt);
+  renderHead();
+  renderBrowse();
+})();
+</script>
+
+<script src="your-links.js?v=5"></script>
+<script src="membrane-rail.js?v=2"></script>
+</body>
+</html>

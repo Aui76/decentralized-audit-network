@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>!function(){try{var k="membrane_nav_session",s=sessionStorage.getItem(k);document.documentElement.classList.add(s?"nav-session":"cold-load");if(!s)sessionStorage.setItem(k,"1")}catch(e){}}();</script>
+<title>2 · The idea · The Book · Audit Cell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css?v=5">
+</head>
+<body class="page-prose">
+<div class="layout layout-docs">
+
+  <nav>
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink" href="quickstart.html">Quickstart</a>
+    <a class="navlink on" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+
+  <main>
+    <div class="inner">
+
+      <div class="doc-layer-row">
+        <a href="docs-book.html" class="doc-layer doc-layer-story">The Book · I</a>
+        <span class="doc-layer doc-layer-story">Story · chapter 2</span>
+      </div>
+      <h1>The idea</h1>
+      <p class="doc-q">What is the <strong>opposite product shape</strong> to reputation audits — and what does one audit loop look like at the highest level?</p>
+      
+      <div class="doc-bridge">
+        <p class="doc-bridge-lbl">Go deeper — notebook spec</p>
+        <ul>
+          <li><a href="docs-participants-roles.html">Roles</a></li>
+          <li><a href="docs-flows-lifecycle.html">Audit lifecycle</a></li>
+          <li><a href="docs-flows-gate-a.html">The door (Gate A)</a></li>
+          <li><a href="docs-flows-vulnerability.html">Vulnerability disclosure</a></li>
+        </ul>
+      </div>
+      <h2 id="the-idea">The idea</h2>
+      <p><a href="docs-book-01.html">Chapter 1</a> named the gap: immutable code, and a market that sells <strong>trust in a name</strong> instead of a check strangers can repeat.</p>
+      <p><strong>The idea is the opposite shape.</strong> A protocol where independent security researchers audit smart contracts under published rules — not under a client’s private engagement letter. The output is not a PDF to believe. It is a <a href="docs-mechanism.html"><strong>binary verdict</strong></a> — pass or fail — recorded on-chain, backed by artifacts anyone can re-run: same tool, same pinned code, same declared spec, same answer.</p>
+      <p>Payment and credibility follow that record. An auditor is not paid merely for shipping a report. Incentives tie to whether the line they certified <strong>stays</strong> true after strangers had time to probe it during the <a href="docs-flows-lifecycle.html"><strong>challenge window</strong></a>. Findings that survive independent re-run move value; findings that do not, do not.</p>
+      <p>That is the whole pivot: <strong>replace the opinion with a result.</strong></p>
+      <p><strong>Not here:</strong> the seven required properties or market-defect table — <a href="docs-book-01.html">Chapter 1</a>. Toolkit-as-product reframe — <a href="docs-book-03.html">Chapter 3</a>.</p>
+      <table class="doc-table"><thead><tr><th>Layer</th><th>Question</th><th>Read</th></tr></thead><tbody><tr><td><a href="docs-book-01.html">Chapter 1</a></td><td>Why is the market broken?</td><td>The problem</td></tr><tr><td><strong>This chapter</strong></td><td>What replaces it — one loop?</td><td>Below</td></tr><tr><td><a href="docs-book-03.html">Chapter 3</a></td><td>What is the primary product?</td><td>Toolkit as product</td></tr></tbody></table>
+      <h2 id="what-changes-if-you-take-it-seriously">What changes if you take it seriously</h2>
+      <table class="doc-table"><thead><tr><th>Shift</th><th>Meaning</th></tr></thead><tbody><tr><td><strong>Verdicts → computations</strong></td><td>Disagreement is a fork in inputs, not charisma</td></tr><tr><td><strong>Chain → commitments</strong></td><td>Digests and roots; settlement by fixed rules</td></tr><tr><td><strong>Open participation</strong></td><td>Register, assign, prove — no partner desk</td></tr><tr><td><strong>Economics → accuracy</strong></td><td>Pay on <a href="docs-mechanism.html"><strong>success path (positive path)</strong></a> or reproducible fail; <a href="docs-economy-escrow-architecture.html"><strong>reserves</strong></a> absorb exploit payout</td></tr></tbody></table>
+      <p>None of this requires pretending audits are easy. It requires refusing to treat “audited by X” as a substitute for <strong>anyone</strong> being able to ask, <em>did this contract pass that check?</em> and get the same answer the network already recorded.</p>
+      <h2 id="what-this-is-not">What this is not</h2>
+      <table class="doc-table"><thead><tr><th>Not this</th><th>Because</th></tr></thead><tbody><tr><td>Better audit firm on-chain</td><td>Firms sell brand; this sells <a href="docs-mechanism.html"><strong>reproducible</strong></a> infrastructure</td></tr><tr><td>Bounty board with UI</td><td>Record tied to <strong>declared check before launch</strong>, not protocol mood</td></tr><tr><td>Formal verification day one</td><td>Starts binary; <a href="docs-mechanism.html#primary-product"><strong>toolkit</strong></a> grows through real use</td></tr></tbody></table>
+      <h2 id="the-loop-in-plain-language">The loop in plain language</h2>
+      <p>At the highest level — details in later chapters — one audit looks like this:</p>
+      <ol><li>A protocol locks reward and declares what “pass” means for this contract.</li><li>An eligible auditor is assigned under published rules.</li><li>The auditor re-runs that declaration and posts pass or fail with proof.</li><li>On a pass, a <strong>challenge window</strong> opens: anyone can file a <a href="docs-book-05.html#proof-bearing-claim"><strong>proof-bearing claim</strong></a> if the check missed something reproducible.</li><li>If the window closes clean, the auditor earns a confirmation reward; if a challenge reproduces, the record and payouts update through the <strong>challenge procedure (break path)</strong> under the same rules.</li></ol>
+      <p>Every step is designed so a stranger can verify <strong>what happened</strong> from public data — not from trusting who wrote the slide deck.</p>
+      <p>The <a href="docs-mechanism.html"><strong>Audit Cell</strong></a> is the on-chain attempt to make this idea real: contracts that do not care who you are, only whether the digests match and the window rules were followed.</p>
+      
+      <footer class="doc-page-foot"><a href="docs-book.html">← The Book</a> · <a href="docs.html">Docs</a></footer>
+    </div>
+  </main>
+
+  <aside id="docRail" aria-label="You are here" hidden></aside>
+
+</div>
+<script src="motion.js?v=1"></script>
+<script src="your-links.js?v=5"></script>
+<script src="docs-rail.js?v=5"></script>
+</body>
+</html>

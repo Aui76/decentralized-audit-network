@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>!function(){try{var k="membrane_nav_session",s=sessionStorage.getItem(k);document.documentElement.classList.add(s?"nav-session":"cold-load");if(!s)sessionStorage.setItem(k,"1")}catch(e){}}();</script>
+<title>Integrator hub · Integration · Audit Cell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css?v=5">
+</head>
+<body class="page-prose">
+<div class="layout layout-docs">
+
+  <nav>
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink" href="quickstart.html">Quickstart</a>
+    <a class="navlink on" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+
+  <main>
+    <div class="inner">
+
+      <div class="doc-layer-row">
+        <a href="docs-integration.html" class="doc-layer doc-layer-spec">Integration</a>
+        <span class="doc-layer doc-layer-spec">Spec · reader</span>
+      </div>
+      <h1>Integrator hub</h1>
+      <p class="doc-q">How do I read the cell and run organs** — without redefining settlement?</p>
+      
+      <div class="doc-bridge doc-bridge-story">
+        <p class="doc-bridge-lbl">Story context</p>
+        <ul>
+          <li><a href="docs-book-07.html">Book ch 7 · The fingerprint</a></li>
+          <li><a href="docs-book-22.html">Book ch 22 · Reading the chain</a></li>
+          <li><a href="docs-book-23.html">Book ch 23 · The membrane</a></li>
+        </ul>
+      </div>
+      <p>Stranger quickstarts, cell read surface, indexer entry — composes without redefining settlement.</p>
+      <p>The live stack is <strong>`AuditCell`</strong> + satellites in <code>cell/contracts/</code>; the cathedral <strong>`AuditNetwork`</strong> monolith in dan-core <code>testnet/</code> is the behaviour oracle until batch cutover.</p>
+      <p>Three profiles: <strong>protocol</strong> (submit audits), <strong>auditor</strong> (accept / verdict / window), <strong>indexer/UI</strong> (read state → Bob card). Most integrations combine at least two.</p>
+      <p><strong>Repo entry points:</strong> <code>../../../README.md</code> · <code>../../../../cell/indexer/README.md</code> · <code>../../operator/runbooks/CUTOVER-RUNBOOK.md</code></p>
+      <p><strong>Live membrane (shipped explorer):</strong> stranger quickstarts live in <code>../../membrane/README.md</code> (<code>ui/VERIFY</code>, <code>PROTOCOL</code>, <code>AUDITOR</code>, <code>CONCERN</code>). Docs below are the cell-side integration spec; use membrane for on-chain addresses and verify flow on Base Sepolia.</p>
+      <p>Quickstarts: <a href="docs-integration-quickstarts.html">Quickstarts</a>.</p>
+      <h2 id="reading-cell-state">Reading cell state</h2>
+      <p>Primary state lives on <strong>`AuditCell`</strong> and linked modules (<code>ClaimDisputeModule</code>, <code>CellEscrow</code>, …). All audit rows are public; prefer stable named views over raw tuple decode when the cell exposes them.</p>
+      <p><strong>Lifecycle tracking:</strong> subscribe to events per audit id — <code>AuditSubmitted</code> → assignment → accept → verdict → confirm. Fork branches: <code>VulnerabilityClaimed</code>, spec challenge events, integrity overlay (when wired).</p>
+      <p><strong>On-chain vs off-chain:</strong> the cell stores commitments (<code>resultRoot</code>, <code>specErrorsRoot</code>, <code>*RunDigest</code>), not tool output. Verification = re-run declared tool against pinned bytecode and match digest (declare + re-run). See <a href="docs-integration-wallets-and-verification.html">Wallets, re-run &amp; verifier seam</a>.</p>
+      <p>Contract surface: <a href="docs-contract.html"><code>../../7-contract/reference.md</code></a>.</p>
+      <h2 id="indexer-ui-integration">Indexer / UI integration</h2>
+      <p>Off-chain organs live under <strong>`cell/indexer/`</strong> (module map in <code>../../../../cell/indexer/README.md</code>). Production Bob path:</p>
+      <pre class="mono doc-pre">import { deriveBobCard } from &quot;../indexer/deriveBobCard.mjs&quot;;
+
+const card = deriveBobCard({ /* audit facts + portfolioContext + specInvariants + bounty */ });</pre>
+      <p><strong>Bob assurance family</strong> — full card spec: <a href="docs-integration-bob-card.html">Bob card</a>.</p>
+      <table class="doc-table"><thead><tr><th>Concern</th><th>Header</th><th>Meaning</th><th>Test</th></tr></thead><tbody><tr><td>Card / outcomes / action</td><td><a href="docs-integration-bob-card.html">Bob card</a> (#integrator-surface · #decision-trees)</td><td>Full card JSON</td><td><code>npm run test:bob-fixtures</code></td></tr><tr><td>Golden rows</td><td><a href="docs-integration-bob-card.html#fixtures">Bob card § fixtures</a></td><td>Regression targets</td><td>same</td></tr><tr><td>Phases</td><td><a href="docs-participants-participant-phases.html">Participant phases (O3)</a></td><td>Maturity animation</td><td><code>npm run test:organs-o3</code></td></tr><tr><td>Scope / spec-quality</td><td><a href="docs-integration-spec-scope-and-quality.html">Scope, spec-quality &amp; fleet</a> (#scope · #quality)</td><td>O4 overlays</td><td><code>npm run test:organs-o4</code></td></tr><tr><td>Active bounty bands</td><td><a href="docs-integration-bounty-bands.html">Bounty bands</a></td><td>Cohort percentile signal</td><td><code>npm run test:organs-o8</code></td></tr><tr><td>Assurance tiers</td><td><a href="docs-integration-assurance-tiers.html">Assurance tiers</a></td><td>Standard / High badge</td><td><code>npm run test:organs-x3</code></td></tr><tr><td>Contagion fuse</td><td><a href="docs-health-portfolio-contagion.html">Portfolio contagion</a></td><td>Bob dampening</td><td><code>npm run test:organs-o5</code></td></tr><tr><td>Spec-quality fleet</td><td><a href="docs-integration-spec-scope-and-quality.html#fleet">Scope, spec-quality &amp; fleet § fleet</a></td><td>Maintainer JSONL</td><td><code>npm run test:organs-o7</code></td></tr><tr><td>Claim scorecard</td><td><a href="docs-integration-claim-scorecard.html">Claim-resolution scorecard</a></td><td>Post-claim conduct</td><td><code>npm run test:organs-o6</code></td></tr><tr><td>DAN ids / EIP-712</td><td><a href="docs-integration-wallets-and-verification.html">Wallets, re-run &amp; verifier seam</a></td><td>Wallet metadata</td><td><code>npm run test:organs-o1</code></td></tr><tr><td>Artifact registry QA</td><td><a href="docs-integration-artifact-registry.html">Artifact registry</a></td><td>R1–R5 consistency</td><td><code>npm run test:organs-o9</code></td></tr><tr><td>Verifier declare + re-run</td><td><a href="docs-integration-wallets-and-verification.html">Wallets, re-run &amp; verifier seam</a></td><td>Digest binding</td><td>forge + fixtures</td></tr></tbody></table>
+      <p>Integrator UI spec: <a href="docs-integration-protocol-ui-spec.html">Protocol UI spec</a>.</p>
+      <p>Full test matrix: <a href="docs-integration-appendix-a-organ-tests.html">Appendix A — Organ tests &amp; gas baselines</a>.</p>
+      <p>Gates 5–7 (Sepolia deploy, Life re-point, CONTENTS seal) run once at batch cutover — see <code>../../operator/runbooks/CUTOVER-RUNBOOK.md</code>.</p>
+      <p><strong>Cathedral oracle:</strong> dan-core <code>testnet/</code> (monolith + historical fixtures) remains the cross-check bench until cutover confirms live parity.</p>
+      
+      <footer class="doc-page-foot"><a href="docs-integration.html">← Integration</a> · <a href="docs-notebook.html">Notebook</a></footer>
+    </div>
+  </main>
+
+  <aside id="docRail" aria-label="You are here" hidden></aside>
+
+</div>
+<script src="motion.js?v=1"></script>
+<script src="your-links.js?v=5"></script>
+<script src="docs-rail.js?v=5"></script>
+</body>
+</html>

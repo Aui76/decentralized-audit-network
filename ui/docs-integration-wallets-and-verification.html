@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>!function(){try{var k="membrane_nav_session",s=sessionStorage.getItem(k);document.documentElement.classList.add(s?"nav-session":"cold-load");if(!s)sessionStorage.setItem(k,"1")}catch(e){}}();</script>
+<title>Wallets, re-run &amp; verifier seam · Integration · Audit Cell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css?v=5">
+</head>
+<body class="page-prose">
+<div class="layout layout-docs">
+
+  <nav>
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink" href="quickstart.html">Quickstart</a>
+    <a class="navlink on" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+
+  <main>
+    <div class="inner">
+
+      <div class="doc-layer-row">
+        <a href="docs-integration.html" class="doc-layer doc-layer-spec">Integration</a>
+        <span class="doc-layer doc-layer-spec">Spec · reader</span>
+      </div>
+      <h1>Wallets, re-run &amp; verifier seam</h1>
+      <p class="doc-q">How does assurance bind today** (declare + re-run) — and where is Option F?</p>
+      
+      <div class="doc-bridge doc-bridge-story">
+        <p class="doc-bridge-lbl">Story context</p>
+        <ul>
+          <li><a href="docs-book-07.html">Book ch 7 · The fingerprint</a></li>
+        </ul>
+      </div>
+      <p>Three related topics: <strong>EIP-712</strong> wallet metadata (O1), <strong>declare + re-run</strong> verification (today's assurance path), and <strong>Option F</strong> (C10 stub — future cryptographic verifier).</p>
+      <p>Canonical encoding standard: <a href="docs-fingerprint.html">Fingerprint Technical Note</a> — not duplicated here.</p>
+      <h2 id="declare-re-run-assurance-today">Declare + re-run (assurance today)</h2>
+      <p><strong>No signers on testnet.</strong> Assurance = declare digest + off-chain re-run. Deprecated: <code>AuditProofVerifier</code> and signed proof paths.</p>
+      <h3>Pattern</h3>
+      <ol><li>Run tool off-chain on canonical inputs.</li><li>Produce deterministic <code>resultRoot</code> / <code>errorsRoot</code>.</li><li>Call cell API with digest — <strong>no signature</strong>.</li><li>Indexers / Bob re-run and check <code>*RunDigest</code> helpers.</li></ol>
+      <table class="doc-table"><thead><tr><th>Phase</th><th>Entry</th><th>Digest</th></tr></thead><tbody><tr><td>Spec submit</td><td><code>submitAudit(…, specErrorsRoot)</code></td><td><code>specRunDigest</code></td></tr><tr><td>Spec accept</td><td><code>acceptAudit(id, specErrorsRoot)</code></td><td><code>specRunDigest</code></td></tr><tr><td>Verdict</td><td><code>provePass</code> / <code>proveFail</code></td><td><code>verdictRunDigest</code></td></tr><tr><td>Claim</td><td><code>claimVulnerability</code></td><td><code>claimRunDigest</code></td></tr><tr><td>Spec dispute</td><td><code>SpecArbiterModule</code> challenge/defend</td><td><code>specRunDigest</code></td></tr><tr><td>Integrity</td><td><code>IntegrityReviewModule</code></td><td><code>integrityRunDigest</code></td></tr><tr><td>Structural</td><td>gap/fix on module</td><td>structural digests</td></tr></tbody></table>
+      <h3>Tool types</h3>
+      <table class="doc-table"><thead><tr><th>Type</th><th>Off-chain</th><th>On-chain</th></tr></thead><tbody><tr><td>Static analyzer</td><td><code>resultRoot = hash(report)</code></td><td><code>provePass/Fail</code></td></tr><tr><td>Fuzz / property</td><td>seed + config in tool metadata</td><td>same</td></tr><tr><td>Formal</td><td>proof bundle hash</td><td>same; Option F optional later</td></tr></tbody></table>
+      <h3>Bob hints (off-chain only)</h3>
+      <p><strong>spec-defended-unverified</strong>, <strong>wash-triangle</strong>, <strong>defended-spec-on-wash-line</strong> → card WALK / integrity suggest — <strong>never</strong> auto-slash. See <a href="docs-integration-bob-card.html">Bob card</a> · hint registry.</p>
+      <h2 id="option-f-the-verifier-seam-c10">Option F — the verifier seam (C10)</h2>
+      <p>An optional cryptographic verifier that would harden the witness binding into an unforgeable proof. It is a <strong>stub today</strong> (<code>IRunProofVerifier</code>, the C10 seam) — not wired into any settlement path.</p>
+      <h3>What it would harden</h3>
+      <p>What is <em>not</em> yet cryptographic is the binding between an on-chain fingerprint and a genuine tool run. Today that binding rests on:</p>
+      <ul><li>an independent <strong>re-runner</strong> who actually executes the tool, and</li><li>a <strong>14-day window</strong> in which anyone can reproduce the run and challenge it.</li></ul>
+      <p>The assumption is honest-majority over an open population given time to look — not trust in a single actor at a single moment.</p>
+      <h3>What Option F is</h3>
+      <p>A verifier — zero-knowledge or trusted-execution — that proves on-chain the statement &quot;replay witness <strong>W</strong> on contract <strong>O</strong> → evaluator → FAIL,&quot; replacing the re-runner-plus-window with an unforgeable proof of the same fact. It proves exactly what the <a href="docs-fingerprint.html">Fingerprint Technical Note</a> already encodes; it changes nothing else.</p>
+      <h3>Status</h3>
+      <table class="doc-table"><thead><tr><th>Item</th><th>State</th></tr></thead><tbody><tr><td><code>IRunProofVerifier</code></td><td>stub interface; not called in any flow</td></tr><tr><td><code>setProofVerifier</code> / <code>setClaimVerifier</code> / <code>setSpecVerifier</code></td><td>deprecated compat no-ops</td></tr><tr><td>On-chain verify calls</td><td>none — settlement binds to re-runnable <code>*RunDigest</code> / witness replay</td></tr></tbody></table>
+      <p>The cell is signerless and hash-anchored, so the verifier attaches as a future seam <strong>without changing the encoding</strong>. Build when the goal is to remove the honest-majority + window assumption; not a necessary condition for pay or withhold.</p>
+      <p>Flows cross-ref: <a href="docs-flows-vulnerability.html#claim-side-assignment">Vulnerability disclosure</a>.</p>
+      <h2 id="eip-712-typed-data-and-dan-identifiers-o1">EIP-712 typed data and DAN identifiers (O1)</h2>
+      <p>Off-chain encoding helpers for wallets, indexers, and later organs (Bob, scope, fleet logs). <strong>Not compiled into `AuditCell`</strong> — import from <code>cell/indexer/</code>.</p>
+      <table class="doc-table"><thead><tr><th>Module</th><th>Role</th></tr></thead><tbody><tr><td><code>indexer/danIdV0.mjs</code></td><td>v0 DAN id grammar + <code>danId(domain, symbol)</code></td></tr><tr><td><code>indexer/eip712Digests.mjs</code></td><td>EIP-712 digests + <code>build*TypedData</code> for <code>eth_signTypedData_v4</code></td></tr></tbody></table>
+      <p>The cell uses <strong>declare + re-run</strong> (<code>*RunDigest</code>, witness paths). EIP-712 is parallel wallet metadata; settlement truth still binds to re-runnable roots, not typed-data signatures.</p>
+      <h3>DAN identifier v0 (<code>danIdV0.mjs</code>)</h3>
+      <p>Grammar: <code>DAN:&lt;DOMAIN&gt;:v0:&lt;SYMBOL&gt;</code> (UTF-8, then <code>keccak256</code>).</p>
+      <table class="doc-table"><thead><tr><th>Export</th><th>Purpose</th></tr></thead><tbody><tr><td><code>DAN_ID_VERSION</code></td><td><code>&quot;v0&quot;</code></td></tr><tr><td><code>DAN_ID_DOMAIN.SCOPE</code></td><td>Within-spec scope symbols (O4+)</td></tr><tr><td><code>DAN_ID_DOMAIN.FMEA_SCOPE</code></td><td>FMEA scope bridge namespace</td></tr><tr><td><code>danIdUtf8(domain, symbol)</code></td><td>Canonical string before hash</td></tr><tr><td><code>danId(domain, symbol)</code></td><td><code>bytes32</code> id for on-chain / indexer keys</td></tr></tbody></table>
+      <p>Register new domains in this module only — downstream organs import, never re-hash ad hoc.</p>
+      <h3>EIP-712 domain</h3>
+      <table class="doc-table"><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td><code>name</code></td><td><code>Decentralized Audit Network</code></td></tr><tr><td><code>version</code></td><td><code>1</code></td></tr><tr><td><code>chainId</code></td><td>deployment chain</td></tr><tr><td><code>verifyingContract</code></td><td>network contract address (cathedral <code>AuditNetwork</code>; cell deploy TBD at cutover)</td></tr></tbody></table>
+      <p>Cathedral on-chain helpers: <code>eip712DomainSeparator()</code>, <code>eip712ClaimDigest</code>, <code>eip712VerdictDigest</code> on <code>AuditNetwork</code>. Cell bench uses <strong>`contracts/Eip712Reference.sol`</strong> (extracted, identical math) for fast oracle tests; cathedral <code>test/Eip712Digests.t.sol</code> remains the monolith cross-check.</p>
+      <h3>Structs</h3>
+      <p><strong>ClaimVulnerability</strong> — <code>ClaimVulnerability(uint256 originalAuditId, bytes32 toolId, bytes32 resultRoot)</code></p>
+      <p>Helper: <code>eip712ClaimDigest(chainId, verifyingContract, originalAuditId, toolId, resultRoot)</code>.</p>
+      <p><strong>Not</strong> interchangeable with <code>claimRunDigest</code> / <code>claimProofStatement</code> — different encoding domain.</p>
+      <p><strong>SubmitVerdict</strong> — <code>SubmitVerdict(uint256 auditId, bytes32 toolId, bool pass, bytes32 resultRoot)</code></p>
+      <p>Helper: <code>eip712VerdictDigest(chainId, verifyingContract, auditId, toolId, pass, resultRoot)</code>.</p>
+      <h3>Wallet integration</h3>
+      <ol><li>Compute digest via <code>eip712Digests.mjs</code> <strong>or</strong> cathedral on-chain views (must agree).</li><li>Present <code>eth_signTypedData_v4</code> using <code>buildClaimTypedData</code> / <code>buildVerdictTypedData</code>.</li><li>Indexers may store both <code>runDigest</code> (Bob re-run binding) and optional <code>eip712Digest</code> for audit trails.</li></ol>
+      <p>See #wallet-demo for copy-paste JSON payloads.</p>
+      <h2 id="wallet-demo-o1-wallet-demo">Wallet demo (O1) {#wallet-demo}</h2>
+      <p>Copy-paste <code>eth_signTypedData_v4</code> payloads for claim and verdict UX in the cell bench.</p>
+      <p><strong>Authority:</strong> On-chain settlement still binds <code>*RunDigest</code> / witness replay on the cell. EIP-712 is parallel wallet metadata only.</p>
+      <h3>Prerequisites</h3>
+      <ul><li><code>verifyingContract</code> — cathedral <code>AuditNetwork</code> address (or cell network address after cutover)</li><li><code>chainId</code> from the connected network</li><li>Digest parity: <code>cell/indexer/eip712Digests.mjs</code> or on-chain <code>eip712ClaimDigest</code> / <code>eip712VerdictDigest</code></li></ul>
+      <p>Generate payloads in code:</p>
+      <pre class="mono doc-pre">import { buildClaimTypedData, buildVerdictTypedData } from &quot;../indexer/eip712Digests.mjs&quot;;
+
+const claim = buildClaimTypedData(chainId, networkAddr, 42n, toolId, resultRoot);
+const verdict = buildVerdictTypedData(chainId, networkAddr, 7n, toolId, true, resultRoot);</pre>
+      <h3>ClaimVulnerability example</h3>
+      <pre class="mono doc-pre">{
+  &quot;types&quot;: {
+    &quot;EIP712Domain&quot;: [
+      { &quot;name&quot;: &quot;name&quot;, &quot;type&quot;: &quot;string&quot; },
+      { &quot;name&quot;: &quot;version&quot;, &quot;type&quot;: &quot;string&quot; },
+      { &quot;name&quot;: &quot;chainId&quot;, &quot;type&quot;: &quot;uint256&quot; },
+      { &quot;name&quot;: &quot;verifyingContract&quot;, &quot;type&quot;: &quot;address&quot; }
+    ],
+    &quot;ClaimVulnerability&quot;: [
+      { &quot;name&quot;: &quot;originalAuditId&quot;, &quot;type&quot;: &quot;uint256&quot; },
+      { &quot;name&quot;: &quot;toolId&quot;, &quot;type&quot;: &quot;bytes32&quot; },
+      { &quot;name&quot;: &quot;resultRoot&quot;, &quot;type&quot;: &quot;bytes32&quot; }
+    ]
+  },
+  &quot;primaryType&quot;: &quot;ClaimVulnerability&quot;,
+  &quot;domain&quot;: {
+    &quot;name&quot;: &quot;Decentralized Audit Network&quot;,
+    &quot;version&quot;: &quot;1&quot;,
+    &quot;chainId&quot;: 31337,
+    &quot;verifyingContract&quot;: &quot;0x00000000000000000000000000000000000000C0&quot;
+  },
+  &quot;message&quot;: {
+    &quot;originalAuditId&quot;: &quot;42&quot;,
+    &quot;toolId&quot;: &quot;0x…&quot;,
+    &quot;resultRoot&quot;: &quot;0x…&quot;
+  }
+}</pre>
+      <h3>SubmitVerdict example</h3>
+      <p>Same domain; <code>primaryType</code> = <code>SubmitVerdict</code>; message includes <code>auditId</code>, <code>toolId</code>, <code>pass</code>, <code>resultRoot</code>.</p>
+      <h3>MetaMask snippet</h3>
+      <pre class="mono doc-pre">const sig = await ethereum.request({
+  method: &quot;eth_signTypedData_v4&quot;,
+  params: [signerAddress, JSON.stringify(buildClaimTypedData(chainId, network, auditId, toolId, root))],
+});</pre>
+      <p>Run <code>npm run test:eip712</code> after changing <code>eip712Digests.mjs</code>.</p>
+      <h3>Tests (gate 2 / gate 4)</h3>
+      <table class="doc-table"><thead><tr><th>Check</th><th>Command</th></tr></thead><tbody><tr><td>DAN ids</td><td><code>cd cell &amp;&amp; npm run test:dan-id</code></td></tr><tr><td>EIP-712 off-chain</td><td><code>cd cell &amp;&amp; npm run test:eip712</code></td></tr><tr><td>EIP-712 on-chain oracle</td><td><code>cd cell &amp;&amp; forge test --match-contract Eip712DigestsOracle</code></td></tr></tbody></table>
+      <p>Off-chain tests must stay aligned with <code>test/Eip712DigestsOracle.t.sol</code> and <code>contracts/Eip712Reference.sol</code> (same math as cathedral <code>AuditNetwork</code> views).</p>
+      
+      <footer class="doc-page-foot"><a href="docs-integration.html">← Integration</a> · <a href="docs-notebook.html">Notebook</a></footer>
+    </div>
+  </main>
+
+  <aside id="docRail" aria-label="You are here" hidden></aside>
+
+</div>
+<script src="motion.js?v=1"></script>
+<script src="your-links.js?v=5"></script>
+<script src="docs-rail.js?v=5"></script>
+</body>
+</html>

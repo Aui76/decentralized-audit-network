@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>!function(){try{var k="membrane_nav_session",s=sessionStorage.getItem(k);document.documentElement.classList.add(s?"nav-session":"cold-load");if(!s)sessionStorage.setItem(k,"1")}catch(e){}}();</script>
+<title>Activity-led reward · The AUDIT Economy · Audit Cell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css?v=5">
+</head>
+<body class="page-prose">
+<div class="layout layout-docs">
+
+  <nav>
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink" href="quickstart.html">Quickstart</a>
+    <a class="navlink on" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+
+  <main>
+    <div class="inner">
+
+      <div class="doc-layer-row">
+        <a href="docs-economy.html" class="doc-layer doc-layer-spec">The AUDIT Economy</a>
+        <span class="doc-layer doc-layer-spec">Spec · reader</span>
+      </div>
+      <h1>Activity-led reward</h1>
+      <p class="doc-q">How big<strong> is the </strong>base** mint at confirm — EMA, LP cap, manipulation discount — before any escrow supplement or green-light?</p>
+      
+      <div class="doc-bridge doc-bridge-story">
+        <p class="doc-bridge-lbl">Story context</p>
+        <ul>
+          <li><a href="docs-book-10.html">Book ch 10 · Issuance &amp; positive blocks</a></li>
+        </ul>
+      </div>
+      <p>Positive-block size follows <strong>network activity</strong>, not a fixed schedule or <code>remainingSupply()</code> curve.</p>
+      <p>Design: <a href="docs-economy-adaptive-issuance-uncapped-supply-by-choice.html">Adaptive issuance</a> · anchor: <a href="docs-economy-the-positive-block.html">The positive block</a>.</p>
+      <p><strong>Not here:</strong> depression floor, green-light fresh mint, or other pay <strong>on top of</strong> this reward — <a href="docs-economy-network-states.html">Issuance network states</a>.</p>
+      <h2 id="live-formula-84532">Live formula (84532)</h2>
+      <p>On each confirm, <code>IssuanceModule</code> computes:</p>
+      <pre class="mono doc-pre">activityMint = emaSlow × emaToMintBps / 10_000          (default emaToMintBps = 2500)
+reward       = min(activityMint, mintLpCapBps × lpBalance / 10_000)   when LP &gt; 0
+             = activityMint                                            when LP = 0</pre>
+      <p>Default <code>mintLpCapBps = 500</code>.</p>
+      <p>This <code>reward</code> is what splits to auditor / treasury / founder at confirm (<a href="docs-economy-where-mint-splits.html">Where mint splits</a>). Supplements in depression are separate draws — ch 05.</p>
+      <h2 id="dual-ema">Dual EMA</h2>
+      <table class="doc-table"><thead><tr><th>EMA</th><th>Meaning</th></tr></thead><tbody><tr><td><strong>`emaFast`</strong></td><td>Recent bounty-weighted activity — reacts quickly</td></tr><tr><td><strong>`emaSlow`</strong></td><td>Smooth baseline — <strong>drives mint size</strong></td></tr></tbody></table>
+      <p>Bounty signal is <strong>protocol-credibility-weighted</strong> (<code>kProtocol</code> blend vs network mean). Auditors below <code>emaSlowMinSuccessfulForFullWeight</code> successful audits contribute at reduced weight until full weight earned.</p>
+      <h2 id="manipulation-discount">Manipulation discount</h2>
+      <p>When <code>emaFast / emaSlow &gt; manipulationThresholdBps</code> → <strong>Manipulation</strong> → base mint scaled by <code>manipulationMintScaleBps</code> (default 8000 = 80%).</p>
+      <p>Damps suspicious spikes <strong>on the positive-block reward</strong> — settlement still runs; only size changes.</p>
+      <h2 id="worked-examples-defaults">Worked examples (defaults)</h2>
+      <p><strong>A — activity binds:</strong> <code>emaSlow = 10_000</code> → <code>activityMint = 2_500</code>; LP cap <code>5_000</code> → <strong>reward = 2_500</strong></p>
+      <p><strong>B — LP cap binds:</strong> <code>activityMint = 12_500</code>; cap <code>5_000</code> → <strong>reward = 5_000</strong></p>
+      <p><strong>C — manipulation:</strong> <code>2_500 × 0.8</code> → <strong>2_000</strong></p>
+      <p>Integrators: preview = <code>nextPositiveBlockReward()</code>; history = <code>auditBlockRewardMinted(id)</code>.</p>
+      <p><strong>Previous:</strong> <a href="docs-economy-the-positive-block.html">The positive block</a> · <strong>Next:</strong> <a href="docs-economy-network-states.html">Issuance network states</a></p>
+      
+      <footer class="doc-page-foot"><a href="docs-economy.html">← The AUDIT Economy</a> · <a href="docs-notebook.html">Notebook</a></footer>
+    </div>
+  </main>
+
+  <aside id="docRail" aria-label="You are here" hidden></aside>
+
+</div>
+<script src="motion.js?v=1"></script>
+<script src="your-links.js?v=5"></script>
+<script src="docs-rail.js?v=5"></script>
+</body>
+</html>

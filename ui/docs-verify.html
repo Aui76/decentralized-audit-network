@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Verify it yourself · Docs · Audit Cell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="site.css?v=5"></head>
+<body>
+<div class="layout layout-docs">
+
+  <nav>
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink" href="quickstart.html">Quickstart</a>
+    <a class="navlink on" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+
+  <main>
+    <div class="inner">
+      <p class="eyebrow"><a href="docs.html">Docs</a></p>
+      <h1>Verify it yourself</h1>
+      <p class="lede">A verdict is a proof, not an opinion. Recompute any settled result from the live code — no wallet, no account, no tokens.</p>
+
+      <h2 id="anyone">Anyone can check</h2>
+      <p>You don't need to be registered or hold anything to verify an audit. If a result is honest, you can re-derive it yourself from the live, on-chain code — in under a minute, on any computer.</p>
+
+      <h2 id="intab">One click, in this tab</h2>
+      <p>Checking used to cost something: install node, open a terminal, copy a command. Now every audit in the <a href="explorer.html">explorer</a> has a <b>Reproduce it now</b> button — click it, and your own browser does the recomputation and confirms the match. Nothing to install, no wallet, no account; the page only <em>reads</em> from the chain.</p>
+      <p>You'll see the same story the command tells. First a few <b>MATCH ✓</b> lines — the checker proving its own math before it checks anything else. Then one of two endings: <b>VERIFIED ✓</b> means the recorded verdict really is the honest pass/fail of the code deployed on chain right now. <b>MISMATCH ✗</b> means it isn't — wrong contract, code that changed since the audit, or an audit that used a different tool than the standard one this checker knows. The button never rounds a mismatch up to a pass. A successful run is remembered on this device as <i>reproduced by you</i>.</p>
+      <p>If you watch audits (the ☆ in the explorer), the <b>Your audits</b> rail does two more things for you. It reads each watched audit's state <em>live from the chain</em> on every visit and flags anything that moved since you last looked — "AwaitingWindow → Claimed since your last look". And one <b>Re-verify all watched</b> button runs this same reproduction over your whole watchlist and updates your personal ledger, so a morning glance covers everything you care about. Same honest limits: read-only, this device only, and audits newer than the site's snapshot are skipped until the index refreshes. The summary also says <em>why</em> a non-match isn't an alarm when the chain already explains it: "not settled yet" (no verdict on chain to check), "different spec" (this in-tab checker only knows the canonical fixture recipe — use the CLI/harness), and "expected mismatch" (the verdict was overturned — the checker refusing to confirm it is the record working). The red MISMATCH is reserved for the one case that deserves your attention.</p>
+      <p>One honest note: the button lives on this site, and the whole point is that you shouldn't have to trust any site. If you'd rather trust nothing but your own machine, the command below proves the same thing from a terminal — button and command run the exact same code, one shared core.</p>
+
+      <h2 id="command">One command</h2>
+      <p>With <span class="mono">node</span> installed, from the membrane folder:</p>
+      <pre>node verify.mjs 7</pre>
+      <p>The script self-tests its own math against published values, fetches the audited contract's live bytecode, recomputes the result, and compares it to what the cell recorded.</p>
+
+      <h2 id="see">What you'll see</h2>
+      <p>A row of <b>MATCH ✓</b> lines — the script proving its own encoding — then <b>VERIFIED ✓</b> with the settled verdict. Try audit <b>#6</b> and you'll get a <b>MISMATCH</b>: correct, because that result was overturned. Verify refusing to confirm a bad result is exactly the point.</p>
+
+      <h2 id="limit">The honest limit</h2>
+      <p>This re-derives the <b>encoding</b> and its <b>binding to the real deployed bytecode</b> — that the recorded result is the honest encoding of pass/fail on the actual code, under the named spec and tool. It does not re-execute the contract in an EVM; independently re-running the fixture to re-derive the verdict from scratch needs a local EVM fork (the harness). The tool says which layer it proves — it never overstates.</p>
+
+      <h2 id="why">Why it matters</h2>
+      <p>This is the whole point of the network. You never have to trust the auditor, the protocol, or this site — you recompute, and the numbers either match or they don't.</p>
+
+      <p>More detail: <a href="docs-fingerprint.html">How verification works — the fingerprint</a>.</p>
+
+      <span class="badge"><span class="live"></span> Testnet · Base Sepolia — test funds only</span>
+    </div>
+  </main>
+
+  <aside id="docRail" aria-label="You are here" hidden></aside>
+
+</div>
+<script src="your-links.js?v=5"></script>
+<script src="docs-rail.js?v=5"></script>
+<script src="motion.js?v=1"></script>
+</body>
+</html>

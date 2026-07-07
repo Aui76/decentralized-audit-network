@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>!function(){try{var k="membrane_nav_session",s=sessionStorage.getItem(k);document.documentElement.classList.add(s?"nav-session":"cold-load");if(!s)sessionStorage.setItem(k,"1")}catch(e){}}();</script>
+<title>14 · Bounties &amp; pricing · The Book · Audit Cell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css?v=5">
+</head>
+<body class="page-prose">
+<div class="layout layout-docs">
+
+  <nav>
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink" href="quickstart.html">Quickstart</a>
+    <a class="navlink on" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+
+  <main>
+    <div class="inner">
+
+      <div class="doc-layer-row">
+        <a href="docs-book.html" class="doc-layer doc-layer-story">The Book · IV</a>
+        <span class="doc-layer doc-layer-story">Story · chapter 14</span>
+      </div>
+      <h1>Bounties &amp; pricing</h1>
+      <p class="doc-q">What does <strong>bounty magnitude</strong> mean — and who gets paid <strong>what</strong>, <strong>when</strong>, on-chain?</p>
+      
+      <div class="doc-bridge">
+        <p class="doc-bridge-lbl">Go deeper — notebook spec</p>
+        <ul>
+          <li><a href="docs-economy-escrow-architecture.html">Escrow architecture</a></li>
+          <li><a href="docs-economy-the-discoverers-reward.html">The discoverer's reward</a></li>
+          <li><a href="docs-integration-bounty-bands.html">Bounty bands</a></li>
+        </ul>
+      </div>
+      <h2 id="the-price-of-attention">The price of attention</h2>
+      <p>Chapters <a href="docs-book-08.html">8</a> and <a href="docs-book-11.html">11</a> named <strong>bounty</strong> locked at submit and <strong>reserves</strong> for discoverers.</p>
+      <p>At <strong>submit</strong> the protocol locks AUDIT and publishes <strong>bounty magnitude</strong> — public thermometer for economic weight. Not a severity dial. Not half-pay for “medium.”</p>
+      <p><strong>Not here:</strong> activity-led mint size — <a href="docs-book-10.html">Chapter 10</a> · <a href="docs-economy-activity-led-reward.html">Activity-led reward</a>.</p>
+      <table class="doc-table"><thead><tr><th>Payee</th><th>When</th><th>Source</th></tr></thead><tbody><tr><td><strong>Auditor</strong></td><td>After clean <strong>confirm</strong></td><td><strong>Positive block</strong> mint</td></tr><tr><td><strong>Discoverer</strong></td><td>Reproduced miss on break path</td><td><strong>Reserves</strong> — boost × bounty, cap, floor</td></tr><tr><td><strong>Claim stake</strong></td><td>At filing</td><td>Returned on win; slashed on fail</td></tr></tbody></table>
+      <h2 id="boundary-bounties-vs-value-vs-issuance">Boundary — Bounties vs Value vs Issuance</h2>
+      <table class="doc-table"><thead><tr><th>Layer</th><th><a href="docs-book-08.html">Ch 8</a></th><th><a href="docs-book-10.html">Ch 10</a></th><th><strong>This chapter</strong></th></tr></thead><tbody><tr><td><strong>Bounty lock</strong></td><td>Owns — why escrow exists</td><td>—</td><td>Owns — magnitude meaning</td></tr><tr><td><strong>Auditor reward size</strong></td><td>—</td><td>Owns — POS split</td><td>Names timing only</td></tr><tr><td><strong>Discoverer math</strong></td><td>Reserves bucket</td><td>Not mint</td><td>Owns — boost, cap, floor</td></tr><tr><td><strong>Claim stake</strong></td><td>—</td><td>—</td><td>Owns</td></tr></tbody></table>
+      <p>Display signals (bands, tiers) — <a href="docs-book-16.html">Ch 16</a> · <a href="docs-integration-settlement-vs-signal.html">Settlement vs signal</a> — not payout inputs.</p>
+      <h2 id="auditor-pay-after-the-window">Auditor pay — after the window</h2>
+      <p>Not paid at verdict. On pass → wait <strong>challenge window</strong> → <strong>confirm</strong> → mint on <strong>success path (positive path)</strong>.</p>
+      <h2 id="discoverer-pay-boost-cap-floor">Discoverer pay — boost, cap, floor</h2>
+      <p>Target <strong>boosts</strong> with relevant reputation record. <strong>Cap</strong> ties to escrow depth. <strong>Floor</strong> ties to fraction of locked <strong>bounty</strong>.</p>
+      <p>Extra above bounty comes from <strong>reserves</strong> first. Auditor’s <strong>positive block</strong> is not clawed back.</p>
+      <p><strong>FAIL at audit (Gate B)</strong> → <strong>1×</strong> boost path (no PASS to miss).</p>
+      <h2 id="claim-stake-and-the-deadline">Claim stake and the deadline</h2>
+      <p>Stake scales with <strong>bounty</strong> — spam on rich lines hurts.</p>
+      <p>Past <strong>claim resolution window</strong> → expiry pays discoverer zero; stake slashed. <strong>Liveness</strong>, not automatic guilt on original auditor.</p>
+      <h2 id="before-you-turn-the-page">Before you turn the page</h2>
+      <p><strong>Bounty</strong> — locked at submit; public magnitude.</p>
+      <p><strong>Auditor reward</strong> — mint at confirm, not verdict.</p>
+      <p><strong>Discoverer reward</strong> — reserves; boost × bounty; cap and floor.</p>
+      <p><strong>Claim stake</strong> — scales with bounty.</p>
+      <p><strong>Deadline</strong> — expired claim pays zero.</p>
+      
+      <footer class="doc-page-foot"><a href="docs-book.html">← The Book</a> · <a href="docs.html">Docs</a></footer>
+    </div>
+  </main>
+
+  <aside id="docRail" aria-label="You are here" hidden></aside>
+
+</div>
+<script src="motion.js?v=1"></script>
+<script src="your-links.js?v=5"></script>
+<script src="docs-rail.js?v=5"></script>
+</body>
+</html>

@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>!function(){try{var k="membrane_nav_session",s=sessionStorage.getItem(k);document.documentElement.classList.add(s?"nav-session":"cold-load");if(!s)sessionStorage.setItem(k,"1")}catch(e){}}();</script>
+<title>Structural upgrades · Flows · Audit Cell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css?v=5">
+</head>
+<body class="page-prose">
+<div class="layout layout-docs">
+
+  <nav>
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink" href="quickstart.html">Quickstart</a>
+    <a class="navlink on" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+
+  <main>
+    <div class="inner">
+
+      <div class="doc-layer-row">
+        <a href="docs-flows.html" class="doc-layer doc-layer-spec">Flows</a>
+        <span class="doc-layer doc-layer-spec">Spec · reader</span>
+      </div>
+      <h1>Structural upgrades</h1>
+      <p class="doc-q">The <strong>shared toolkit</strong> is missing a check class — how does someone <strong>prove the gap</strong>, <strong>ship a fix</strong>, get <strong>jury adopt</strong>, and optionally <strong>mint UPG</strong> — without settling unrelated rows?</p>
+      
+      <div class="doc-bridge doc-bridge-story">
+        <p class="doc-bridge-lbl">Story context</p>
+        <ul>
+          <li><a href="docs-book-10.html">Book ch 10 · Issuance &amp; positive blocks</a></li>
+          <li><a href="docs-book-12.html">Book ch 12 · Overlays</a></li>
+        </ul>
+      </div>
+      <p><strong>Structural upgrade adoption (UPG)</strong> is the governed path when the <strong>network’s canonical harness</strong> fails on a target <strong>O</strong> and the fix is a <strong>new registered primitive F</strong> — not a debate on one protocol’s declared spec. The network <strong>learns</strong> (Probationary → Official canonical tier) without rewriting the immutable settlement core.</p>
+      <p>Per-audit fail outside <strong>S</strong> on one row → <a href="docs-flows-spec-gap.html">Spec-gap overlay</a>. One protocol’s app bug → ordinary audit / Gate C — <strong>not</strong> a network gap.</p>
+      <p><strong>Module:</strong> <code>StructuralUpgradeModule.sol</code> · UPG mint via <code>IssuanceModule.setStructuralModule</code> (<a href="docs-economy-where-mint-splits.html">Where mint splits</a>).</p>
+      <h2 id="structural-upgrade-vs-spec-gap">Structural upgrade vs spec-gap</h2>
+      <table class="doc-table"><thead><tr><th></th><th><strong>Spec-gap</strong> (one audit row)</th><th><strong>Structural upgrade</strong> (network toolkit)</th></tr></thead><tbody><tr><td><strong>Scope</strong></td><td>Property <strong>P</strong> outside declared <strong>S</strong> on row <strong>O</strong></td><td>Canonical harness fails on <strong>O</strong>; fix is new tool <strong>F</strong></td></tr><tr><td><strong>Effect on original PASS</strong></td><td>Non-destructive — PASS on <strong>S</strong> can stand</td><td>Separate gap/fix <strong>audit rows</strong>; does not rewrite unrelated claims</td></tr><tr><td><strong>Payout</strong></td><td>Protocol <code>adoptSpecGap</code> only</td><td>Escrow tranches + UPG mint on jury adopt</td></tr><tr><td><strong>Opens with</strong></td><td><code>openSpecGap</code></td><td><code>fileNetworkGap</code></td></tr></tbody></table>
+      <h2 id="actors-and-artifacts">Actors and artifacts</h2>
+      <table class="doc-table"><thead><tr><th>Symbol</th><th>Meaning</th></tr></thead><tbody><tr><td><strong>O</strong></td><td>Target contract under test (gap audit)</td></tr><tr><td><strong>F</strong></td><td>Fix / harness contract (fix audit after gap confirmed)</td></tr><tr><td><strong>Gap audit</strong></td><td>Proves canonical harness <strong>FAIL</strong> on <strong>O</strong> via <code>proveGapFail</code> (<code>STRUCTURAL_GAP_RUN_V1</code>)</td></tr><tr><td><strong>Fix audit</strong></td><td>Proves fix <strong>PASS</strong> with pinned <code>harnessToolId</code> after gap confirmed</td></tr></tbody></table>
+      <h2 id="end-to-end-flow">End-to-end flow</h2>
+      <pre class="mono doc-pre">fileNetworkGap
+        ↓
+structuralSpawn (gap row on O) → proveGapFail → gap confirmed
+        ↓
+submitStructuralFix → fix row on F → provePass (harness pinned)
+        ↓
+confirmAudit(fix) → Probation (canonical tier staging)
+        ↓
+voteStructuralUpgrade (jury + credibility WC gates)
+        ↓
+adoptStructuralUpgrade → Probationary canonical + UPG mint + adopt escrow tranche
+        ↓
+promoteCanonicalToOfficial   OR   rollbackStructuralUpgrade (Gate D — Probationary only)</pre>
+      <h2 id="no-logic-jumps-g-10">No-logic-jumps (G-10)</h2>
+      <table class="doc-table"><thead><tr><th>Rule</th><th>Meaning</th></tr></thead><tbody><tr><td>Fix <strong>`confirmAudit` on F</strong></td><td>Starts <strong>probation only</strong> — does <strong>not</strong> settle a vulnerability claim on <strong>O</strong></td></tr><tr><td>Gap FAIL</td><td>Uses <strong>`proveGapFail`</strong> — not <code>cell.proveFail</code> on the ordinary audit railroad</td></tr><tr><td>UPG mint</td><td>Lives in <strong>module events</strong> — not ordinary POS hash-chain entries</td></tr></tbody></table>
+      <p>One row’s proof does not pay or void another row by narrative alone.</p>
+      <h2 id="layer-placement">Layer placement</h2>
+      <table class="doc-table"><thead><tr><th>Layer</th><th>Owns</th></tr></thead><tbody><tr><td><strong>L1 module</strong></td><td>Gap overlay, jury, canonical tier, probation / adopt / rollback</td></tr><tr><td><strong>L0 cell</strong></td><td>Gap and fix <strong>audit rows</strong>, spawn, gap-fail record — <strong>no</strong> canonical tier on cell</td></tr><tr><td><strong>L1 issuance</strong></td><td><code>mintUpgradeAdopt</code> on adopt</td></tr></tbody></table>
+      <h2 id="mutex-gates">Mutex / gates</h2>
+      <table class="doc-table"><thead><tr><th>Gate</th><th>Meaning</th></tr></thead><tbody><tr><td>Gap vs <strong>Official</strong> deploy</td><td>Gap filing against a registered canonical deploy requires <strong>Official</strong> tier</td></tr><tr><td>Gap audit</td><td><strong>FAIL only</strong> via <code>proveGapFail</code></td></tr><tr><td>Fix PASS</td><td>Must cite pinned <code>harnessToolId</code> after gap confirmed</td></tr><tr><td>Overlays</td><td>Open spec challenge or integrity review <strong>block</strong> via module overlay state</td></tr><tr><td><strong>Gate D</strong></td><td><code>rollbackStructuralUpgrade</code> — <strong>Probationary</strong> tier only</td></tr></tbody></table>
+      <h2 id="escrow-tranches">Escrow tranches</h2>
+      <p>After fix <strong>`InBlock`</strong>, proposer may claim <strong>pass tranche</strong> during probation:</p>
+      <p><code>passTarget = upgradeProposalPayoutTarget × passPayoutBps / 10_000</code> (default <strong>40%</strong>)</p>
+      <p>On <strong>`adoptStructuralUpgrade`</strong>: <strong>adopt tranche</strong> + <strong>UPG mint</strong>. Draws capped at <code>upgradeClaimCapBps</code> (default <strong>5.4%</strong>) of general escrow via <code>payStructuralUpgradeEscrow</code>.</p>
+      <h2 id="jury-credibility">Jury credibility</h2>
+      <p>Votes feed headcount, seniority-weighted, and <strong>credibility-weighted</strong> tallies (<code>juryOkWC</code> / <code>juryNotOkWC</code>). Adopt requires primary gates plus WC gates once data exists. Post-adopt: OK jurors call <code>confirmJuryCredit</code> for future modifier.</p>
+      <h2 id="key-functions">Key functions</h2>
+      <table class="doc-table"><thead><tr><th>Function</th><th>Meaning</th></tr></thead><tbody><tr><td><code>fileNetworkGap</code></td><td>Stake + spawn <strong>gap</strong> audit on <strong>O</strong></td></tr><tr><td><code>proveGapFail</code></td><td>Gap auditor posts FAIL + confirms harness gap</td></tr><tr><td><code>submitStructuralFix</code></td><td>Spawn <strong>fix</strong> audit after gap confirmed</td></tr><tr><td><code>voteStructuralUpgrade</code></td><td>Jury vote during probation</td></tr><tr><td><code>adoptStructuralUpgrade</code></td><td>Threshold met → Probationary canonical + UPG + adopt tranche</td></tr><tr><td><code>claimStructuralUpgradeEscrow</code></td><td>Pass tranche during probation</td></tr><tr><td><code>promoteCanonicalToOfficial</code></td><td>Time gate after adopt</td></tr><tr><td><code>rollbackStructuralUpgrade</code></td><td>Gate D — revert Probationary adoption only</td></tr></tbody></table>
+      <p><strong>Previous:</strong> <a href="docs-flows-integrity-review.html">Integrity review</a> · <strong>Next:</strong> <a href="docs-flows-mainnet-gates.html">Mainnet gates</a></p>
+      
+      <footer class="doc-page-foot"><a href="docs-flows.html">← Flows</a> · <a href="docs-notebook.html">Notebook</a></footer>
+    </div>
+  </main>
+
+  <aside id="docRail" aria-label="You are here" hidden></aside>
+
+</div>
+<script src="motion.js?v=1"></script>
+<script src="your-links.js?v=5"></script>
+<script src="docs-rail.js?v=5"></script>
+</body>
+</html>

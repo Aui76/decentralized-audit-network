@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>!function(){try{var k="membrane_nav_session",s=sessionStorage.getItem(k);document.documentElement.classList.add(s?"nav-session":"cold-load");if(!s)sessionStorage.setItem(k,"1")}catch(e){}}();</script>
+<title>Settlement vs signal · Integration · Audit Cell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css?v=5">
+</head>
+<body class="page-prose">
+<div class="layout layout-docs">
+
+  <nav>
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink" href="quickstart.html">Quickstart</a>
+    <a class="navlink on" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+
+  <main>
+    <div class="inner">
+
+      <div class="doc-layer-row">
+        <a href="docs-integration.html" class="doc-layer doc-layer-spec">Integration</a>
+        <span class="doc-layer doc-layer-spec">Spec · reader</span>
+      </div>
+      <h1>Settlement vs signal</h1>
+      <p class="doc-q">Which card fields move AUDIT** — and which only orient attention?</p>
+      
+      <div class="doc-bridge doc-bridge-story">
+        <p class="doc-bridge-lbl">Story context</p>
+        <ul>
+          <li><a href="docs-book-16.html">Book ch 16 · Reputation signals</a></li>
+        </ul>
+      </div>
+      <p>Strangers see one surface — bounty, expected reward, tier badges, band labels — and often read those as price. <strong>Settlement</strong> is what contracts transfer. <strong>Signal</strong> is what indexers derive for cards. The chain never reads signal back.</p>
+      <p>Settlement rules live in the AUDIT Economy (mint, escrow, payout). This book covers <strong>display</strong> — how organs label rows without becoming wallet inputs.</p>
+      <p><strong>Economy fence post:</strong> <a href="docs-economy-value-vs-signal.html">Value vs signal</a> — settlement vs advisory at the ledger. <strong>This chapter:</strong> integrator discipline for card fields (bands, tiers, ripe-slot).</p>
+      <table class="doc-table"><thead><tr><th>Layer</th><th><a href="docs-economy-value-vs-signal.html">Value vs signal</a> (Economy)</th><th>This chapter (Integration)</th></tr></thead><tbody><tr><td><strong>Audience</strong></td><td>Readers — where money moves</td><td>Builders — what cards may show</td></tr><tr><td><strong>Examples</strong></td><td>Mint, escrow, payout paths</td><td>Bounty bands, assurance tiers, ripe-slot</td></tr><tr><td><strong>Rule</strong></td><td>Chain facts settle</td><td>Signals orient only</td></tr></tbody></table>
+      <table class="doc-table"><thead><tr><th>Layer</th><th>What it is</th><th>Examples</th></tr></thead><tbody><tr><td><strong>Settlement</strong></td><td>On-chain transfers and reverts</td><td>Bounty lock, positive-block mint, discoverer draw from escrow, slash to escrow</td></tr><tr><td><strong>Signal</strong></td><td>Off-chain labels for cards and sort order</td><td>Bounty bands, assurance tier badges, complexity phase, multiplier label</td></tr></tbody></table>
+      <p>Build wallet flows and payout logic from <strong>chain state only</strong>. Signals inform copy, sorting, and hints — they do not gate mint, change discoverer formulas, or alter challenge windows.</p>
+      <h2 id="economic-signals-in-this-book">Economic signals in this book</h2>
+      <p>Part IV names two signals that look like economics but sit outside the ledger. Both are rebuilt from public audit data each tick; neither appears in a transfer or revert.</p>
+      <p><strong>Bounty bands</strong> answer a cohort question: <em>where does this locked bounty rank against other audits that still have money on the line?</em> An indexer collects economically active bounties, computes quartiles, and classifies each row as <code>top_quartile</code>, <code>mid</code>, or <code>low</code>. That rank feeds thermodynamic hints on cards (<a href="docs-integration-bounty-bands.html">Bounty bands</a>). A top-quartile band does not widen treasury split, inflate the positive block, or change what the discoverer earns.</p>
+      <p><strong>Assurance tiers</strong> answer a readability question: <em>how should a stranger label this launch at a glance?</em> An indexer assigns <strong>Standard</strong> or <strong>High</strong> from snapshot fields at submit (<a href="docs-integration-assurance-tiers.html">Assurance tiers</a>). Every audit on live cells shares the same challenge window and claim stake today; the badge is presentation, not a fee schedule. Tiers do not scale discoverer boost, mint size, or pool assignment.</p>
+      <p><strong>Ripe-slot</strong> (deferred) would answer a <strong>maintainer / R&amp;D</strong> question: <em>where does the next verification primitive want to be built?</em> It ranks vulnerability classes from FMEA + canonization + contagion — <strong>beacon only</strong>, not on the investor Bob card (<a href="docs-integration-ripe-slot-indicator.html">Ripe-slot indicator</a>). It does not mint, fund, or gate audits; errors misdirect attention, not money.</p>
+      <p>The pattern is fixed: <strong>settlement moves AUDIT; signal orients attention.</strong></p>
+      <h2 id="integrator-discipline">Integrator discipline</h2>
+      <p>Integrators bridge chain facts to human cards. The failure mode is backward: a tier badge becomes an APY input, a top-quartile band becomes a payout multiplier, a <strong>High</strong> label becomes a shorter window. The contract ignores all three.</p>
+      <p><strong>Read settlement from chain.</strong> Mint previews come from <code>nextPositiveBlockReward()</code> (<a href="docs-economy-the-positive-block.html">The positive block</a>); discoverer capacity from escrow balances (<a href="docs-economy-escrow-architecture.html">Escrow architecture</a>). Pass locked bounty and cohort distribution into card hints so bands read as <em>where this row sits among peers</em> — not as treasury routing. On investor-facing surfaces, show tier disclaimers: informational only; same windows and stakes for every audit today.</p>
+      <p><strong>Do not back-solve economics from signals.</strong> No yield models from tier badges. No payout math that treats <code>top_quartile</code> as an input. No copy that implies faster challenge or lighter stake because the card says <strong>High</strong>.</p>
+      <p><strong>Previous:</strong> <a href="docs-integration-claim-scorecard.html">Claim-resolution scorecard</a> · <strong>Next:</strong> <a href="docs-integration-bounty-bands.html">Bounty bands</a></p>
+      
+      <footer class="doc-page-foot"><a href="docs-integration.html">← Integration</a> · <a href="docs-notebook.html">Notebook</a></footer>
+    </div>
+  </main>
+
+  <aside id="docRail" aria-label="You are here" hidden></aside>
+
+</div>
+<script src="motion.js?v=1"></script>
+<script src="your-links.js?v=5"></script>
+<script src="docs-rail.js?v=5"></script>
+</body>
+</html>

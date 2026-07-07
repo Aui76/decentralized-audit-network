@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>!function(){try{var k="membrane_nav_session",s=sessionStorage.getItem(k);document.documentElement.classList.add(s?"nav-session":"cold-load");if(!s)sessionStorage.setItem(k,"1")}catch(e){}}();</script>
+<title>Assignment (CRD) · Participants · Audit Cell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css?v=5">
+</head>
+<body class="page-prose">
+<div class="layout layout-docs">
+
+  <nav>
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink" href="quickstart.html">Quickstart</a>
+    <a class="navlink on" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+
+  <main>
+    <div class="inner">
+
+      <div class="doc-layer-row">
+        <a href="docs-participants.html" class="doc-layer doc-layer-spec">Participants</a>
+        <span class="doc-layer doc-layer-spec">Spec · reader</span>
+      </div>
+      <h1>Assignment (CRD)</h1>
+      <p class="doc-q">Who** gets assigned to an ordinary audit — and what stops protocols from stalling or farming the same auditor pair?</p>
+      
+      <div class="doc-bridge doc-bridge-story">
+        <p class="doc-bridge-lbl">Story context</p>
+        <ul>
+          <li><a href="docs-book-09.html">Book ch 9 · The audit cycle</a></li>
+          <li><a href="docs-book-15.html">Book ch 15 · The pool</a></li>
+          <li><a href="docs-book-19.html">Book ch 19 · Gaming &amp; defenses</a></li>
+          <li><a href="docs-book-21.html">Book ch 21 · What each actor sees</a></li>
+        </ul>
+      </div>
+      <p><strong>Ordinary audits</strong> assign auditors by <strong>constrained random draw (CRD)</strong> over the pool — reject memory, dyad cap, FIFO fallback. <strong>Dispute / fix / gap / structural</strong> lanes use <strong>in-cell FIFO + exclusion</strong> — independence is structural, not draw-based.</p>
+      <p>Roles: <a href="docs-participants-roles.html">Roles</a> · pool hold: pool charter.</p>
+      <p><strong>Module:</strong> <code>cell/contracts/AssignmentModule.sol</code> · <strong>Monitor (off-chain QA):</strong> <code>cell/indexer/deriveAssignmentCrd.mjs</code> · <strong>Test:</strong> <code>cell/test/AssignmentRandomDrawCell.t.sol</code></p>
+      <h2 id="boundary-with-roles-and-o3">Boundary with Roles and O3</h2>
+      <table class="doc-table"><thead><tr><th>Layer</th><th>This chapter</th><th><a href="docs-participants-roles.html">Roles</a></th><th><a href="docs-participants-participant-phases.html">Participant phases (O3)</a></th></tr></thead><tbody><tr><td><strong>Who acts</strong></td><td>—</td><td>Five roles · protocol submit surface</td><td>—</td></tr><tr><td><strong>Who gets picked</strong></td><td>CRD · dyad · reject cap · lane split</td><td>Reject = <em>who</em>, not truth</td><td>—</td></tr><tr><td><strong>What Bob shows</strong></td><td>Events feed sequence hints</td><td>—</td><td>Phase tags · <code>SEQ-reject-loop</code></td></tr></tbody></table>
+      <p>Dispute-lane FIFO is <strong>procedure</strong> — <a href="docs-flows-vulnerability.html#resolution--dispute-re-audit">Vulnerability disclosure § resolution</a>, not CRD.</p>
+      <h2 id="two-assignment-worlds">Two assignment worlds</h2>
+      <table class="doc-table"><thead><tr><th>Lane kind</th><th>Selector</th><th>Why separate</th></tr></thead><tbody><tr><td><strong>Ordinary audit</strong></td><td><code>AssignmentModule.pickOrdinary</code> → FIFO fallback if unset</td><td>Fair pool draw + anti-gaming memory</td></tr><tr><td><strong>Dispute / fix / gap / structural</strong></td><td>In-cell <code>findDisputeAuditor</code> / FIFO + exclusions</td><td>Settlement independence — not CRD lottery</td></tr></tbody></table>
+      <p>Claim-side filters (R8/R9) are <strong>distinct</strong> from ordinary dyad policy — <a href="docs-flows-vulnerability.html#resolution--dispute-re-audit">Vulnerability disclosure § resolution</a>.</p>
+      <h2 id="ordinary-flow">Ordinary flow</h2>
+      <pre class="mono doc-pre">register() → queue tail
+submitAudit → assignNext → pickOrdinary(id, protocol)  [or FIFO if module unset / returns 0]
+protocolAcceptAuditor | protocolRejectAuditor → noteReject on reject → re-roll
+acceptAudit | declineAudit → noteDecline on decline → re-roll
+confirmAudit (ordinary positive block) → noteCompletion(protocol, auditor)</pre>
+      <p>Deploy default: <strong>`RandomConstrained`</strong>. Wire: <code>AssignmentModule.wire(cell)</code> then <code>cell.setAssignmentModule(module)</code>.</p>
+      <h2 id="eligibility-filter">Eligibility filter</h2>
+      <p>Auditor <strong>A</strong> eligible for audit <code>id</code> when <strong>all</strong> hold:</p>
+      <table class="doc-table"><thead><tr><th>#</th><th>Rule</th><th>Meaning</th></tr></thead><tbody><tr><td>1</td><td>Balance ≥ position-scaled hold</td><td>Mirrors cell <code>requiredHold</code></td></tr><tr><td>2</td><td><code>A != protocol</code></td><td>Submitter cannot audit own bounty</td></tr><tr><td>3</td><td><code>!rejectedOnAudit[id][A]</code></td><td>Permanent after protocol reject or auditor decline on <strong>this</strong> audit</td></tr><tr><td>4</td><td>Dyad cap</td><td><code>protocolAuditorCompleted[protocol][A] &lt;= maxDyadRepeats</code> (<code>0</code> = no repeat after one completed pair)</td></tr></tbody></table>
+      <h2 id="draw-mechanics">Draw mechanics</h2>
+      <table class="doc-table"><thead><tr><th>Item</th><th>Meaning</th></tr></thead><tbody><tr><td><strong>Mode `RandomConstrained`</strong></td><td>Reservoir sampling (k=1) over queue walk; gas cap <code>MAX_SCAN = 256</code></td></tr><tr><td><strong>Entropy (testnet)</strong></td><td><code>keccak256(blockhash(n−1), auditId, drawCounter)</code> — sequencer-influenceable; documented testnet posture</td></tr><tr><td><strong>Mainnet target</strong></td><td>Commit-reveal salt (<a href="docs-flows-mainnet-gates.html">Mainnet gates</a>)</td></tr><tr><td><strong>Mode `QueueFifo`</strong></td><td>Returns <code>address(0)</code> → cell uses FIFO head (rollback / harness)</td></tr></tbody></table>
+      <h2 id="module-hooks-onlycell">Module hooks (onlyCell)</h2>
+      <table class="doc-table"><thead><tr><th>Hook</th><th>When</th></tr></thead><tbody><tr><td><code>noteReject(id, auditor)</code></td><td><code>protocolRejectAuditor</code></td></tr><tr><td><code>noteDecline(id, auditor)</code></td><td><code>declineAudit</code></td></tr><tr><td><code>noteCompletion(protocol, auditor)</code></td><td><code>confirmAudit</code> on ordinary positive block</td></tr></tbody></table>
+      <p>Reject memory and dyad counters live in <strong>module storage</strong> — not frozen cell AppStorage beyond the <code>assignmentModule</code> pointer.</p>
+      <h2 id="cell-surface">Cell surface</h2>
+      <table class="doc-table"><thead><tr><th>Item</th><th>Meaning</th></tr></thead><tbody><tr><td><code>assignmentModule</code> / <code>setAssignmentModule</code> / <code>lockAssignmentModule</code></td><td>Dedicated wiring (not a dispute-module slot)</td></tr><tr><td><code>protocolRejectAuditor</code></td><td>Release assignee, note reject, re-assign — <strong>capped</strong></td></tr><tr><td><code>CellLogicLib.findEligibleAuditor</code></td><td>Module pick + FIFO fallback</td></tr><tr><td><code>findDisputeAuditor</code></td><td>CRD reservoir over first <code>MAX_SCAN = 256</code> eligible; seeded via <code>_disputeAssignmentSeed</code></td></tr></tbody></table>
+      <h3>Protocol-reject cap</h3>
+      <p>A protocol <strong>cannot</strong> reject assigned auditors indefinitely.</p>
+      <p><code>min(MAX_PROTOCOL_REJECTS_CAP, 1 + successful/10)</code>, reduced by <code>exploited</code>-history penalty (floor 0). Budget scales with protocol track record — anti-griefing inside reject path.</p>
+      <p>High reject count → Bob <code>SEQ-reject-loop</code> — <a href="docs-participants-participant-phases.html">Participant phases (O3)</a>.</p>
+      <h3>Multi-assignment</h3>
+      <p>One auditor may hold <strong>multiple simultaneous assignments</strong> (ordinary + mid-dispute). <code>_assignNext</code> moves chosen auditor to queue tail but does not remove them. Decision windows and push-out bound non-response — <strong>not</strong> a settlement-soundness gap.</p>
+      <h2 id="protocol-reject-cap">Events (monitor feed)</h2>
+      <table class="doc-table"><thead><tr><th>Event</th><th>Source</th></tr></thead><tbody><tr><td><code>AssignmentCandidates(auditId, eligibleCount, chosen)</code></td><td>Module</td></tr><tr><td><code>AssignmentRejectNoted</code></td><td>Module</td></tr><tr><td><code>AssignmentCompletionNoted</code></td><td>Module</td></tr><tr><td><code>ProtocolAuditorRejected</code></td><td>Cell</td></tr></tbody></table>
+      
+      <footer class="doc-page-foot"><a href="docs-participants.html">← Participants</a> · <a href="docs-notebook.html">Notebook</a></footer>
+    </div>
+  </main>
+
+  <aside id="docRail" aria-label="You are here" hidden></aside>
+
+</div>
+<script src="motion.js?v=1"></script>
+<script src="your-links.js?v=5"></script>
+<script src="docs-rail.js?v=5"></script>
+</body>
+</html>

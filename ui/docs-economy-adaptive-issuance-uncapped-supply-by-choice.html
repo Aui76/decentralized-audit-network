@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>!function(){try{var k="membrane_nav_session",s=sessionStorage.getItem(k);document.documentElement.classList.add(s?"nav-session":"cold-load");if(!s)sessionStorage.setItem(k,"1")}catch(e){}}();</script>
+<title>Adaptive issuance — Uncapped Supply by choice · The AUDIT Economy · Audit Cell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css?v=5">
+</head>
+<body class="page-prose">
+<div class="layout layout-docs">
+
+  <nav>
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink" href="quickstart.html">Quickstart</a>
+    <a class="navlink on" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+
+  <main>
+    <div class="inner">
+
+      <div class="doc-layer-row">
+        <a href="docs-economy.html" class="doc-layer doc-layer-spec">The AUDIT Economy</a>
+        <span class="doc-layer doc-layer-spec">Spec · reader</span>
+      </div>
+      <h1>Adaptive issuance — Uncapped Supply by choice</h1>
+      
+      
+      <div class="doc-bridge doc-bridge-story">
+        <p class="doc-bridge-lbl">Story context</p>
+        <ul>
+          <li><a href="docs-book-10.html">Book ch 10 · Issuance &amp; positive blocks</a></li>
+        </ul>
+      </div>
+      <p><a href="docs-economy-what-is-not-live-yet.html">What is not live yet</a> · <a href="docs-economy-appendix-b-formulas.html">Appendix B</a></p>
+      <h2 id="0-north-star">0. North star</h2>
+      <p>Mint proves the mechanism is working — not that any individual audit was excellent. The issuance rate should reflect the network's genuine health as observed from its own signals, without a governor, without an admin key, and without fixed parameters that require human judgment to calibrate at deploy time.</p>
+      <p>This document describes how the network achieves that by reading its own health at every scale simultaneously and adjusting issuance accordingly.</p>
+      <h2 id="1-why-uncapped-supply-and-why-it-must-be-adaptive">1. Why uncapped supply and why it must be adaptive</h2>
+      <p>A fixed supply token has a predetermined equilibrium. It distributes what it has and waits for the environment to assign value. It cannot change its own behavior in response to what it observes. It is a closed thermodynamic system — it tends toward maximum entropy and has no internal mechanism to do further work once its supply is spent.</p>
+      <p>This network is a battlefield with no external protector. It requires ongoing incentives to fund its own defense — against exploits, against lazy auditors, against coordination attacks. A fixed supply that exhausts its incentive budget has no recourse.</p>
+      <p>Uncapped supply is the capability to respond. But an uncapped supply that responds to all signals equally becomes gameable — a single large coordinated injection can push the issuance rate wherever an attacker wants. The design challenge is: <strong>make the system light for genuine state transitions and heavy for manufactured ones.</strong></p>
+      <p>The mechanism below achieves this by building issuance on top of signals the network already computes about its own participants.</p>
+      <h2 id="2-the-coordinate-space-foundation">2. The coordinate space (foundation)</h2>
+      <p>The full theoretical grounding is in <a href="docs-health-thermodynamics-and-flow.html">Network flow</a> (health book). Summary for issuance purposes:</p>
+      <table class="doc-table"><thead><tr><th>Dimension</th><th>What it measures</th><th>Issuance role</th></tr></thead><tbody><tr><td>D1/D2</td><td>Network topology — who connects to whom</td><td>Pattern detection (P2G, FLOW hint)</td></tr><tr><td>D3</td><td>Economic magnitude — committed bounty per audit</td><td>Weights the signal; <code>bounty</code> not <code>valueSecured</code></td></tr><tr><td>D4</td><td>Time — how topology and magnitude evolve</td><td>EMA memory, phase transitions</td></tr></tbody></table>
+      <p><strong>Value-agnostic principle:</strong> <code>valueSecured</code> is self-reported and unverified. The network does not use it anywhere in its own mechanics and does not use it here. D3 uses <code>bounty</code> — committed, on-chain capital.</p>
+      <h2 id="3-the-fractal-health-framework">3. The fractal health framework</h2>
+      <p>The network's health is observable at every scale from the same framework:</p>
+      <pre class="mono doc-pre">Individual audit
+    → hint tools (PASS/FAIL per axis)
+    → card.flow (D3 magnitude + thermodynamic cluster signals)
+
+Participant
+    → phase tags: unproven · alive · declining · detrimental
+    → maturity band: cold · warm · hot
+
+Cluster
+    → FLOW hint (isolation coefficient + temporal coherence)
+    → communicating vessels — sealed or open?
+
+Network
+    → aggregate phase distribution across all active participants
+    → networkHealth index (computable from indexer)</pre>
+      <p>Each level reads the level below it. The network's health is the sum of its participants' phases. No new data is needed — just aggregation of what the indexer already computes.</p>
+      <p><strong>Network health index:</strong></p>
+      <pre class="mono doc-pre">networkHealth = (aliveAuditors / totalActiveAuditors)
+              × (aliveProtocols / totalActiveProtocols)
+              × (steadyLines / totalActiveLines)</pre>
+      <p>Near 1.0: participants are in good standing, lines in good trajectory. Trending toward 0: the distribution is shifting into declining and detrimental territory.</p>
+      <p>This index is behavior-based, not calendar-based — consistent with the maturity ontology's core principle. Entropy enters only through documented failure paths.</p>
+      <h2 id="4-the-dual-ema">4. The dual EMA</h2>
+      <p>Two exponential moving averages run simultaneously:</p>
+      <pre class="mono doc-pre">emaFast  — high emaWeightBps (~2000–3000)  — tracks recent signal closely
+emaSlow  — phase-weighted, clean signal only (see below)</pre>
+      <h3>4.1 emaFast</h3>
+      <p>Updated after every confirmed completion (<code>InBlock</code> or <code>Audited</code>). All completions contribute. This is the raw pulse of network activity.</p>
+      <h3>4.2 emaSlow — phase-weighted, clean signal</h3>
+      <p>Updated after confirmed completions but with two filters:</p>
+      <p><strong>Filter 1 — thermodynamic cleanliness (deferred on-chain):</strong> FLOW-FAIL completions (sealed vessel, suppressed timing) are excluded from <code>emaSlow</code> updates. The EMA of healthy signal is built from genuinely healthy signal only.</p>
+      <p><strong>Filter 2 — participant phase weighting (deferred on-chain; proxy live):</strong></p>
+      <table class="doc-table"><thead><tr><th>Participant phase</th><th>Weight in emaSlow update</th><th>Reasoning</th></tr></thead><tbody><tr><td>alive</td><td>1.0</td><td>Full signal — these are who we trust</td></tr><tr><td>unproven</td><td>0.25</td><td>Low weight — a sybil influx during depression must not inflate the clean baseline; 0.25 caps this attack surface while still allowing the baseline to build in early network life</td></tr><tr><td>declining</td><td>0.1</td><td>Near-zero — declining participants degrade the health signal; they barely register in network memory</td></tr><tr><td>detrimental</td><td>0.0</td><td>Excluded — no contribution to clean baseline</td></tr></tbody></table>
+      <p><strong>Why</strong> <code>unproven</code> <strong>is 0.25 not 0.5:</strong> During a depression, a flood of new unproven registrations is suspicious — it may be a wash ring registering fresh addresses to inflate <code>emaSlow</code> and trigger a larger floor supplement. 0.25 closes this attack surface without preventing genuine new entrants from eventually contributing once they become <code>alive</code>.</p>
+      <p>The effective update weight for a completion is the minimum of the auditor and protocol phase weights. A declining auditor on an alive protocol contributes at 0.2. A detrimental auditor contributes nothing.</p>
+      <p><strong>Filter 3 — protocol credibility weighting (testnet):</strong> The bounty scalar fed into the emaSlow update is credibility-weighted by the submitting protocol's submission history (<code>kProtocol</code> on-chain). A fresh protocol address blends toward the network mean bounty; an established protocol's own bounty level is taken at face value.</p>
+      <pre class="mono doc-pre">protocol_credibility_bounty = Z_protocol × protocol_mean_bounty
+                             + (1 − Z_protocol) × network_mean_bounty
+
+Z_protocol = N_submissions / (N_submissions + K_protocol)   [K_protocol = 10]</pre>
+      <p>This closes the attack surface where a fresh protocol address inflates emaSlow with an artificially large bounty, independent of the thermodynamic wash-ring detection that operates at the cluster level. Protocol credibility operates on individual addresses; FLOW signals operate on clusters. Both are needed.</p>
+      <p>Note: protocol credibility affects only the emaSlow bounty input. Raw posted bounty still determines auditor and discoverer payouts — those calculations are unchanged.</p>
+      <p><strong>What emaSlow represents (design intent):</strong> The network's memory of what genuine healthy activity looks like — FLOW-clean, phase-weighted, credibility-blended. On 84532, protocol credibility (Filter 3) and the auditor successful-count proxy are live; FLOW exclusion and full phase weights are not yet on-chain.</p>
+      <h3>4.3 The divergence signal</h3>
+      <pre class="mono doc-pre">divergence = emaFast / emaSlow</pre>
+      <table class="doc-table"><thead><tr><th>Divergence</th><th>Reading</th></tr></thead><tbody><tr><td>≈ 1.0</td><td>Stable — both timescales agree</td></tr><tr><td>&gt;&gt; 1.0</td><td>Fast growing faster than clean baseline — potential manipulation or genuine growth</td></tr><tr><td>&lt;&lt; 1.0</td><td>Fast falling below clean baseline — depression</td></tr></tbody></table>
+      <p>The direction of divergence combined with thermodynamic signals determines the network state (§5). On 84532, <code>issuanceNetworkState()</code> classifies from <code>fastRatioBps = emaFast × 10000 / emaSlow</code> only — not FLOW or <code>aliveRatio</code>.</p>
+      <h2 id="5-the-four-network-states">5. The four network states</h2>
+      <p>Design conditions below include FLOW and phase context. <strong>Live state machine:</strong> <code>issuanceNetworkState()</code> — Manipulation when <code>fastRatioBps &gt; manipulationThresholdBps</code>; Depression when <code>fastRatioBps &lt; depressionThresholdBps</code>; Recovery when <code>emaFast &gt; lastEmaFast</code> and ratio below 10000; else Stable.</p>
+      <table class="doc-table"><thead><tr><th>State</th><th>Condition (design)</th><th>Mint posture (live)</th></tr></thead><tbody><tr><td><strong>Stable health</strong></td><td><code>divergence ≈ 1.0</code>, FLOW mostly PASS</td><td>Activity curve from <code>emaSlow</code> — light, responsive</td></tr><tr><td><strong>Suspected manipulation</strong></td><td><code>divergence &gt;&gt; 1.0</code>, FLOW FAILs rising</td><td>Same <code>emaSlow</code> basis; reward × <code>manipulationMintScaleBps</code></td></tr><tr><td><strong>Depression</strong></td><td><code>divergence &lt;&lt; 1.0</code>, FLOW mostly PASS</td><td>Counter-cyclical — floor from <code>CellEscrow</code>; see §6</td></tr><tr><td><strong>Recovery</strong></td><td><code>emaFast</code> rising from below <code>emaSlow</code>, FLOW PASS</td><td>Activity curve; no manipulation discount while rising</td></tr></tbody></table>
+      <h3>State 1 — Stable health</h3>
+      <pre class="mono doc-pre">activityMint = emaSlow × emaToMintBps / 10000              (emaToMintBps = 2500)
+reward       = (lpBalance == 0) ? activityMint             (genesis: no pool yet)
+             : min(activityMint, mintLpCapBps × lpBalance / 10000)   (mintLpCapBps = 500, LP-pace smoother)</pre>
+      <ul><li>No <code>S_max</code>, no <code>supplyTailBps</code>, no <code>emaBlendBps</code>. Manipulation damping (State 2) still applies on top.</li><li>Genesis = the first ordinary audit (<code>submitGenesisAudit</code>, declared-unfunded <code>B_g</code>); first mint = formula(B_g) ≈ 312 at B_g = 5,000.</li></ul>
+      <h3>State 2 — Suspected manipulation</h3>
+      <p><strong>Live:</strong> Mint still derives from <code>emaSlow</code> (activity curve); when <code>fastRatioBps &gt; manipulationThresholdBps</code>, reward is scaled by <code>manipulationMintScaleBps</code> (default 8000 = 80%). The fast EMA does not replace the slow basis — it triggers a discount. Design intent: quarantine inflated fast signal via phase-weighted <code>emaSlow</code>; full quarantine awaits on-chain phase + FLOW filters (§4.2).</p>
+      <h3>State 3 — Depression</h3>
+      <p>See §6 for the depression floor mechanism in full.</p>
+      <h3>State 4 — Recovery</h3>
+      <p><strong>Live:</strong> <code>issuanceNetworkState()</code> returns Recovery when <code>emaFast &gt; lastEmaFast</code> and <code>fastRatioBps &lt; 10000</code>. Design adds FLOW PASS confirmation — indexer-only on 84532. Trust rising <code>emaFast</code> immediately; no manipulation discount applies while ratio is below the manipulation threshold.</p>
+      <h2 id="6-the-depression-floor">6. The depression floor</h2>
+      <h3>6.1 Detecting depression</h3>
+      <p>Depression is not a binary switch. It is a gradient:</p>
+      <pre class="mono doc-pre">depressionIntensity = max(0, 1 − (emaFast / emaSlow))</pre>
+      <p>Zero when both EMAs agree. Approaches 1.0 when recent activity collapses relative to clean baseline. Floor contributions are proportional — gentle when depression is mild, full when deep.</p>
+      <h3>6.2 Treasury first, fresh mint as backstop</h3>
+      <p><strong>CellEscrow</strong> (referenced as <code>treasuryEscrow</code> in <code>IssuanceModule</code>) accumulates <strong>24.9%</strong> of every mint during healthy periods (see §6.6 for derivation). That accumulation is the oil reserve — saved during good times, deployed during bad ones.</p>
+      <p><strong>Order of operations during depression:</strong></p>
+      <ol><li>Normal mint formula produces <code>totalReward</code></li><li>Floor supplement = <code>emaSlow × floorFraction × depressionIntensity</code></li><li>Pay floor supplement from <strong>CellEscrow</strong> escrow balance first, up to <code>maxEscrowDrawdownPerAudit</code></li><li>If escrow balance insufficient: pay remainder from fresh mint (see §7 for conditions)</li><li><code>maxEscrowDrawdownPerAudit</code> = <strong>0.3% of current escrow balance</strong> per confirmed completion (geometric drain — see §6.6)</li></ol>
+      <p>Escrow-funded floor supplement does not increase total token supply. Fresh-mint supplement does. The system minimizes supply dilution by exhausting reserves first.</p>
+      <p><strong>Critical property — one-way drain during depression.</strong> Floor supplements are paid from escrow, not from new mint. Since they are not new mint, no treasury split occurs on them — meaning no 24.9% flows back into escrow from floor payments. During depression, mint collapses (emaFast → 0), treasury accumulation → 0, and every floor payment is a pure one-way draw with no return path. The escrow must arrive at depression onset already carrying the full load it needs to survive the depression. It cannot refill itself while running.</p>
+      <h3>6.3 Behavioral expiry — two signals, no calendar</h3>
+      <p>The floor cannot run forever, but when it stops should not be decided by a timer. Calendar time is not a behavioral signal. The maturity ontology's principle applies here too: entropy enters only through documented failure paths, not through birthdays.</p>
+      <p>The floor decays from two independent behavioral observations, whichever is faster:</p>
+      <p><strong>Signal A — failed recovery attempts (live).</strong></p>
+      <p>When recovery conditions are satisfied but recovery isn't happening, the problem is structural, not liquidity. Count how many times the floor has been active with green-light proxies met but <code>emaFast</code> has not risen:</p>
+      <pre class="mono doc-pre">failedRecoveryAttempts++ when (on-chain, at confirm):
+  fastRatioBps &lt; depressionThresholdBps
+  AND fastRatioBps &gt;= recoverabilityFactorBps
+  AND emaFast &lt;= prevFast
+  AND floorDecayBps() &gt; 0</pre>
+      <p>Design intent also requires FLOW PASS and <code>aliveRatio &gt; healthBaseline × recoverabilityFactor</code> — <strong>not</strong> checked on-chain today (§7 F-64 proxies).</p>
+      <p><strong>Signal B — healthBaseline itself declining (deferred).</strong></p>
+      <p>If <code>healthBaseline</code> — the EMA of <code>aliveRatio</code> during clean periods — is itself trending downward, the network's own definition of healthy has shifted. The floor is trying to maintain a level that no longer exists as the network's normal. The floor decays proportionally:</p>
+      <pre class="mono doc-pre">baselineDecay = currentHealthBaseline / peakHealthBaseline</pre>
+      <p>As the baseline drifts lower, the floor pays out less. The system has accepted — from its own signals — that the world has changed. Not because a timer expired. Because the network's memory of healthy has been revised downward through documented behavioral history.</p>
+      <p><strong>Combined decay (design):</strong></p>
+      <pre class="mono doc-pre">floorDecay = min(
+  max(0, 1 − (failedRecoveryAttempts / maxFailedAttempts)),
+  baselineDecay
+)
+effectiveFloor = baseFloor × depressionIntensity × floorDecay</pre>
+      <p><strong>Live:</strong> <code>floorDecayBps()</code> implements Signal A only (linear decay to zero at <code>maxFailedRecoveryAttempts</code>). Supplement amount is <strong>not</strong> multiplied by <code>floorDecay</code> on-chain — decay gates green-light mint via <code>_greenLightMintAllowed</code>, not floor payout size.</p>
+      <p><code>maxFailedAttempts</code> is a behavioral count — how many times do we try before accepting the recovery isn't coming. It is not a duration. It counts documented failures, not elapsed time.</p>
+      <h3>6.4 Who benefits from the floor</h3>
+      <p><strong>Design intent (mainnet target):</strong> floor supplement applies only to <strong>confirmed completions by alive participants.</strong> <code>declining</code> and <code>detrimental</code> participants receive no floor supplement — only their normal (discounted or zero) weight in the formula.</p>
+      <p><strong>Testnet today (84532):</strong> <code>_updateEmaAndPayFloor</code> pays the <strong>completing auditor</strong> whenever depression intensity triggers; there is no on-chain <code>AuditorPhase</code> check. <code>emaSlow</code> uses a <strong>successful-count proxy</strong> (<code>emaSlowUnprovenWeightBps</code>), not Bob <code>alive</code> / <code>declining</code> tags. See <a href="docs-economy-what-is-not-live-yet.html">What is not live yet</a>.</p>
+      <p>This matters for two reasons. First: it prevents the floor from rewarding the actors who contributed to the depression. Second: it creates a selection effect — auditors who continue working honestly through a depression are revealed as committed participants.</p>
+      <h3>6.5 The loyalty premium — survival instinct as the economically dominant strategy</h3>
+      <p>The floor makes staying survivable. The loyalty premium makes staying the best long-term choice even when exit looks rational in the short term.</p>
+      <p><strong>The reflexivity risk without this.</strong> If staying during depression is merely survivable but not advantaged at recovery, then when participants correctly read the floor signals and model their recovery position, leaving and returning later is neutral or better. This is the bank run dynamic: individually rational exit, collectively catastrophic.</p>
+      <p><strong>The mechanism.</strong> Track a <code>depressionParticipation</code> counter per auditor: confirmed completions while <code>depressionIntensity &gt; 0.3</code>. This counter is visible on the Bob card and accumulates throughout the depression period.</p>
+      <p>During State 4 (recovery), the <code>emaSlow</code> phase weight for an <code>alive</code> auditor with nonzero <code>depressionParticipation</code> is <strong>1.2</strong> instead of 1.0. Their completions contribute more to the clean baseline during recovery. They earn more from the same work because their prior commitment is recognized.</p>
+      <pre class="mono doc-pre">recoveryWeight = 1.0 + (0.2 × min(1, depressionParticipation / participationThreshold))</pre>
+      <p>This caps at 1.2 to prevent gaming via spam completions during mild depressions. <code>participationThreshold</code> is the number of completions needed to earn the full 1.2 multiplier — proposed as 5 confirmed completions during depression (meaningful participation, not a single audit).</p>
+      <p><strong>What this closes.</strong> An auditor who exits during depression and returns during recovery earns the same as any other new or returning participant — 1.0 weight. An auditor who stayed earns 1.2 for the entire recovery period. The rational strategy is not exit-and-return. It is stay. Survival instinct is no longer noble but economically unprofitable. It is the dominant strategy.</p>
+      <h3>6.6 Calculated escrow parameters</h3>
+      <p>These three parameters were derived from the same behavioral framework as §9 — not set arbitrarily.</p>
+      <p><strong>The escrow equilibrator principle.</strong> Escrow is not a savings account. It is the mechanism that equilibrates network supply (audits, verdicts, tool primitives, structural fixes) with participant demand (reasons to stay over the alternative of no escrow at all). At the wrong level it fails in one of two directions: too high and escrow capture becomes the dominant participant strategy (manufacturing vulns, triggering depressions, farming structural upgrades); too low and escrow is too thin to change any behavior — the counterfactual of no escrow produces the same decisions.</p>
+      <p>The right level is the <strong>behavioral threshold</strong>: the minimum that tips the marginal participant's calculus across all four draw types simultaneously — depression floor, discoverer payouts, structural upgrade tranches, integrity review subsidies — without making any of them the primary optimization target.</p>
+      <p><strong>Escrow serves four draw types, not one.</strong> Calculating the accumulation rate from depression floor alone understates the needed rate. All four draws compete for the same pot:</p>
+      <table class="doc-table"><thead><tr><th>Draw type</th><th>Frequency</th><th>Avg escrow draw</th><th>Expected draw per audit</th></tr></thead><tbody><tr><td>Depression floor</td><td>20% of audits</td><td>0.45 × normalMint × avg intensity 0.5</td><td>0.045 × normalMint</td></tr><tr><td>Discoverer payouts</td><td>~3% of audits</td><td>~1.5× bounty escrow boost</td><td>0.045 × normalMint</td></tr><tr><td>Structural upgrades</td><td>~1 per 150 audits</td><td>~8 × normalMint (two tranches)</td><td>0.053 × normalMint</td></tr><tr><td>Integrity review subsidy</td><td>~1 per 25 audits</td><td>~0.5 × normalMint</td><td>0.020 × normalMint</td></tr><tr><td><strong>Total equilibrium draw rate</strong></td><td></td><td></td><td><strong>~0.163 × normalMint</strong></td></tr></tbody></table>
+      <p><strong>Self-funding correction.</strong> During depression, mint collapses → treasury accumulation → 0 → escrow inflow → 0. The escrow is a one-way drain during the exact period it runs hardest. Accumulation happens only during healthy periods. Recalculating over 1,000 total audits (800 healthy, 200 depression):</p>
+      <pre class="mono doc-pre">Accumulation:      800 × R × normalMint
+Healthy draws:     800 × 0.118 × normalMint   (discoverer + structural + integrity)
+Depression draws:  200 × 0.225 × normalMint   (floor at avg 0.5 intensity)
+
+To reach minimum useful depth (60 × normalMint) by end of 1,000 audits:
+800R = 199.4  →  R = 24.9%</pre>
+      <p><strong>Non-negligible bound:</strong> at 24.9%, expected escrow value per audit ≈ 16% of normalMint — above the ~10% threshold where participants factor it into behavior. ✓</p>
+      <p><strong>Not-dominant bound:</strong> 16% is far below the ~50% threshold where escrow optimization crowds out genuine audit work. ✓</p>
+      <p><code>**treasuryEscrowSplitBps</code> = 2490** (24.9% of treasury share per block to escrow; remaining 75.1% to LP). Replaces the prior arbitrary 20/80 split.</p>
+      <p><code>**maxEscrowDrawdownPerAudit</code> = 0.3% of current escrow balance (30 bps)**</p>
+      <p>Expressed as a fraction of escrow balance rather than a fixed amount, so drain is geometric — each draw reduces the base, the next draw is smaller. This makes depletion timing nonlinear and impossible for participants to model precisely from observable state alone.</p>
+      <p>At 0.3% per audit, halving the escrow takes ~230 audits (ln(0.5)/ln(0.997)). At ~10 depression audits per failed-recovery-attempt period, halving takes 23 periods. Since <code>maxFailedAttempts = 25</code>, behavioral expiry arrives before the escrow can halve from drawdown alone. The floor expires before the reserve runs dry. This is the required ordering.</p>
+      <p><code>**escrowMinimumThreshold</code> = 3.6 × emaSlow**</p>
+      <p>Equivalent to 8 audit-equivalents of full floor intensity (8 × 0.45 × emaSlow). Fresh mint activates only when the remaining escrow can cover fewer than 8 more depression audits at current baseline — genuinely depleted, not merely low.</p>
+      <p>Expressed in emaSlow rather than fixed tokens so the threshold scales automatically with network activity. A growing network has a higher threshold in absolute terms but the same meaning: 8 audits of runway. Denominating in a continuously-updating signal (emaSlow) makes the threshold-crossing time self-referential — participants cannot model it without knowing future emaSlow, which depends on their own participation decisions.</p>
+      <h2 id="7-the-mint-green-light-crossing-from-escrow-to-fresh-min">7. The mint green-light — crossing from escrow to fresh mint</h2>
+      <p>Fresh mint during depression is a bet on recovery. It dilutes existing holders. The system makes this bet only when its own signals support it.</p>
+      <p><strong>All four conditions must be true:</strong></p>
+      <pre class="mono doc-pre">1. escrow balance &lt; escrowMinimumThreshold               (reserves genuinely depleted)
+2. aliveRatio &gt; healthBaseline × recoverabilityFactor    (enough alive to recover)
+3. FLOW signals mostly PASS                              (depression genuine, not manufactured)
+4. floorDecay &gt; 0                                        (floor has not behaviorally expired — §6.3)</pre>
+      <p><strong>Testnet (F-64):</strong> condition 2 → <code>fastRatioBps &gt;= recoverabilityFactorBps</code>; condition 3 → <code>emaFast &gt; lastEmaFast</code>. <strong>Not</strong> <code>aliveRatio</code> or FLOW PASS. <strong>Mainnet (deferred — sprint item 20):</strong> replace proxies per `green-light-real-gates-deferred.md<code>. See </code>greenLightMintAllowed()` and <strong>F-64</strong>.</p>
+      <h3>Condition 1 — snapshot timing (implementation note)</h3>
+      <p>On each depression <code>confirmAudit</code>, <code>_updateEmaAndPayFloor</code> reads <code>**escrowBal</code> once** before <code>payFloorSupplement</code>:</p>
+      <ol><li><code>escrowBal</code> → compute <code>drawdownCap</code> and <code>supplement</code></li><li><code>payFloorSupplement</code> drains escrow (returns <code>paid ≤ supplement</code>; <strong>F-32</strong>)</li><li>Green-light shortfall mint runs only if <code>paid &lt; supplement</code> <strong>and</strong> <code>escrowBal &lt; threshold</code> (same <strong>pre-payment</strong> snapshot)</li></ol>
+      <p>So condition 1 compares <strong>escrow balance as it was at the start of that confirm's floor step</strong>, not the balance <strong>after</strong> the floor draw. In the same transaction, on-chain <code>CellEscrow.escrowBalance()</code> can be <strong>lower</strong> than the <code>escrowBal</code> used for the threshold check.</p>
+      <table class="doc-table"><thead><tr><th>Effect</th><th>Typical magnitude</th></tr></thead><tbody><tr><td>Green-light may mint when live escrow already crossed threshold</td><td>At most <strong>one floor payment</strong> of lag per confirm</td></tr><tr><td>Threshold check may use a slightly <strong>higher</strong> balance than post-draw reality</td><td>Same — one-step stale</td></tr></tbody></table>
+      <p><strong>Policy (v1):</strong> Accepted edge case — usually negligible because the threshold is very low (8 audit-equivalents of full floor) and drawdown is capped per confirm (0.3% of balance). <strong>Not a revert risk</strong> — worst case is mint/backstop timing off by one confirm's floor step.</p>
+      <p><strong>Integrators:</strong> <code>greenLightMintAllowed()</code> does <strong>not</strong> encode condition 1 (escrow depletion); it only reflects §7 conditions 2–4 proxies. For &quot;is escrow below threshold?&quot; use live <code>escrowMinimumThreshold()</code> vs <code>CellEscrow.escrowBalance()</code> after the block, not the in-call snapshot.</p>
+      <p><strong>Deferred:</strong> Re-read <code>escrowBalance()</code> after <code>payFloorSupplement</code> before the threshold compare (mainnet hardening).</p>
+      <p><strong>Condition 2 is the critical gate.</strong></p>
+      <p>If <code>aliveRatio</code> has dropped below <code>healthBaseline × recoverabilityFactor</code>, the network has already gone structurally compromised. Minting into a network where most participants are declining or detrimental does not fund recovery — it funds the final extraction. The system recognizes this and stops.</p>
+      <p>If condition 2 is satisfied but condition 3 is not (FLOW FAILs rising during the depression), the depression is manufactured — someone is suppressing activity to trigger the floor while running extraction on the side. The system does not mint into this condition.</p>
+      <p><strong>Condition 4 replaces the old</strong> <code>maxFloorDuration</code> <strong>calendar check.</strong> The floor has not expired when there are still behavioral recovery attempts available and the baseline has not shifted so far that the floor amount would be negligible anyway. This is a behavioral gate, not a timer. See §6.3.</p>
+      <p>Only when all four conditions are met does fresh mint activate as a survival mechanism — and at a reduced rate relative to healthy-period issuance, signaling distress to the market rather than hiding it.</p>
+      <h2 id="8-the-adaptive-baseline-the-network-knowing-itself">8. The adaptive baseline — the network knowing itself</h2>
+      <h3>8.1 healthBaseline</h3>
+      <pre class="mono doc-pre">healthBaseline = emaSlow of (aliveRatio)
+                 computed only during periods where:
+                   — networkHealth &gt; healthyThreshold
+                   — FLOW mostly PASS across active audits
+                   — escrow balance growing (treasury is accumulating, not depleting)</pre>
+      <p>This is the network's memory of what good health felt like for it specifically. A vibrant network that historically ran at 85% alive participants has a different baseline than a network that has always operated lean at 55%.</p>
+      <h3>8.2 Why this dissolves the parameter problem</h3>
+      <p>All thresholds that previously required human calibration at deploy time now derive from the network's own history:</p>
+      <table class="doc-table"><thead><tr><th>Previously fixed parameter</th><th>Now derived from</th></tr></thead><tbody><tr><td>Depression threshold</td><td><code>healthBaseline × depressionFactor</code></td></tr><tr><td>Floor amount</td><td><code>emaSlow × floorFraction</code> (relative to clean baseline)</td></tr><tr><td>Mint green-light alive threshold</td><td><code>healthBaseline × recoverabilityFactor</code></td></tr><tr><td>EMA slow weight</td><td>Implicit in phase weighting — behavior-derived</td></tr></tbody></table>
+      <p>The system calibrates its thresholds against what healthy looks like for it. A vibrant network protects itself more aggressively. A lean network has lower absolute thresholds but they are equally meaningful relative to its own normal.</p>
+      <h3>8.3 Why it cannot be gamed</h3>
+      <p>The baseline builds only during verified clean periods — FLOW PASS, escrow growing, networkHealth above threshold. To manipulate the baseline upward, an attacker would need to maintain genuinely clean thermodynamic signals across the entire baseline accumulation window. That requires doing real work at scale for an extended period. The cost approaches the cost of simply being a legitimate participant.</p>
+      <h3>8.4 Seasonal and cyclical memory</h3>
+      <p>The slow EMA incorporates the network's own activity cycles. If the network always sees lower activity during bear markets, the baseline reflects that. A seasonal dip does not look like a crisis because the baseline already knows what that period normally feels like. The system distinguishes &quot;slow but normal for this time&quot; from &quot;genuinely in trouble.&quot;</p>
+      <h2 id="9-calculated-behavioral-ratios">9. Calculated behavioral ratios</h2>
+      <p>The design has no parameters that require human judgment to be meaningful. What remains are <strong>behavioral ratios</strong> — proportional relationships between signals the network already computes. Their values are derived from two principles: <strong>survival instinct must be the economically dominant strategy</strong>, and <strong>correct signal reading must not trigger reflexive collective exit</strong>.</p>
+      <table class="doc-table"><thead><tr><th>Ratio</th><th>Calculated value</th><th>Survival instinct reasoning</th><th>Reflexivity guard</th></tr></thead><tbody><tr><td><code>floorFraction</code></td><td><strong>0.45</strong></td><td>45% of healthy mint makes staying rational for any participant who believes in the network; filters pure yield farmers who need full returns</td><td>Not a round number — harder to arbitrage exactly than 0.5; imprecise enough to resist coordinated exit timing</td></tr><tr><td><code>recoverabilityFactor</code></td><td><strong>0.45</strong></td><td>Aggressive optimism — bet on recovery as long as 45% of historical alive base remains; survival instinct says we don't give up easily</td><td>Places the mint-stop cliff far enough down that reflexive exits don't become rational until the network is genuinely past saving</td></tr><tr><td><code>maxFailedAttempts</code></td><td><strong>25</strong></td><td>25 documented failed recovery attempts is substantial behavioral evidence of structural failure; survival instinct says try hard</td><td>High enough that exact expiry cannot be predicted or coordinated around; a bank run requires knowing when the cliff arrives</td></tr><tr><td><code>unproven</code> weight in emaSlow</td><td><strong>0.25</strong></td><td>Low enough to prevent sybil influx inflating clean baseline during depression</td><td>Caps the attack surface for wash rings registering fresh addresses to game the floor</td></tr><tr><td><code>declining</code> weight in emaSlow</td><td><strong>0.1</strong></td><td>Near-zero — declining participants degrade the health signal</td><td>Prevents compromised participants from corrupting the baseline the floor is built on</td></tr><tr><td><code>detrimental</code> weight in emaSlow</td><td><strong>0.0</strong></td><td>Excluded entirely</td><td>Hard exclusion</td></tr><tr><td>Recovery loyalty multiplier</td><td><strong>1.2</strong></td><td>Explicitly rewards participants who stayed through depression; survival instinct becomes economically dominant, not just noble</td><td>Closes the bank run loop — the rational choice during depression is stay, because exit forfeits the recovery advantage permanently</td></tr><tr><td><code>participationThreshold</code> (loyalty)</td><td><strong>5 completions</strong></td><td>Meaningful participation during depression, not a single token audit</td><td>Caps the multiplier to prevent gaming via spam completions during mild depressions</td></tr><tr><td><code>K_protocol</code> (credibility)</td><td><strong>10</strong></td><td>After 10 submissions, protocol's own bounty history is more informative than the network mean — fast enough to credit genuine demand, slow enough to prevent fresh-address manipulation</td><td>A fresh address posting a large bounty does not move emaSlow — it is blended toward the network mean until a real track record exists</td></tr></tbody></table>
+      <p><strong>The design principle tying these together:</strong> every parameter either makes staying economically correct or makes leaving economically costly. The reflexivity warning is handled not by preventing correct signal reading but by making the individually rational response to correct signal reading be &quot;stay&quot; rather than &quot;exit.&quot;</p>
+      <p>The design is fully self-calibrating from its own behavioral history. No calendar. No external reference. No admin key required to adjust when conditions change.</p>
+      <h2 id="10-the-full-picture-one-diagram">10. The full picture — one diagram</h2>
+      <pre class="mono doc-pre">On-chain events (confirmAudit, phase transitions, FLOW evaluations)
+                        ↓
+        ┌───────────────────────────────┐
+        │   Fractal health layer        │
+        │  audit hints → participant    │
+        │  phases → cluster FLOW →      │
+        │  networkHealth index          │
+        └───────────────┬───────────────┘
+                        ↓
+        ┌───────────────────────────────┐
+        │   Dual EMA                    │
+        │  emaFast (all completions)    │
+        │  emaSlow (phase-weighted,     │
+        │           FLOW-clean target)  │
+        │  divergence = emaFast/emaSlow │
+        └───────────────┬───────────────┘
+                        ↓
+        ┌───────────────────────────────┐
+        │   Four-state machine          │
+        │  stable / manipulation /      │
+        │  depression / recovery        │
+        └───────────────┬───────────────┘
+                        ↓
+        ┌───────────────────────────────┐
+        │   Mint formula                │
+        │  normal (stable/recovery)     │
+        │  heavy (manipulation)         │
+        │  floor: escrow → fresh mint   │
+        │  green-light gate (§7)        │
+        └───────────────┬───────────────┘
+                        ↓
+              totalReward per audit
+              split: auditor / treasury / founder
+              (same bps splits as today)</pre>
+      <h2 id="11-relationship-to-existing-tokenomics-proposals">11. Relationship to existing tokenomics proposals</h2>
+      <p><code>tokenomics-proposals.txt</code> defines the baseline mechanism: EMA-smoothed bounty-linked issuance with a hybrid <code>curveAnchor</code> + <code>emaLine</code> formula, uncapped supply, and a quality package (staged mint, slashable bonds, assurance tiers <strong>Phase A shipped</strong> — Standard/High at submit, tier windows + claim stake mult; bonds/staged mint/second review deferred per `../../proposals/applied/assurance-tiers-proposal.txt`).</p>
+      <p>This document does not replace that baseline. It sits on top of it:</p>
+      <ul><li>The <code>bountyEma</code> in <code>tokenomics-proposals.txt</code> §3 becomes <code>emaSlow</code> here — phase-weighted and thermodynamically filtered (full filtering deferred; see §4.2)</li><li>The built v1 on 84532 uses <code>emaToMintBps</code> only (+ <code>mintLpCapBps</code> LP smoother) — not the archive <code>curveAnchor</code> hybrid. Hybrid blend remains deferred.</li><li>The quality package (§8 there — staged mint, bonds, second review) is orthogonal to and compatible with this framework</li><li><code>emaBlendBps</code> / <code>supplyTailBps</code> from the archive were <strong>dropped</strong> (tail redundant; see <code>bounty-ema-hybrid-mint-deferred.md</code>)</li></ul>
+      <h2 id="12-open-questions">12. Open questions</h2>
+      <p>Calculated values are in §9. Remaining open questions:</p>
+      <ul><li><code>**maxEscrowDrawdownPerAudit</code>:<strong> </strong>Calculated — 0.3% of current escrow balance per audit (§6.6).** Geometric drain; behavioral expiry arrives before escrow halves under normal depression audit rates.</li><li><strong>Phase weighting — protocol vs auditor:</strong> Use <code>min(auditorWeight, protocolWeight)</code> as proposed, or geometric mean? Min is conservative and harder to game (attacker must compromise both sides). Geometric mean is smoother but easier to partially game. Recommendation: <code>min</code> for the same reason the network uses strict exclusions elsewhere.</li><li><code>**baselineDecay</code> floor:** Should <code>baselineDecay</code> have a minimum value (e.g. 0.1) so the floor never fully zeroes from baseline drift alone, leaving Signal A (<code>failedRecoveryAttempts</code>) as the final gate? Full zero is more honest about permanent state change. Minimum floor is more conservative but risks maintaining a zombie floor. Proposed: allow full zero from either signal — honesty about permanent state change is more important than conservative caution.</li><li><code>**participationThreshold</code> calibration (loyalty):** 5 confirmed completions during depression proposed. Too low = gameable by anyone who submits a few audits. Too high = excludes participants who tried but had audits fail. Validate against typical auditor completion rates.</li><li><strong>Loyalty multiplier duration:</strong> Does the 1.2 recovery multiplier apply for the entire recovery phase until <code>emaFast ≈ emaSlow</code>, or for a fixed window after recovery begins? Entire recovery phase is proposed — the multiplier fades naturally as recovery completes and State 1 (stable) is reached.</li><li><strong>Interaction with staged mint (§8.1 of tokenomics-proposals.txt):</strong> The deferred portion of staged mint — does it also receive floor supplement treatment or only the immediate portion? Likely immediate only; deferred is already a bet on future non-exploit. Loyalty multiplier applies to immediate portion only for the same reason.</li></ul>
+      <p><strong>Previous:</strong> <a href="docs-economy-appendix-b-formulas.html">Appendix B — Formula reference</a> · Book home · <strong>Live rules:</strong> Part II — Issuance · <a href="docs-economy-what-is-not-live-yet.html">What is not live yet</a></p>
+      
+      <footer class="doc-page-foot"><a href="docs-economy.html">← The AUDIT Economy</a> · <a href="docs-notebook.html">Notebook</a></footer>
+    </div>
+  </main>
+
+  <aside id="docRail" aria-label="You are here" hidden></aside>
+
+</div>
+<script src="motion.js?v=1"></script>
+<script src="your-links.js?v=5"></script>
+<script src="docs-rail.js?v=5"></script>
+</body>
+</html>

@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Observer · Quickstart · Audit Cell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="site.css?v=5"></head>
+<body>
+<div class="layout layout-docs">
+
+  <nav>
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink on" href="quickstart.html">Quickstart</a>
+    <a class="navlink" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+
+  <main>
+    <div class="inner">
+      <p class="eyebrow">Quickstart</p>
+      <h1>Observer</h1>
+      <p class="lede">Don't trust a verdict — recompute it. No wallet, no account, no tokens.</p>
+
+      <div class="flow">
+
+        <div class="step" id="pick">
+          <div class="num">1</div>
+          <div>
+            <p class="t">Pick an audit</p>
+            <p class="d">Browse the audits and choose any one — note its id.</p>
+            <a class="link" href="explorer.html">Browse audits →</a>
+          </div>
+        </div>
+
+        <div class="step" id="run">
+          <div class="num">2</div>
+          <div>
+            <p class="t">Run one command</p>
+            <p class="d">With <span style="font-family:var(--mono)">node</span> installed — nothing else, any OS:</p>
+            <pre>cd membrane
+node verify.mjs 7</pre>
+          </div>
+        </div>
+
+        <div class="step" id="read">
+          <div class="num">3</div>
+          <div>
+            <p class="t">Read the answer</p>
+            <p class="d">A row of <b>MATCH ✓</b> then <b>VERIFIED ✓</b> means the settled result is the honest one for the real deployed code. Try audit <b>#6</b> and you'll see a <b>MISMATCH</b> — that result was overturned, and verify catching it is the point.</p>
+            <a class="link" href="docs-verify.html">What it proves (and its limit) →</a>
+          </div>
+        </div>
+
+      </div>
+
+      <p class="d" style="margin-top:8px">More detail: <a href="docs-verify.html">How verification works</a>.</p>
+
+    </div>
+  </main>
+
+  <aside>
+    <div class="lbl">The flow</div>
+    <a href="#pick">1 · Pick an audit</a>
+    <a href="#run">2 · Run one command</a>
+    <a href="#read">3 · Read the answer</a>
+  </aside>
+
+</div>
+
+<script src="your-links.js?v=5"></script>
+<script src="membrane-rail.js?v=2"></script>
+<script src="motion.js?v=1"></script>
+</body>
+</html>

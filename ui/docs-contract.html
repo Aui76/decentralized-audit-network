@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>!function(){try{var k="membrane_nav_session",s=sessionStorage.getItem(k);document.documentElement.classList.add(s?"nav-session":"cold-load");if(!s)sessionStorage.setItem(k,"1")}catch(e){}}();</script>
+<title>Contract surface · Contract API · Audit Cell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css?v=5">
+</head>
+<body class="page-prose">
+<div class="layout layout-docs">
+
+  <nav>
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink" href="quickstart.html">Quickstart</a>
+    <a class="navlink on" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+
+  <main>
+    <div class="inner">
+
+      <div class="doc-layer-row">
+        <a href="docs-notebook.html" class="doc-layer doc-layer-spec">The Notebook</a>
+        <span class="doc-layer doc-layer-spec">Spec · Contract API</span>
+      </div>
+      <h1>Contract surface</h1>
+      <p class="doc-q">What can I call and read on <code>AuditCell</code>** — views, entrypoints, modules, events — without decoding behaviour from Solidity?</p>
+      <p>The cell's external surface — what integrators read, what actors call, and what organs subscribe to. <strong>Behaviour</strong> (states, gates, overlays) lives in the Flows book; <strong>money</strong> in the Economy book; <strong>Bob cards</strong> in <a href="docs-integration-integrator-hub.html">Integration</a>. This leaf is the <strong>index of the surface itself</strong>.</p>
+      <p><strong>Live cell (84532):</strong> AuditCell <code>0xB8BFC2dd2CDFF79e018479C8a97B6AeC1979ff6d</code> · full wiring: Live footprint.</p>
+      <p><strong>Rule:</strong> prefer <strong>named views</strong> over raw tuple decode — tuple shape may grow; named getters are the stable seam.</p>
+      <h2 id="this-doc-vs-sibling-specs">This doc vs sibling specs</h2>
+      <table class="doc-table"><thead><tr><th>You need…</th><th>Read here</th><th>Read there</th></tr></thead><tbody><tr><td>Function / view names</td><td>This doc</td><td>—</td></tr><tr><td>When to call <code>confirmAudit</code>, claim lanes, overlay openers</td><td>Cross-links only</td><td><a href="docs-flows-lifecycle.html">Audit lifecycle</a> · overlay chapters</td></tr><tr><td>Dispute module index → overlay</td><td>Wiring table below</td><td><a href="docs-flows-appendix-a.html">Appendix A — Module wiring</a></td></tr><tr><td>Mint, escrow, discoverer pay</td><td><code>token()</code> · <code>treasuryEscrow()</code> · events</td><td>Economy book</td></tr><tr><td>Deploy addresses, param snapshot</td><td>Pointer</td><td>Live footprint</td></tr></tbody></table>
+      <h2 id="reading-named-audit-views">Reading — named audit views</h2>
+      <table class="doc-table"><thead><tr><th>View</th><th>Meaning</th></tr></thead><tbody><tr><td><code>auditStateOf(id)</code></td><td>Current <code>AuditState</code> — see <a href="docs-flows-lifecycle.html">Audit lifecycle</a></td></tr><tr><td><code>auditAuditorOf(id)</code> · <code>auditProtocolOf(id)</code> · <code>auditDeployedOf(id)</code></td><td>Auditor, protocol, deployed contract on the row</td></tr><tr><td><code>auditLinkedOf(id)</code> · <code>auditSupersedesOf(id)</code></td><td>Dispute / upgrade lineage links</td></tr><tr><td><code>specChallengeActive(id)</code> · <code>activeDisputeAuditId(id)</code></td><td>Spec-challenge and active dispute overlay status</td></tr></tbody></table>
+      <h2 id="reading-global-views">Reading — global views</h2>
+      <table class="doc-table"><thead><tr><th>View</th><th>Meaning</th></tr></thead><tbody><tr><td><code>nextAuditId()</code> · <code>auditorCount()</code> · <code>currentBlockSize()</code></td><td>Counters — block size is always <strong>1</strong></td></tr><tr><td><code>queueHead()</code> · <code>queueLength()</code> · <code>queueNext(a)</code></td><td>Auditor queue — walk from head (<code>queueTail</code> / <code>queuePrev</code> dropped; indexer-derivable)</td></tr><tr><td><code>minAuditWindow()</code> · <code>auditWindowOf(id)</code></td><td>G4 per-audit window + global floor (default 14d; <code>setParam(8, v)</code> / <code>lockParam(8)</code>)</td></tr><tr><td><code>decisionWindow()</code> · <code>protocolDecisionWindow()</code> · <code>inAuditWindow()</code></td><td>G5 lifecycle windows (defaults 1d / 2d / 7d; <code>setParam(9–11, v)</code> + <code>lockParam</code>)</td></tr><tr><td><code>paramLocked(id)</code> · <code>lockParam(id)</code></td><td>G6 generic param-lock bitmap (ids 0–11; see table below)</td></tr><tr><td><code>genesisPending()</code> · <code>genesisAuditOpen()</code> · <code>genesisAuditId()</code></td><td>G7 one-shot genesis bootstrap state</td></tr><tr><td><code>increment()</code> · <code>incrementLocked()</code></td><td>G1 per-position hold scaler — live 84532: <strong>`1e18` locked</strong>; <code>required_hold(N) = (N−1)×increment</code></td></tr><tr><td><code>maxBountyPerSubmit()</code> · <code>maxBountyPerSubmitLocked()</code></td><td>G3 bounty cap per submit (default 10M AUDIT)</td></tr><tr><td><code>latestBlockHash()</code></td><td>Head of the positive-block tamper chain</td></tr><tr><td><code>token()</code> · <code>treasuryEscrow()</code> · <code>issuanceModule()</code> · <code>claimVerifier()</code> · <code>admin()</code></td><td>Wired L0/L1 addresses</td></tr></tbody></table>
+      <h2 id="reading-raw-structs-avoid-when-a-named-view-exists">Reading — raw structs (avoid when a named view exists)</h2>
+      <table class="doc-table"><thead><tr><th>Struct getter</th><th>Meaning</th></tr></thead><tbody><tr><td><code>audits(id)</code> · <code>auditors(addr)</code> · <code>vulnerabilityClaims(id)</code></td><td>Full rows — decode order not guaranteed stable across additions</td></tr></tbody></table>
+      <p>Use named views above wherever possible.</p>
+      <h2 id="writing-actor-entrypoints">Writing — actor entrypoints</h2>
+      <p>Grouped by lifecycle phase. Procedure detail: <a href="docs-flows-lifecycle.html">Audit lifecycle</a>.</p>
+      <table class="doc-table"><thead><tr><th>Phase</th><th>Functions</th><th>Meaning</th></tr></thead><tbody><tr><td>Register</td><td><code>register()</code> · <code>registerTool(toolId, isSpecTool)</code></td><td>Join pool · register tool id</td></tr><tr><td>Submit / assign</td><td><code>submitAudit(…)</code> · <code>protocolAcceptAuditor(id)</code> · <code>protocolRejectAuditor(id)</code> · <code>advanceProtocolDecision(id)</code></td><td>Open row · protocol accept/reject assignee</td></tr><tr><td>Accept / decline</td><td><code>acceptAudit(id, specErrorsRoot)</code> · <code>declineAudit(id)</code></td><td>Auditor takes job or declines</td></tr><tr><td>Liveness</td><td><code>advanceAssignment(id)</code> · <code>advanceInAudit(id)</code> · <code>retryAssignment(id)</code></td><td>Window advances · R12 re-draw when <code>Submitted</code>, no assignee</td></tr><tr><td>Verdict</td><td><code>provePass(id, toolId, resultRoot)</code> · <code>proveFail(id, toolId, resultRoot)</code></td><td>Auditor submits pass/fail proof</td></tr><tr><td>Confirm</td><td><code>confirmAudit(id)</code></td><td>Survives challenge window → <strong>positive block</strong> + mint path</td></tr><tr><td>Claim</td><td><code>claimVulnerability(…)</code> · <code>expireClaim(originalId)</code></td><td>Break path — overloads: legacy digest · 9-arg witness · class-id; R11b lane-gated expire</td></tr></tbody></table>
+      <h2 id="claim-dispute-module-claimdisputemodule-r11">Claim dispute module (<code>ClaimDisputeModule</code> — R11)</h2>
+      <p>Wired via <code>setDisputeModule(0, m)</code>. Settlement mutators stay on the cell; dispute <strong>policy</strong> lives in the satellite. Procedure: <a href="docs-flows-vulnerability.html">Vulnerability disclosure</a>.</p>
+      <table class="doc-table"><thead><tr><th>Call</th><th>Actor</th><th>Meaning</th></tr></thead><tbody><tr><td><code>protocolDeclineDisputeFunding(originalId)</code></td><td>protocol</td><td>Declines to fund dispute re-audit</td></tr><tr><td><code>claimantOpenDisputeReaudit(originalId, disputeBounty)</code></td><td>claimant</td><td>Opens dispute after decline or protocol window lapse</td></tr><tr><td><code>claimantDisputeLaneOpen(originalId)</code></td><td>view</td><td>Lane open for expire / claimant path — also read by cell <code>expireClaim</code></td></tr></tbody></table>
+      <p><strong>All dispute indices:</strong> <a href="docs-flows-appendix-a.html">Appendix A — Module wiring</a>.</p>
+      <h2 id="read-seams-celllogiclib">Read seams (<code>CellLogicLib</code>)</h2>
+      <p>Internal assignment / register / advance logic delegates through <code>CellLogicLib</code>.</p>
+      <p>Module-facing getters on the cell are freeze-class <strong>read seams</strong> (same foreclosure as settlement entrypoints). Reclaim (2026-06-22) dropped four internal-only getters; borderline module/organ views stay on the cell.</p>
+      <h2 id="module-surface-admin-wiring-module-only-mutators">Module surface (admin wiring + module-only mutators)</h2>
+      <table class="doc-table"><thead><tr><th>Group</th><th>Calls</th><th>Meaning</th></tr></thead><tbody><tr><td>Wiring (one-shot, admin)</td><td><code>setTreasuryEscrow</code> · <code>setIssuanceModule</code> · <code>setDisputeModule(which, m)</code> · <code>setAssignmentModule</code></td><td>Attach L1 satellites</td></tr><tr><td>Parameters (admin)</td><td><code>setParam(id, v)</code> · <code>lockParam(id)</code> · <code>setIncrement</code> · <code>lockIncrement</code> · <code>setMaxBountyPerSubmit</code> · <code>lockMaxBountyPerSubmit</code> · <code>setMaxClaimantDyadRepeats</code> · <code>setMaxTriangleRepeats</code></td><td>G1/G3/G6 + R8/R9 caps</td></tr><tr><td>Reject cap (R10)</td><td>per-audit <code>Audit.protocolRejectCount</code>; cap in <code>CellLogicLib._maxProtocolRejectsForAudit</code></td><td>Protocol reject budget by track record</td></tr><tr><td>Settlement mutators (module-only)</td><td><code>settlementToken</code> · <code>settlementSpecChallenge</code> · <code>settlementIntegrityReview</code> · <code>settlementOverlay</code> · <code>settlementPayDiscoverer</code> · <code>settlementResolveClaim</code></td><td>L1 modules call cell — not user-facing</td></tr></tbody></table>
+      <h2 id="g6-param-lock-ids-cellparamids">G6 param-lock ids (<code>CellParamIds</code>)</h2>
+      <table class="doc-table"><thead><tr><th>Id</th><th>Param</th><th>Meaning</th></tr></thead><tbody><tr><td>0</td><td><code>claimResolutionWindow</code></td><td>Claim resolve / expire horizon</td></tr><tr><td>1</td><td><code>claimFilingStake</code></td><td>Stake to file claim</td></tr><tr><td>2</td><td><code>canonicalThreshold</code></td><td>Successful uses before CAN mint</td></tr><tr><td>3</td><td><code>maxBoostFactor</code></td><td>Discoverer boost ceiling</td></tr><tr><td>4</td><td><code>discoveryCapBps</code></td><td>Max discoverer pay vs escrow</td></tr><tr><td>5</td><td><code>discoveryFloorBps</code></td><td>Min discoverer pay vs bounty</td></tr><tr><td>6</td><td>dispute module swaps</td><td>Lock-only — guards <code>setDisputeModule</code></td></tr><tr><td>7</td><td><code>treasuryEscrow</code></td><td>Lock-only — guards <code>setTreasuryEscrow</code></td></tr><tr><td>8</td><td><code>minAuditWindow</code></td><td>G4 global floor</td></tr><tr><td>9</td><td><code>decisionWindow</code></td><td>G5 protocol→auditor accept</td></tr><tr><td>10</td><td><code>protocolDecisionWindow</code></td><td>G5 protocol decision</td></tr><tr><td>11</td><td><code>inAuditWindow</code></td><td>G5 in-audit liveness</td></tr></tbody></table>
+      <p>Legacy individual locks (<code>lockIncrement</code>, <code>lockMaxBountyPerSubmit</code>, assignment/issuance/claim-verifier locks) remain separate bools. <code>pushOutThreshold</code> and block size stay deploy-immutable (no setter).</p>
+      <p>Economy defaults for ids 0–5: <a href="docs-economy-appendix-a-parameters.html">Appendix A — Parameter tables</a>.</p>
+      <h2 id="g7-genesis-bootstrap">G7 genesis bootstrap</h2>
+      <p>Ordinary <code>submitAudit</code> only:</p>
+      <table class="doc-table"><thead><tr><th>Condition</th><th>Meaning</th></tr></thead><tbody><tr><td><code>bounty == 0</code> allowed</td><td>While <code>genesisPending &amp;&amp; !genesisAuditOpen</code></td></tr><tr><td>On submit</td><td>Sets <code>genesisAuditOpen</code> + <code>genesisAuditId</code></td></tr><tr><td>First successful ordinary <code>confirmAudit</code> for that id while <code>genesisAuditOpen</code></td><td>Clears all three genesis flags (L-05: paid id 0 confirms do <strong>not</strong> clear)</td></tr><tr><td>Terminal non-confirm exit (FAIL-at-audit, Exploited, Invalidated)</td><td><code>_releaseGenesisIfOpen</code> — clears open + id; keeps <code>genesisPending</code> for fresh 0-bounty submit</td></tr><tr><td>After bootstrap</td><td><code>bounty &gt; 0</code> required on ordinary submit</td></tr></tbody></table>
+      <p>Fix/structural submit paths unchanged. Cutover: CUTOVER-RUNBOOK (two-founder-address genesis — protocol ≠ auditor #1).</p>
+      <h2 id="events-the-organ-stream">Events — the organ stream</h2>
+      <p>Organs read the chain through these; they write nothing back.</p>
+      <table class="doc-table"><thead><tr><th>Event</th><th>Meaning</th></tr></thead><tbody><tr><td><code>AuditSubmitted</code> · <code>AuditAssigned</code> · <code>AuditAccepted</code></td><td>Row opened · assignee set · auditor accepted</td></tr><tr><td><code>VerdictSubmitted</code> · <code>AuditConfirmed</code> · <code>PositiveBlockMinted</code></td><td>Pass/fail posted · window cleared · mint fired</td></tr><tr><td><code>VulnerabilityClaimed</code> · <code>DisputeReauditOpened</code> · <code>OriginalAuditExploited</code></td><td>Break path · dispute lane · exploit fact</td></tr><tr><td><code>DiscovererPayoutResolved</code> · <code>ClaimExpired</code> · <code>ClaimVindicated</code></td><td>Reserve payout · claim closed · claimant wins</td></tr><tr><td><code>SpecInvalidated</code> · <code>AuditStateChanged</code></td><td>Spec overlay · any state transition</td></tr><tr><td><code>DisputeModuleSet</code> · <code>AssignmentModuleSet</code> · <code>ParameterUpdated</code></td><td>Wiring · param change</td></tr></tbody></table>
+      <p>Indexer entry: <code>cell/indexer/</code> · card pipeline: <a href="docs-integration-bob-card.html">Bob card</a>.</p>
+      <p><a href="docs-integration-integrator-hub.html">Integrator hub</a> · Flows book · Live footprint</p>
+      
+      <footer class="doc-page-foot"><a href="docs-notebook.html">← Notebook</a></footer>
+    </div>
+  </main>
+
+  <aside id="docRail" aria-label="You are here" hidden></aside>
+
+</div>
+<script src="motion.js?v=1"></script>
+<script src="your-links.js?v=5"></script>
+<script src="docs-rail.js?v=5"></script>
+</body>
+</html>

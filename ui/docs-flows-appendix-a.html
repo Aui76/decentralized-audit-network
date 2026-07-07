@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>!function(){try{var k="membrane_nav_session",s=sessionStorage.getItem(k);document.documentElement.classList.add(s?"nav-session":"cold-load");if(!s)sessionStorage.setItem(k,"1")}catch(e){}}();</script>
+<title>Appendix A — Module wiring · Flows · Audit Cell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css?v=5">
+</head>
+<body class="page-prose">
+<div class="layout layout-docs">
+
+  <nav>
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink" href="quickstart.html">Quickstart</a>
+    <a class="navlink on" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+
+  <main>
+    <div class="inner">
+
+      <div class="doc-layer-row">
+        <a href="docs-flows.html" class="doc-layer doc-layer-spec">Flows</a>
+        <span class="doc-layer doc-layer-spec">Spec · reader</span>
+      </div>
+      <h1>Appendix A — Module wiring</h1>
+      <p class="doc-q">Which <strong>`setDisputeModule` index</strong> maps to which overlay — and what is the minimal <strong>wire + test</strong> surface for integrators?</p>
+      
+      <p><strong>Module wiring</strong> is how L1 satellites attach to <strong>`AuditCell`</strong>: dispute module slots, one-time <code>wire()</code> calls, and the Foundry cell tests that oracle each overlay path.</p>
+      <p>Procedure specs: <a href="docs-flows-spec-arbiter.html">Spec arbiter</a> · <a href="docs-flows-spec-gap.html">Spec-gap overlay</a> · <a href="docs-flows-integrity-review.html">Integrity review</a> · <a href="docs-structural.html">Structural upgrades</a> · <a href="docs-flows-vulnerability.html">Vulnerability disclosure</a>.</p>
+      <p>Integration hub: Integration.</p>
+      <h2 id="dispute-module-indices">Dispute module indices</h2>
+      <p><code>AuditCell.setDisputeModule(index, moduleAddress)</code> — settlement mutators call the wired module at each index:</p>
+      <table class="doc-table"><thead><tr><th>Index</th><th>Module</th><th>Procedure spec</th></tr></thead><tbody><tr><td><code>0</code></td><td><strong>Claim</strong> (break path)</td><td><a href="docs-flows-vulnerability.html">Vulnerability disclosure</a></td></tr><tr><td><code>1</code></td><td><strong>Spec-gap</strong></td><td><a href="docs-flows-spec-gap.html">Spec-gap overlay</a></td></tr><tr><td><code>2</code></td><td><strong>Spec arbiter</strong></td><td><a href="docs-flows-spec-arbiter.html">Spec arbiter</a></td></tr><tr><td><code>3</code></td><td><strong>Integrity review</strong></td><td><a href="docs-flows-integrity-review.html">Integrity review</a></td></tr></tbody></table>
+      <p><strong>Structural upgrades</strong> use a separate seam — <code>IssuanceModule.setStructuralModule</code> — not a dispute index (<a href="docs-structural.html">Structural upgrades</a>).</p>
+      <h2 id="wiring-snippets">Wiring snippets</h2>
+      <p><strong>Spec arbiter (index 2)</strong></p>
+      <pre class="mono doc-pre">cell.setDisputeModule(2, address(specArbiterModule));</pre>
+      <p><strong>Integrity review (index 3)</strong></p>
+      <pre class="mono doc-pre">cell.setDisputeModule(3, address(integrityReviewModule));
+integrityReviewModule.wire(address(cell), address(specArbiterModule));</pre>
+      <p><strong>Spec-gap (dedicated setter)</strong></p>
+      <pre class="mono doc-pre">cell.setSpecGapModule(module);
+module.wire(cell);</pre>
+      <p><strong>Structural upgrades (issuance seam)</strong></p>
+      <pre class="mono doc-pre">IssuanceModule.setStructuralModule(address(structuralUpgradeModule));</pre>
+      <p>Deploy order and cutover: CUTOVER-RUNBOOK · live map: footprint.</p>
+      <h2 id="tests-oracle-paths">Tests (oracle paths)</h2>
+      <p>Each flow has a <strong>cell test</strong> in <code>cell/test/</code> — green path proves the wired module + cell hooks settle correctly:</p>
+      <table class="doc-table"><thead><tr><th>Flow</th><th>Puzzle test</th><th>Spec</th></tr></thead><tbody><tr><td>Spec challenge</td><td><code>SpecChallengeFlowCell.t.sol</code></td><td><a href="docs-flows-spec-arbiter.html">Spec arbiter</a></td></tr><tr><td>Integrity review</td><td><code>IntegrityReviewFlowCell.t.sol</code></td><td><a href="docs-flows-integrity-review.html">Integrity review</a></td></tr><tr><td>Spec-gap</td><td><code>SpecGapOverlayCell.t.sol</code></td><td><a href="docs-flows-spec-gap.html">Spec-gap overlay</a></td></tr><tr><td>Structural upgrade</td><td><code>StructuralUpgradeFlowCell.t.sol</code></td><td><a href="docs-structural.html">Structural upgrades</a></td></tr><tr><td>Claim / dyad exclusion</td><td><code>ClaimantDyadExclusionCell.t.sol</code></td><td><a href="docs-flows-vulnerability.html">Vulnerability disclosure</a></td></tr></tbody></table>
+      <p>Book home</p>
+      
+      <footer class="doc-page-foot"><a href="docs-flows.html">← Flows</a> · <a href="docs-notebook.html">Notebook</a></footer>
+    </div>
+  </main>
+
+  <aside id="docRail" aria-label="You are here" hidden></aside>
+
+</div>
+<script src="motion.js?v=1"></script>
+<script src="your-links.js?v=5"></script>
+<script src="docs-rail.js?v=5"></script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+{
+  "name": "life-membrane",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Organ 3 (membrane) — read-only indexer + explorer over the body harness cell. Life repo; no wallet, no writes.",
+  "scripts": {
+    "index": "node indexer.mjs",
+    "test:concern-router": "node scripts/sync-concern-router.mjs && node ../../cell/indexer/deriveConcernRouter.test.mjs && node ../../cell/indexer/resolveAuditScope.test.mjs && node test/concernStep0Refresh.test.mjs && node test/concern-scope-per-audit.test.mjs && node test/concern-router.test.mjs",
+    "test:want-board": "node scripts/sync-want-board.mjs && node ../../cell/indexer/deriveWantCard.test.mjs && node ../../cell/indexer/wantStore.test.mjs && node ../../cell/indexer/deriveWantBoard.test.mjs && node test/wantBoardFeed.test.mjs && node test/want-board-engine.test.mjs",
+    "sync-docs-rail": "node scripts/build-docs-nav.mjs",
+    "sync-docs": "node scripts/sync-docs-pages.mjs && node scripts/build-docs-nav.mjs",
+    "capture-rail-reference": "node scripts/capture-rail-reference.mjs"
+  }
+}

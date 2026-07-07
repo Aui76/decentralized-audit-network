@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>!function(){try{var k="membrane_nav_session",s=sessionStorage.getItem(k);document.documentElement.classList.add(s?"nav-session":"cold-load");if(!s)sessionStorage.setItem(k,"1")}catch(e){}}();</script>
+<title>Flows · The Notebook · Audit Cell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css?v=5">
+</head>
+<body class="page-prose">
+<div class="layout layout-docs">
+
+  <nav>
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink" href="quickstart.html">Quickstart</a>
+    <a class="navlink on" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+
+  <main>
+    <div class="inner">
+
+      <div class="doc-layer-row">
+        <a href="docs-notebook.html" class="doc-layer doc-layer-spec">The Notebook</a>
+        <span class="doc-layer doc-layer-spec">Spec book · Flows</span>
+      </div>
+      <h1>Flows — Gates, overlays, and launch</h1>
+      
+      <p class="lede">Canonical <strong>procedure spec</strong> for one audit row: lifecycle, three gates (A/B/C), overlay modules, mutex discipline, mainnet launch checklist.</p>
+      
+      <h2>Part I — Core cycle &amp; gates</h2>
+      <div class="list">
+        <a class="item" href="docs-flows-lifecycle.html"><span><span class="act">Audit lifecycle</span><br><span class="who">State machine · three endings · liveness</span></span><span class="arrow">→</span></a>
+        <a class="item" href="docs-flows-gate-a.html"><span><span class="act">The door (Gate A)</span><br><span class="who">Declare · re-run · pre-mint spec challenge</span></span><span class="arrow">→</span></a>
+        <a class="item" href="docs-flows-vulnerability.html"><span><span class="act">Vulnerability disclosure</span><br><span class="who">Gate C · proof-bearing claim · dispute re-audit</span></span><span class="arrow">→</span></a>
+        <a class="item" href="docs-flows-mutex.html"><span><span class="act">Audit mutex</span><br><span class="who">One dispute lane · routing · triangle alarm</span></span><span class="arrow">→</span></a>
+      </div>
+      <h2>Part II — Overlays</h2>
+      <div class="list">
+        <a class="item" href="docs-flows-spec-arbiter.html"><span><span class="act">Spec arbiter</span><br><span class="who">Gate A overlay — void bad declaration pre-mint</span></span><span class="arrow">→</span></a>
+        <a class="item" href="docs-flows-spec-gap.html"><span><span class="act">Spec-gap overlay</span><br><span class="who">FAIL outside **S** — non-destructive record</span></span><span class="arrow">→</span></a>
+        <a class="item" href="docs-flows-integrity-review.html"><span><span class="act">Integrity review</span><br><span class="who">Paid re-check when the line smells wrong</span></span><span class="arrow">→</span></a>
+        <a class="item" href="docs-structural.html"><span><span class="act">Structural upgrades</span><br><span class="who">Network harness gap → fix → UPG</span></span><span class="arrow">→</span></a>
+      </div>
+      <h2>Part III — Launch</h2>
+      <div class="list">
+        <a class="item" href="docs-flows-mainnet-gates.html"><span><span class="act">Mainnet gates</span><br><span class="who">Posture + issuance gates before real value</span></span><span class="arrow">→</span></a>
+      </div>
+      <h2>Back matter</h2>
+      <div class="list">
+        <a class="item" href="docs-flows-appendix-a.html"><span><span class="act">Appendix A — Module wiring</span><br><span class="who">`setDisputeModule` indices · wire snippets · cell tests</span></span><span class="arrow">→</span></a>
+      </div>
+      
+      <footer class="doc-page-foot"><a href="docs-notebook.html">← Notebook</a></footer>
+    </div>
+  </main>
+
+  <aside id="docRail" aria-label="You are here" hidden></aside>
+
+</div>
+<script src="motion.js?v=1"></script>
+<script src="your-links.js?v=5"></script>
+<script src="docs-rail.js?v=5"></script>
+</body>
+</html>

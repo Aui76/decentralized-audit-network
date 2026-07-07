@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>What is Audit Cell? · Q&amp;A</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css?v=5">
+</head>
+<body>
+<div class="layout layout-docs">
+  <nav>
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink" href="quickstart.html">Quickstart</a>
+    <a class="navlink" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+
+  <main>
+    <div class="inner">
+      <p class="eyebrow">Network Q&amp;A</p>
+      <h1>What is Audit Cell?</h1>
+      <p class="lede">Ten plain questions that, together, describe what this network is — why it exists, how trust works, what one audit means, and where the honest limits are.</p>
+      <p class="qa-hook">Opinions are cheap. Reproduction is the currency.</p>
+
+      <p class="k-read" style="margin-bottom:8px">This page is about the <strong>network</strong>. Worried about a specific audit? Use the explorer → <strong>Find your step</strong> on <a href="concern.html">concern.html</a> — that router is audit-scoped, not a general FAQ.</p>
+
+      <div class="qa-list">
+
+        <details class="qa-item" id="q1" open>
+          <summary><span class="qa-num">1</span><span class="qa-q">What problem is this network solving?</span></summary>
+          <div class="qa-body">
+            <p class="qa-meta">Everyone · start here</p>
+            <p>Smart contracts cannot be patched after deployment. If the code is wrong, the loss is permanent — so getting it right before launch is not a nice-to-have; it is survival.</p>
+            <p>The usual answer today is the professional audit: a protocol pays a firm, waits weeks, and receives a report. That model has three built-in weaknesses the network is designed to replace:</p>
+            <ul>
+              <li><strong>The auditor is paid by the audited.</strong> Incentives bend toward verdicts that do not create friction for the client.</li>
+              <li><strong>No stake after the report.</strong> If a missed bug is exploited later, the audit fee is not returned and the finder is not automatically funded by the mechanism.</li>
+              <li><strong>The result is not reproducible.</strong> “Audited by Firm X” is an opinion you must trust — not a check you can re-run on live bytecode and compare.</li>
+            </ul>
+            <p>Audit Cell (the Decentralized Audit Network on Base Sepolia testnet today) replaces that opinion with a <strong>binary pass/fail result</strong> from a named tool against a written spec, posted on-chain as a fingerprint anyone can recompute. The goal is public audit infrastructure — not another PDF brand.</p>
+            <p class="qa-more"><a href="docs-overview.html#problem" class="link">Read: The problem →</a> · <a href="whitepaper.html" class="link">Whitepaper →</a></p>
+          </div>
+        </details>
+
+        <details class="qa-item" id="q2">
+          <summary><span class="qa-num">2</span><span class="qa-q">What makes a result trustworthy if I don't know the auditor?</span></summary>
+          <div class="qa-body">
+            <p class="qa-meta">Verifiers · explorers · skeptics</p>
+            <p>Trust does not come from reputation alone. Each settled audit posts a <strong>result root</strong> on-chain: a compact fingerprint that means “this registered tool ran on <strong>O</strong> — the original target contract pinned when the audit was posted — and produced this pass/fail outcome.”</p>
+            <p><strong>Verify</strong> means you run the same tool on that same contract address yourself — no wallet, no account, no permission from anyone. If your recomputed root matches what the chain recorded, the result <em>reproduces</em>. If it does not match, something deserves a closer look before you treat the pass as settled fact.</p>
+            <p>That is the core trust model: <strong>reproduction, not authority.</strong> The network does not ask you to believe a firm, a committee, or a dashboard. It asks you to re-run the check. Strangers can do this read-only; only escalation paths (claims, posting bounties, pool registration) require a wallet and stake.</p>
+            <p>Verify proves the on-chain binding and encoding story matches live bytecode. It does not by itself re-execute the full EVM from scratch in your browser — for that depth you use the local harness documented in the verify guide. Still, for most readers, “does my root match?” is the honest first gate.</p>
+            <p class="qa-more"><a href="docs-verify.html" class="link">Full verify guide →</a> · <a href="docs-fingerprint.html" class="link">Fingerprints →</a> · <a href="explorer.html" class="link">Explorer →</a></p>
+          </div>
+        </details>
+
+        <details class="qa-item" id="q3">
+          <summary><span class="qa-num">3</span><span class="qa-q">What does one audit actually promise — and what does it not promise?</span></summary>
+          <div class="qa-body">
+            <p class="qa-meta">Protocols · readers · anyone interpreting a pass</p>
+            <p>One audit is deliberately narrow. It promises exactly this: a named tool was run against a declared spec on the bytecode at <strong>O</strong> — the target contract address pinned at submit time — and the posted verdict (pass or fail) is the outcome of that run, challengeable under the network rules.</p>
+            <p>It does <strong>not</strong> promise:</p>
+            <ul>
+              <li>That the whole protocol is “safe” or that users cannot lose funds in ways outside the spec.</li>
+              <li>That future upgrades, proxies, or off-chain components are covered unless they are part of the declared check.</li>
+              <li>That frontend/UI issues, governance politics, or legal compliance were reviewed.</li>
+              <li>That the declared spec was the <em>right</em> spec for what you care about — only that the contract was checked against the spec that was declared.</li>
+            </ul>
+            <p>A flawless tool run against a hollow or mis-scoped spec returns a hollow verdict. The machine settles whether the contract failed <em>that</em> check — not whether the check was adequate for your risk model. Choosing scope is a protocol responsibility at post time; challenging scope belongs at <strong>Gate A</strong>, not inside an ordinary “they missed my bug” claim.</p>
+            <p class="qa-more"><a href="docs-specs.html" class="link">Specs &amp; scope →</a> · <a href="whitepaper.html" class="link">Whitepaper (scope limits) →</a></p>
+          </div>
+        </details>
+
+        <details class="qa-item" id="q4">
+          <summary><span class="qa-num">4</span><span class="qa-q">Why only pass or fail — no "medium" or "informational"?</span></summary>
+          <div class="qa-body">
+            <p class="qa-meta">Auditors · dispute thinkers</p>
+            <p>The settlement core is built for machine-checkable questions. Either the contract fails the declared check, or it does not. There is no on-chain severity ladder, no partial pay for “kind of wrong,” and no appeals court that rewrites a verdict because humans disagree about priority.</p>
+            <p>That is a feature, not an omission. Severity debates, triage, and “is this in scope for <em>my</em> product?” belong in markets, reputation, and Gate A spec fights — not inside a single binary railroad. The network settles one thing at Gate B: pass/fail against the declared spec on the bytecode at <strong>O</strong> — the pinned original target.</p>
+            <p>When something more nuanced is needed — “we meant a different spec,” “this tool cannot express the property,” “the pass missed a real bug on the bytecode at <strong>O</strong>” — the three-gate model routes those to different mechanisms instead of smuggling them into severity labels on one verdict.</p>
+            <p class="qa-more"><a href="docs-disputes.html" class="link">Bugs &amp; disputes →</a> · <a href="docs-overview.html#different" class="link">What makes it different →</a></p>
+          </div>
+        </details>
+
+        <details class="qa-item" id="q5">
+          <summary><span class="qa-num">5</span><span class="qa-q">What are the three gates?</span></summary>
+          <div class="qa-body">
+            <p class="qa-meta">Everyone who might escalate · essential map</p>
+            <p>Most confusion comes from bringing the wrong kind of fight to the wrong door. The network separates disputes into three gates.</p>
+            <p><strong>What is O?</strong> <strong>O</strong> is the <strong>original target contract</strong>: the deployed address the protocol pinned when it posted the bounty. Every verify run, claim, and dispute re-runs the registered tool on the bytecode at that address — not on a patched deployment, a replacement contract, or code upgraded elsewhere unless the audit explicitly bound to it.</p>
+            <table class="qa-table">
+              <tr><th>Gate</th><th>Question</th><th>Typical path</th></tr>
+              <tr><td><strong>A</strong></td><td>Is the declared spec auditable / the right spec?</td><td>Spec declared at submit; challenge + arbiter before the audit mints as canonical work</td></tr>
+              <tr><td><strong>B</strong></td><td>Does the code at <strong>O</strong> pass or fail that spec?</td><td>Auditor runs registered tool on <strong>O</strong> → posts pass/fail root</td></tr>
+              <tr><td><strong>C</strong></td><td>Was a <em>pass</em> wrong on the code at <strong>O</strong>?</td><td>Staked claim during challenge window → independent re-check on the same pinned address <strong>O</strong></td></tr>
+            </table>
+            <p><strong>Rule of thumb:</strong> “They checked the wrong thing” → Gate A. “They said pass but I can reproduce a fail on <strong>O</strong> with the same tool” → Gate C. Vague worries about frontend copy or off-list risks may be out of scope for an ordinary claim — read the declared scope list on the audit record first.</p>
+            <p>Protocol choice at post time decides <em>who</em> audits and <em>what</em> spec/tool pair is bound — not whether strangers can later reproduce the posted root.</p>
+            <p class="qa-more"><a href="docs-specs.html" class="link">Specs (Gate A) →</a> · <a href="docs-disputes.html" class="link">Disputes (Gate C) →</a></p>
+          </div>
+        </details>
+
+        <details class="qa-item" id="q6">
+          <summary><span class="qa-num">6</span><span class="qa-q">Why is auditor pay delayed until after a challenge window?</span></summary>
+          <div class="qa-body">
+            <p class="qa-meta">Auditors · protocols · anyone asking “why wait?”</p>
+            <p>An auditor is not paid the moment they submit a verdict. Payment comes at <strong>confirmation</strong>, after the challenge period closes with no successful bug claim on that pass. That delay is adversarial by design — not bureaucracy.</p>
+            <p>During the window, anyone who can reproduce a mismatch can file a staked claim. The original pass is provisional until strangers had time to re-run verify on <strong>O</strong> and, if they find a real fail root on that pinned bytecode, force resolution. Pay ties to <strong>accuracy under challenge</strong>, not to delivering a report on deadline.</p>
+            <p>For protocols, the window is the interval where “passed” still means “surviving scrutiny.” For auditors, it is the stake: your reward depends on the contract at <strong>O</strong> surviving that scrutiny, not merely on filing a green checkmark. Missed bugs that reproduce on <strong>O</strong> can void the happy path and fund the finder from reserves.</p>
+            <p class="qa-more"><a href="docs-rewards.html#when" class="link">Paid at confirmation →</a> · <a href="docs-audit.html" class="link">Audit lifecycle →</a></p>
+          </div>
+        </details>
+
+        <details class="qa-item" id="q7">
+          <summary><span class="qa-num">7</span><span class="qa-q">How does someone challenge a pass they think is wrong?</span></summary>
+          <div class="qa-body">
+            <p class="qa-meta">Bug-hunters · pool auditors · skeptical verifiers</p>
+            <p>During the open challenge period on a pass, a qualified participant can file a <strong>claim</strong> — not a vague accusation, but a proof path: you believe the auditor missed a bug that reproduces under the pinned tool on <strong>O</strong>, the same target address bound when the audit was posted.</p>
+            <p>Filing requires <strong>stake</strong> in AUDIT. If the claim succeeds, the original audit is marked failed/exploited and the finder is paid from <strong>reserves</strong> — never from fresh mint on the failure path. If the bug cannot be reproduced on <strong>O</strong>, the claim is rejected and the stake is at risk.</p>
+            <p class="callout-key">Settlement is always on <strong>O</strong> — the original target contract pinned at post, not a patched copy or a new deployment. Patching the code, deploying a fix elsewhere, or finishing some off-chain procedure does not settle a claim for you. Same address, same bytecode binding, same tool, same reproducible result — or the claim fails.</p>
+            <p>If a claim is filed but never taken up and its window expires, coordination risk can slash the finder’s stake with no payout — filing is serious. Read the bug-hunter guide before staking.</p>
+            <p class="qa-more"><a href="bughunter.html" class="link">Bug-hunter guide →</a> · <a href="docs-disputes.html" class="link">Bugs &amp; disputes →</a> · <a href="manage.html" class="link">Manage (file claim) →</a></p>
+          </div>
+        </details>
+
+        <details class="qa-item" id="q8">
+          <summary><span class="qa-num">8</span><span class="qa-q">What is the AUDIT token for — and how do people earn it?</span></summary>
+          <div class="qa-body">
+            <p class="qa-meta">Auditors · protocols · token readers</p>
+            <p>AUDIT is the network’s unit of account for bounties, stakes, and pool participation — not a yield product or equity claim. Protocols lock escrow in AUDIT to post bounties. Claimants stake AUDIT to file serious challenges. Auditors hold position-scaled amounts to register in the assignment pool (early slots can start at zero; later slots expect tokens earned by doing real work).</p>
+            <p><strong>How tokens enter circulation:</strong> primarily through <strong>confirmed audits</strong> — activity-led mint when work survives the challenge window. That ties supply growth to verified mechanism use, not to marketing airdrops or inflationary exploit rewards.</p>
+            <p><strong>How bug finders get paid:</strong> from <strong>reserves</strong> — a slice of each confirmed audit reward — when a claim reproduces a fail on <strong>O</strong>, the pinned original target contract, not on code deployed or upgraded elsewhere. Failures draw down reserves; they are not rewarded with fresh supply as a consolation prize.</p>
+            <p>The token pays for the railroad — escrows, stakes, pool holds — and records that real audits happened. Legal classification in your jurisdiction is your problem; the docs describe function, not investment promises.</p>
+            <p class="qa-more"><a href="tokenomics.html" class="link">Tokenomics →</a> · <a href="docs-rewards.html" class="link">Rewards →</a> · <a href="auditor.html" class="link">Auditor guide →</a></p>
+          </div>
+        </details>
+
+        <details class="qa-item" id="q9">
+          <summary><span class="qa-num">9</span><span class="qa-q">What's the real product — one audit, or something bigger?</span></summary>
+          <div class="qa-body">
+            <p class="qa-meta">Long-term thinkers · tool authors · protocols</p>
+            <p>Any single audit matters — but the long-term product is the <strong>shared toolkit</strong>: a growing library of machine-checkable specs and registered tools that strangers can re-run without asking permission. Individual audits are how the library grows; canonical status comes from real use under stress, not from a committee blessing a PDF.</p>
+            <p>Incumbent audit firms sell trust and narrative. This network sells <strong>public history plus reusable checks</strong>. A pass on audit #N is a row in that history; the tool and spec behind it are bricks in infrastructure the next protocol can reuse or challenge at Gate A.</p>
+            <p>That is why “ideas become real” only when a stranger can re-run them and get the same answer with the result on-chain. Talk — concern clicks, want-board signals, forum posts — proves nothing alone. Reproduction recorded on-chain is the currency.</p>
+            <p class="qa-more"><a href="docs-overview.html#product" class="link">The real product →</a> · <a href="ideas.html" class="link">How ideas become real →</a></p>
+          </div>
+        </details>
+
+        <details class="qa-item" id="q10">
+          <summary><span class="qa-num">10</span><span class="qa-q">What is this network not — and where is it today?</span></summary>
+          <div class="qa-body">
+            <p class="qa-meta">Honesty block · read before trusting with real money</p>
+            <p><span class="badge"><span class="live"></span> Testnet · Base Sepolia — test funds only</span></p>
+            <p style="margin-top:12px">Today this is reconstructed cell infrastructure on testnet with a live membrane UI (explorer, verify, manage, concern router). It is <strong>not</strong> a finished mainnet product, a legal/compliance service, or a guarantee that passed contracts cannot be hacked in ways outside the declared spec.</p>
+            <p><strong>What we will not claim:</strong></p>
+            <ul>
+              <li>Zero risk or guaranteed token returns.</li>
+              <li>Replacement for your legal, regulatory, or enterprise security duties.</li>
+              <li>That interpretation UI (concern router, want-board rankings) settles anything — those tools route and alarm only; payout and slash always go through on-chain verify + staked paths.</li>
+              <li>That admin parameters are immutable forever — economics can be tuned today; multisig/timelock hardening is part of the roadmap before large public bounties.</li>
+            </ul>
+            <p>If something looks wrong on a <em>specific</em> audit, use the explorer → <strong>Find your step</strong> walkthrough — it reads chain facts for that audit and suggests one next step. It does not send your clicks to the chain and cannot slash you for a wrong suggestion.</p>
+            <p class="qa-more"><a href="index.html" class="link">Welcome →</a> · <a href="concern.html" class="link">Find your step (per audit) →</a> · <a href="docs.html" class="link">Full docs →</a></p>
+          </div>
+        </details>
+
+      </div>
+
+      <footer class="doc-page-foot">
+        Stuck on one audit? <a href="explorer.html">Explorer</a> · <a href="help.html">Help</a>
+      </footer>
+    </div>
+  </main>
+
+  <aside>
+    <div class="lbl">Questions</div>
+    <a href="#q1">1 · The problem</a>
+    <a href="#q2">2 · Trust / verify</a>
+    <a href="#q3">3 · What one audit promises</a>
+    <a href="#q4">4 · Pass or fail only</a>
+    <a href="#q5">5 · Three gates</a>
+    <a href="#q6">6 · Delayed pay</a>
+    <a href="#q7">7 · Challenge a pass</a>
+    <a href="#q8">8 · AUDIT token</a>
+    <a href="#q9">9 · Real product</a>
+    <a href="#q10">10 · Honest limits</a>
+    <div class="lbl" style="margin-top:22px">Go deeper</div>
+    <a href="docs.html">Docs hub</a>
+    <a href="ideas.html">How ideas become real</a>
+    <a href="explorer.html">Explorer</a>
+  </aside>
+</div>
+
+<script src="your-links.js?v=5"></script>
+<script src="membrane-rail.js?v=2"></script>
+<script src="motion.js?v=1"></script>
+</body>
+</html>

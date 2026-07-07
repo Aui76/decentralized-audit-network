@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>!function(){try{var k="membrane_nav_session",s=sessionStorage.getItem(k);document.documentElement.classList.add(s?"nav-session":"cold-load");if(!s)sessionStorage.setItem(k,"1")}catch(e){}}();</script>
+<title>Protocol UI spec · Integration · Audit Cell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css?v=5">
+</head>
+<body class="page-prose">
+<div class="layout layout-docs">
+
+  <nav>
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink" href="quickstart.html">Quickstart</a>
+    <a class="navlink on" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+
+  <main>
+    <div class="inner">
+
+      <div class="doc-layer-row">
+        <a href="docs-integration.html" class="doc-layer doc-layer-spec">Integration</a>
+        <span class="doc-layer doc-layer-spec">Spec · reader</span>
+      </div>
+      <h1>Protocol UI spec</h1>
+      <p class="doc-q">What MUST integrator UIs show** — per audit row, not per protocol brand?</p>
+      
+      <div class="doc-bridge doc-bridge-story">
+        <p class="doc-bridge-lbl">Story context</p>
+        <ul>
+          <li><a href="docs-book-21.html">Book ch 21 · What each actor sees</a></li>
+          <li><a href="docs-book-22.html">Book ch 22 · Reading the chain</a></li>
+          <li><a href="docs-book-23.html">Book ch 23 · The membrane</a></li>
+        </ul>
+      </div>
+      <p>Display rules for <strong>`AuditCell`</strong> and its indexers. Verdict consensus is unchanged; <code>supersedesAuditId</code> is <strong>navigation metadata only</strong>.</p>
+      <p><strong>On-chain source:</strong> <code>cell/contracts/AuditCell.sol</code> · <strong>Bob:</strong> <code>cell/indexer/deriveBobCard.mjs</code> · <strong>Artifact dedup:</strong> <a href="docs-integration-artifact-registry.html">Artifact registry</a></p>
+      <h2 id="core-rule">Core rule</h2>
+      <p>The network certifies <strong>one pinned audit case</strong> per <code>auditId</code> — not a protocol brand or wallet.</p>
+      <table class="doc-table"><thead><tr><th>Wrong</th><th>Right</th></tr></thead><tbody><tr><td>“Acme Protocol ✅ audited”</td><td>“<code>0xBBB</code> — Audit #47 — PASS — case root <code>0xabc…</code> (pinned at submit)”</td></tr></tbody></table>
+      <p>Each row is authoritative only for its <code>(deployedAddress, artifactHash at submit, spec binding)</code> triple.</p>
+      <h2 id="three-layers-keep-separate">Three layers (keep separate)</h2>
+      <table class="doc-table"><thead><tr><th>Layer</th><th>On-chain key</th><th>UI role</th></tr></thead><tbody><tr><td><strong>Protocol profile</strong></td><td><code>audits[id].protocol</code></td><td>Grouping, submission history</td></tr><tr><td><strong>Audit record</strong></td><td><code>auditId</code> + <code>Audit</code> struct + events</td><td>Verdict, state, auditor, bounty, dates</td></tr><tr><td><strong>Artifact / case</strong></td><td><code>artifactHash</code>, <code>caseRootOf(id)</code></td><td>Dedup lock; what was judged</td></tr></tbody></table>
+      <p><code>valueSecured</code> and tier signals are <strong>informational</strong> — they do not gate discoverer payout.</p>
+      <h2 id="audit-row-minimum-fields">Audit row (minimum fields)</h2>
+      <table class="doc-table"><thead><tr><th>Field</th><th>Source</th><th>Display</th></tr></thead><tbody><tr><td>Audit ID</td><td><code>auditId</code></td><td>Link to detail</td></tr><tr><td>State</td><td><code>auditStateOf(id)</code></td><td>See state labels</td></tr><tr><td>Deployed address</td><td><code>auditDeployedOf(id)</code></td><td>Explorer link</td></tr><tr><td>Artifact hash</td><td><code>audits(id).artifactHash</code></td><td>Short hex + “pinned at submit”</td></tr><tr><td>Case root</td><td><code>caseRootOf(id)</code></td><td>Dedup / witness binding</td></tr><tr><td>Verdict path</td><td>derived</td><td>PASS track / FAIL→Claimed / Exploited / in progress</td></tr><tr><td>Auditor</td><td><code>auditAuditorOf(id)</code></td><td>Address; empty if unassigned</td></tr><tr><td>Bounty</td><td><code>audits(id).bounty</code></td><td>Amount at submit</td></tr><tr><td>Spec tool</td><td><code>audits(id).specToolId</code></td><td>Gate A linter Tom declared</td></tr><tr><td>Submitted</td><td><code>AuditSubmitted</code></td><td>Block/time</td></tr><tr><td>Type</td><td><code>isVulnerabilityReport</code></td><td>Ordinary vs fix audit + <code>auditLinkedOf(id)</code></td></tr><tr><td><strong>Supersedes</strong></td><td><code>auditSupersedesOf(id)</code></td><td>If non-zero, link prior row (<strong>navigation only</strong>)</td></tr></tbody></table>
+      <h3>State labels</h3>
+      <table class="doc-table"><thead><tr><th><code>AuditState</code></th><th>Label</th><th>“Trust this deployment?”</th></tr></thead><tbody><tr><td><code>Submitted</code> … <code>InAudit</code></td><td>In progress</td><td>No</td></tr><tr><td><code>AwaitingWindow</code> / <code>Audited</code></td><td>PASS provisional</td><td>Provisional — window open</td></tr><tr><td><code>InBlock</code></td><td>PASS finalized</td><td><strong>Yes for pinned artifact only</strong></td></tr><tr><td><code>Claimed</code></td><td>Challenged</td><td>No — outcome pending</td></tr><tr><td><code>Exploited</code></td><td>Exploited</td><td><strong>No</strong></td></tr><tr><td><code>Invalidated</code></td><td>Void</td><td><strong>No</strong></td></tr></tbody></table>
+      <p>Fix audits (<code>isVulnerabilityReport</code>): show separately; do not merge into the parent PASS badge.</p>
+      <h2 id="grouping-under-one-protocol">Grouping under one protocol</h2>
+      <p>Multiple rows coexist in history. Each row covers only its own deployment + pinned hash.</p>
+      <pre class="mono doc-pre">Protocol 0xBEEF
+├── #91  0xCCC  PASS (InBlock)     ← product v2
+├── #47  0xBBB  PASS (InBlock)     ← product v1
+└── #12  0xAAA  Exploited          ← legacy</pre>
+      <p><strong>“Current product” (off-chain convention):</strong> e.g. latest <code>InBlock</code> PASS for the address the protocol advertises — label <strong>“Latest listed deployment”</strong>, not “Protocol audited.”</p>
+      <h2 id="version-upgrades-new-address-new-bytecode">Version upgrades (new address / new bytecode)</h2>
+      <p>New deploy → new audit, full cycle. Prior rows <strong>stay</strong> on chain.</p>
+      <table class="doc-table"><thead><tr><th>v1</th><th>v2</th></tr></thead><tbody><tr><td>#12, <code>0xAAA</code>, artifact H₁</td><td>#47, <code>0xBBB</code>, artifact H₂</td></tr><tr><td>Historical PASS row</td><td>New Gate A + queue + PASS + window</td></tr></tbody></table>
+      <p><strong>UI copy:</strong> “Deployment <code>0xAAA</code> — PASS (historical)” vs “Deployment <code>0xBBB</code> — PASS”. No “upgraded certification” unless a lineage link is shown (below).</p>
+      <h2 id="proxy-implementation-staleness">Proxy / implementation staleness</h2>
+      <p>On submit: <code>artifactHash = deployedAddress.codehash</code> (then). After <code>upgradeTo</code>, live code may differ.</p>
+      <p><strong>Required client check</strong> before a green badge:</p>
+      <pre class="mono doc-pre">liveHash   = extcodehash(deployedAddress)
+pinnedHash = audits(auditId).artifactHash
+
+if liveHash != pinnedHash → STALE_IMPLEMENTATION
+else if state == InBlock  → CERTIFIED_FOR_PINNED_BYTECODE (qualified)</pre>
+      <table class="doc-table"><thead><tr><th>Status</th><th>Badge</th><th>Copy</th></tr></thead><tbody><tr><td><code>STALE_IMPLEMENTATION</code></td><td>Amber</td><td>“Implementation changed since audit. Re-audit required.”</td></tr><tr><td>Match + <code>InBlock</code></td><td>Green (qualified)</td><td>“PASS for bytecode pinned at submit”</td></tr></tbody></table>
+      <p>Do not show a green check on address alone for proxy contracts without this check.</p>
+      <h2 id="upgrade-lineage-supersedesauditid">Upgrade lineage — <code>supersedesAuditId</code></h2>
+      <p><strong>Purpose:</strong> Product navigation. <strong>Does not</strong> inherit PASS, void prior audits, or change prior settlement.</p>
+      <p><strong>Set at submit:</strong> <code>submitAudit(..., supersedesAuditId = priorId)</code> on ordinary audits only.</p>
+      <p><strong>On-chain rules (`CellLogicLib.createAuditExt`):</strong></p>
+      <table class="doc-table"><thead><tr><th>Rule</th><th>Behaviour</th></tr></thead><tbody><tr><td>Same protocol</td><td>Submitter must equal <code>audits[priorId].protocol</code></td></tr><tr><td>Prior exists</td><td><code>priorId &lt; newId</code>; prior must not be a fix audit</td></tr><tr><td>New artifact</td><td>New <code>caseRoot</code> / artifact binding must differ from prior</td></tr><tr><td>Fix audits</td><td><code>supersedesAuditId</code> must be <code>0</code> on <code>submitFixAudit</code></td></tr><tr><td>Dedup</td><td>Same bytecode still reverts <code>CaseAlreadyAudited</code> / <code>ArtifactAlreadyAudited</code> — supersedes is <strong>not</strong> a dedup bypass</td></tr></tbody></table>
+      <p><strong>Does not happen on lineage link:</strong></p>
+      <ul><li>Prior PASS does not cover the new deployment</li><li>Prior row is not voided or upgraded</li><li>New row does not skip Gate A, assignment, or window</li></ul>
+      <h3>UI chain view</h3>
+      <pre class="mono doc-pre">Audit #47  PASS  0xBBB  ──supersedes──►  Audit #12  PASS  0xAAA
+     ▲                                           ▲
+  &quot;Current (UI)&quot;                          &quot;Legacy deployment&quot;</pre>
+      <p><strong>Required disclaimer on chain links:</strong></p>
+      <p>Tests: <code>cell/test/CellPhaseD.t.sol</code> (<code>test_supersedes_sameO_newCaseRoot</code>, <code>test_supersedes_reverts_sameCaseRoot</code>).</p>
+      <h2 id="integrator-is-this-call-safe-checklist">Integrator “is this call safe?” checklist</h2>
+      <ol><li>Which <code>deployedAddress</code> is the user touching?</li><li>Find audit(s) where <code>auditDeployedOf(id)</code> matches and <code>auditStateOf(id) == InBlock</code> (or policy: allow window states with warning).</li><li><strong>Staleness:</strong> <code>extcodehash(deployed) == artifactHash</code>. If not → not safe.</li><li>Multiple PASS rows → match <strong>this</strong> address + hash, not “latest protocol audit.”</li><li><code>Claimed</code> or <code>Exploited</code> on that id → not safe.</li><li>Disclose active <code>Claimed</code> even if original PASS mint stands.</li></ol>
+      <h2 id="bob-indexer-inputs-production">Bob indexer inputs (production)</h2>
+      <p>Reference: <a href="docs-integration-bob-card.html#integrator-surface">Bob card § integrator-surface</a>. Indexer: <code>cell/indexer/deriveBobCard.mjs</code>.</p>
+      <table class="doc-table"><thead><tr><th>Input</th><th>Rule</th><th>If omitted</th></tr></thead><tbody><tr><td><code>portfolioContext</code></td><td><strong>MUST</strong> on every <code>InBlock</code> / window card shown to investors</td><td>Portfolio fuse skipped; R₀ may show CLEAN + INVEST</td></tr><tr><td><code>bounty</code> + <code>bountyDistribution</code></td><td><strong>MUST</strong> for <code>flow</code> / <code>integrityReviewSuggested</code></td><td><code>flow.bountyBand</code> → <code>low</code>; <strong>defended-spec-on-wash-line</strong> never fires</td></tr></tbody></table>
+      <p><strong>`portfolioContext` minimum:</strong></p>
+      <pre class="mono doc-pre">{
+  &quot;audits&quot;: [{ &quot;id&quot;: 3, &quot;state&quot;: 5, &quot;specToolId&quot;: &quot;0x…&quot;, &quot;vulnerabilityClassId&quot;: &quot;0x…&quot; }],
+  &quot;exploits&quot;: [{ &quot;auditId&quot;: 1, &quot;specToolId&quot;: &quot;0x…&quot;, &quot;vulnerabilityClassId&quot;: &quot;0x…&quot; }],
+  &quot;toolKnownGaps&quot;: { &quot;0xToolId&quot;: [&quot;0xClassId&quot;] }
+}</pre>
+      <p>Rebuild from chain: active audits + exploit resolutions + <code>toolKnownGaps</code> from <strong>`FmeaRegistry`</strong> (claim path) and <strong>`SpecGapModule`</strong> (spec-gap path). See <a href="docs-health-portfolio-contagion.html">Portfolio contagion</a> and <code>npm run test:contagion</code>.</p>
+      <p>When inputs are missing, show <code>integratorWarnings[]</code> (amber “incomplete indexer” strip).</p>
+      <h2 id="anti-patterns">Anti-patterns</h2>
+      <table class="doc-table"><thead><tr><th>Anti-pattern</th><th>Why</th></tr></thead><tbody><tr><td>One badge per protocol wallet</td><td>Hides deployments and proxy staleness</td></tr><tr><td>“Latest audit = protocol status”</td><td>Latest may be unrelated contract or fix audit</td></tr><tr><td>Hide Exploited / old PASS rows</td><td>History is the product</td></tr><tr><td>“Supersedes” voids old audit</td><td>Not true unless Exploited / invalidation</td></tr><tr><td>Green badge without staleness check</td><td>Proxy upgrades lie</td></tr></tbody></table>
+      
+      <footer class="doc-page-foot"><a href="docs-integration.html">← Integration</a> · <a href="docs-notebook.html">Notebook</a></footer>
+    </div>
+  </main>
+
+  <aside id="docRail" aria-label="You are here" hidden></aside>
+
+</div>
+<script src="motion.js?v=1"></script>
+<script src="your-links.js?v=5"></script>
+<script src="docs-rail.js?v=5"></script>
+</body>
+</html>

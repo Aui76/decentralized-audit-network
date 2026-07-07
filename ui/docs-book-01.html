@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>!function(){try{var k="membrane_nav_session",s=sessionStorage.getItem(k);document.documentElement.classList.add(s?"nav-session":"cold-load");if(!s)sessionStorage.setItem(k,"1")}catch(e){}}();</script>
+<title>1 · The problem · The Book · Audit Cell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css?v=5">
+</head>
+<body class="page-prose">
+<div class="layout layout-docs">
+
+  <nav>
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink" href="quickstart.html">Quickstart</a>
+    <a class="navlink on" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+
+  <main>
+    <div class="inner">
+
+      <div class="doc-layer-row">
+        <a href="docs-book.html" class="doc-layer doc-layer-story">The Book · I</a>
+        <span class="doc-layer doc-layer-story">Story · chapter 1</span>
+      </div>
+      <h1>The problem</h1>
+      <p class="doc-q">Why is “audited by X” not good enough when strangers must rely on code that cannot be patched after launch?</p>
+      
+      <h2 id="the-problem">The problem</h2>
+      <p>Deployed smart contract bytecode is <a href="docs-problem.html"><strong>immutable</strong></a>. If it is wrong, the loss is permanent — often borne by users and liquidity providers who never saw the audit report. <a href="docs-problem.html"><strong>Correctness before launch</strong></a> is a <a href="docs-problem.html"><strong>survival condition</strong></a>, not a polish item.</p>
+      <p>Teams respond the way the market teaches them: pay a firm, wait, receive a report, publish “audited by X.” Audits are necessary; <strong>the problem is what that label actually is</strong> — an opinion backed by process and prestige, not a result anyone can re-run on the same code and get the same answer. The protocol that paid chose the auditor. The fee cleared when the report shipped, not when the code stayed safe. Everyone else is asked to <strong>trust a name</strong>, not verify a check.</p>
+      <p>That gap — immutable code that needs proof, and a market that mostly sells reputation — is what this chapter names. Later chapters show how value moves, audits settle, and disputes resolve. <strong>Not here:</strong> the replacement shape — <a href="docs-book-02.html">Chapter 2</a>.</p>
+      <table class="doc-table"><thead><tr><th>Layer</th><th>Question</th><th>Read</th></tr></thead><tbody><tr><td><strong>This chapter</strong></td><td>Why does reputation-based audit fail strangers?</td><td>Below</td></tr><tr><td><a href="docs-book-02.html">Chapter 2</a></td><td>What is the opposite product shape?</td><td>The idea</td></tr><tr><td><a href="docs-problem.html">Design constraints</a></td><td>What properties must a valid mechanism enforce?</td><td>Notebook spec</td></tr></tbody></table>
+      <h2 id="what-the-market-offers">What the market actually sells</h2>
+      <p>The dominant model is simple. A protocol pays an audit firm. The firm waits in line. Weeks or months later, a PDF arrives. Exchanges and users read “audited by X” and treat it as a signal.</p>
+      <p>Three defects are <strong>built into the job</strong> — not bugs in any one firm:</p>
+      <table class="doc-table"><thead><tr><th>Defect</th><th>Meaning</th></tr></thead><tbody><tr><td><strong>The payer chooses the auditor</strong></td><td>Whoever funds the engagement shapes the room — selection, scope negotiation, pressure to preserve the relationship</td></tr><tr><td><strong>Payment at delivery, not accuracy</strong></td><td>The fee clears when the report ships. A critical flaw six months later does not claw back economics</td></tr><tr><td><strong>Output is not reproducible</strong></td><td>“Audited by X” is process and prestige — not a result two strangers get from the same tool, bytecode, and spec. You cannot ask the chain <em>did this contract pass that check?</em> — only <em>do I trust the firm?</em></td></tr></tbody></table>
+      <p>No amount of individual integrity fixes those three properties without changing the <strong>shape</strong> of the product.</p>
+      <h2 id="what-the-alternatives-still-leave-open">What the alternatives still leave open</h2>
+      <p>The space is not empty. Each neighbor solves a real pain — and stops short of the same destination.</p>
+      <table class="doc-table"><thead><tr><th>Neighbor</th><th>What it does well</th><th>What it still leaves open</th></tr></thead><tbody><tr><td><strong>Bug bounties</strong></td><td>Hunt live code; pay for findings</td><td>Payout at protocol discretion; no standard valid-under-network-rules test tied to a pinned pre-launch moment; no composable <strong>machine-verifiable record</strong></td></tr><tr><td><strong>Audit contests</strong></td><td>Concentrate talent in a window</td><td>Snapshots, not railroads — severity debates, bounded time, no monotonically growing toolkit</td></tr><tr><td><strong>Formal verification</strong></td><td>Rigorous on chosen properties</td><td>Not, by itself, a permissionless layer that accumulates checks every time a similar contract ships</td></tr></tbody></table>
+      <p>Traditional firms, bounty programs, and time-boxed contests each own a lane. Credibility still clusters. What none standardizes is this: <strong>a growing, machine-verifiable, composable history of what was checked</strong>, open to anyone, with rewards from mechanism output rather than a client’s mood on payout day.</p>
+      <h2 id="what-an-honest-fix-must-look-like">What an honest fix must look like</h2>
+      <p>If you refuse to trust names and insist on mechanism, the constraints get tight quickly — the minimum bar for <a href="docs-mechanism.html"><strong>reproducible</strong></a> security to mean anything on-chain.</p>
+      <table class="doc-table"><thead><tr><th>Property</th><th>Meaning</th></tr></thead><tbody><tr><td><a href="docs-problem.html"><strong>Binary</strong></a></td><td>Pass or fail — no negotiated “medium” that becomes a social game</td></tr><tr><td><a href="docs-problem.html"><strong>Machine-checkable</strong></a></td><td>Same tool, same pinned code, same declared spec → same answer; disagreement is a fork in inputs, not a committee</td></tr><tr><td><a href="docs-problem.html"><strong>Permissionless</strong></a></td><td>Auditors, hunters, and challengers join under published rules — not partner programs</td></tr><tr><td><a href="docs-problem.html"><strong>Skin in the game</strong></a></td><td>Auditor economics tie to long-run accuracy, not to the moment a verdict is typed</td></tr><tr><td><a href="docs-problem.html"><strong>Self-funding</strong></a></td><td>Rewards from the mechanism’s own output — mint and escrow discipline — not goodwill that dries up in a bear market</td></tr><tr><td><a href="docs-problem.html"><strong>Accumulating</strong></a></td><td>Each audit leaves the shared toolkit strictly richer — tools referenced, gaps recorded, canon earned through use</td></tr><tr><td><a href="docs-problem.html"><strong>Judgment-free</strong></a></td><td>Who audits, what counts as a valid claim, when value moves — deterministic from inputs the chain stores and anyone re-derives</td></tr></tbody></table>
+      <p>Those seven properties describe a <a href="docs-mechanism.html"><strong>mechanism</strong></a>, not a better audit firm. The <a href="docs-mechanism.html"><strong>Audit Cell</strong></a> is the attempt to implement them in contracts that do not care who you are — only whether the digests match.</p>
+      <h2 id="read-onward">Read onward</h2>
+      <p>Later chapters explain money held in escrow, audits run and challenged, dashboards that read public chain history. <strong>Read them with this chapter in mind.</strong></p>
+      <p>The failure mode is always the same: <strong>people accept a name when they need a check.</strong> A logo. A firm on a PDF. A severity thread. None of that is <em>anyone</em> running the same procedure on the same code and getting the same answer.</p>
+      <p>The network begins with a refusal: we will not treat “audited by X” as good enough when strangers cannot re-run the check themselves. Everything after that is the work of making a <a href="docs-mechanism.html"><strong>reproducible verdict</strong></a> real in economics and on-chain rules — held, assigned, challenged, paid, recorded.</p>
+      
+      <footer class="doc-page-foot"><a href="docs-book.html">← The Book</a> · <a href="docs.html">Docs</a></footer>
+    </div>
+  </main>
+
+  <aside id="docRail" aria-label="You are here" hidden></aside>
+
+</div>
+<script src="motion.js?v=1"></script>
+<script src="your-links.js?v=5"></script>
+<script src="docs-rail.js?v=5"></script>
+</body>
+</html>

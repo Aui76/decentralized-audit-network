@@ -1,0 +1,22 @@
+{
+  "chainId": 84532,
+  "network": "Base Sepolia",
+  "verifiedAt": "2026-07-04",
+  "sources": [
+    "https://github.com/Uniswap/sdks/blob/main/sdks/sdk-core/src/addresses.ts (BASE_SEPOLIA_ADDRESSES)",
+    "https://github.com/Uniswap/universal-router/commit/419b9e644f1ced2d120fada627bc3e9603556bd1 (DeployBaseSepolia.s.sol)",
+    "https://docs.base.org/base-chain/network-information/base-contracts (WETH9 Sepolia)"
+  ],
+  "CellToken": "0x756bD73C62C33eb4E4fD7028b9fe14314a94851F",
+  "CellEscrow": "0x7d2B523f78968d78eE2071E9F25BB928aDa81B54",
+  "IssuanceModule": "0x499EbbA465b65265b606b0F8bA04A5A5D133B73e",
+  "WETH9": "0x4200000000000000000000000000000000000006",
+  "uniswapV3Factory": "0x4752ba5DBc23f44D87826276BF6Fd6b1C372aD24",
+  "nonfungiblePositionManager": "0x27F971cb582BF9E50F397e4d29a5C7A34f11faA2",
+  "swapRouter02": "0x94cC0AaC535CCDB3C01d6787D6413C739ae12bc4",
+  "feeTierBps": 10000,
+  "feeTierLabel": "1%",
+  "recommendedSeedAuditWei": "5000000000000000000",
+  "recommendedSeedAuditHuman": "5 AUDIT",
+  "seedRationale": "~4.6% of live lpBalance (~108 AUDIT on 2026-07-04); mint cap moves ~5.4→~5.15 AUDIT/block (negligible); lpBalance stays > 0"
+}

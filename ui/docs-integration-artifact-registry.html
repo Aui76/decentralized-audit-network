@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>!function(){try{var k="membrane_nav_session",s=sessionStorage.getItem(k);document.documentElement.classList.add(s?"nav-session":"cold-load");if(!s)sessionStorage.setItem(k,"1")}catch(e){}}();</script>
+<title>Artifact registry · Integration · Audit Cell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css?v=5">
+</head>
+<body class="page-prose">
+<div class="layout layout-docs">
+
+  <nav>
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink" href="quickstart.html">Quickstart</a>
+    <a class="navlink on" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+
+  <main>
+    <div class="inner">
+
+      <div class="doc-layer-row">
+        <a href="docs-integration.html" class="doc-layer doc-layer-spec">Integration</a>
+        <span class="doc-layer doc-layer-spec">Spec · reader</span>
+      </div>
+      <h1>Artifact registry</h1>
+      <p class="doc-q">How do indexers QA codehash dedup** — and what are invariants R1–R5?</p>
+      
+      <div class="doc-bridge doc-bridge-story">
+        <p class="doc-bridge-lbl">Story context</p>
+        <ul>
+          <li><a href="docs-book-09.html">Book ch 9 · The audit cycle</a></li>
+          <li><a href="docs-book-17.html">Book ch 17 · Binary by choice</a></li>
+          <li><a href="docs-book-19.html">Book ch 19 · Gaming &amp; defenses</a></li>
+        </ul>
+      </div>
+      <p>Indexer QA for <strong>codehash-pin dedup</strong> on <strong>`AuditCell`</strong>. Two linked structures per ordinary submit must stay consistent — registry alone or audit row alone can lie if they drift.</p>
+      <p><strong>On-chain (C3/C5):</strong> <code>artifactRegistered</code>, <code>artifactToAuditId</code>, <code>audits[id].artifactHash</code> on <strong>`AuditCell`</strong>.</p>
+      <p><strong>Off-chain validator:</strong> <code>cell/indexer/validateArtifactRegistry.mjs</code>.</p>
+      <p>UI display rules: <a href="docs-integration-protocol-ui-spec.html">Protocol UI spec</a> (staleness check).</p>
+      <h2 id="two-structures">Two structures</h2>
+      <table class="doc-table"><thead><tr><th>Structure</th><th>Key</th><th>Meaning</th></tr></thead><tbody><tr><td><strong>Audit record</strong></td><td><code>auditId</code></td><td>Full lifecycle row (<code>state</code>, <code>deployedAddress</code>, <code>artifactHash</code>, …)</td></tr><tr><td><strong>Artifact registry</strong></td><td><code>artifactHash</code></td><td><code>deployedAddress.codehash</code> <strong>at submit</strong> — global dedup lock</td></tr></tbody></table>
+      <h2 id="invariants-r1r5">Invariants (R1–R5)</h2>
+      <h3>R1 — Active audit owns the lock</h3>
+      <p>If <code>auditStateOf(id)</code> is <strong>not</strong> <code>Invalidated</code>, for <code>hash = audits(id).artifactHash</code>:</p>
+      <ul><li><code>artifactRegistered[hash] == true</code></li><li><code>artifactToAuditId[hash] == id</code></li></ul>
+      <p><strong>Lock-holding states:</strong> <code>Submitted</code>, <code>Assigned</code>, <code>InAudit</code>, <code>AwaitingWindow</code>, <code>Audited</code>, <code>InBlock</code>, <code>Claimed</code>, <code>Exploited</code>.</p>
+      <h3>R2 — Invalidated releases the lock</h3>
+      <p>If state is <strong>`Invalidated`</strong>, for that row's hash:</p>
+      <ul><li><code>artifactRegistered[hash] == false</code></li><li><code>artifactToAuditId[hash] == 0</code></li></ul>
+      <p><strong>Clear paths:</strong> spec challenge finalize / arbiter FAIL, integrity review FAIL, integrity void helpers.</p>
+      <h3>R3 — Registry pointer matches row</h3>
+      <p>If <code>artifactRegistered[hash] == true</code>, let <code>mapped = artifactToAuditId[hash]</code>:</p>
+      <ul><li><code>auditExists(mapped)</code></li><li><code>audits(mapped).artifactHash == hash</code></li></ul>
+      <h3>R4 — Submit pins hash at call time</h3>
+      <p><code>artifactHash</code> is <strong>`deployedAddress.codehash` at `submitAudit`</strong> — not live <code>extcodehash</code> later. Proxy upgrades change live code without updating the row; integrators run a <strong>staleness check</strong> (<a href="docs-integration-protocol-ui-spec.html">Protocol UI spec</a>).</p>
+      <h3>R5 — Supersedes ≠ dedup bypass</h3>
+      <p><code>supersedesAuditId</code> is navigation only. Re-submitting the <strong>same bytecode</strong> still reverts <code>ArtifactAlreadyAudited(existingId)</code>.</p>
+      <h2 id="what-the-registry-is-is-not">What the registry is / is not</h2>
+      <table class="doc-table"><thead><tr><th>Registry answers</th><th>Registry does <strong>not</strong> answer</th></tr></thead><tbody><tr><td>“Is this bytecode already in an audit pipeline?”</td><td>“Is this protocol safe?”</td></tr><tr><td>“Which <code>auditId</code> holds the dedup lock?”</td><td>“Does this address match live code?” (staleness)</td></tr><tr><td>“Can the same code be submitted again?”</td><td>PASS / CLEAN / composable (audit state + Bob)</td></tr></tbody></table>
+      <p>After <strong>`Invalidated`</strong>, same bytecode may be submitted as a <strong>new</strong> <code>auditId</code>. After <strong>`Exploited`</strong>, the lock <strong>remains</strong> — new work requires <strong>new bytecode</strong> or invalidation on an open line.</p>
+      <h2 id="off-chain-validator-o9">Off-chain validator (O9)</h2>
+      <pre class="mono doc-pre">import { validateArtifactRegistryConsistency } from &quot;./validateArtifactRegistry.mjs&quot;;
+
+const { ok, errors } = validateArtifactRegistryConsistency({
+  auditId,
+  auditState,           // name or 6 for Invalidated
+  artifactHash,
+  artifactRegistered,
+  artifactToAuditId,
+  mappedArtifactHash,   // optional R3 cross-check
+});</pre>
+      <h2 id="indexer-workflow">Indexer workflow</h2>
+      <ol><li>On <code>AuditSubmitted</code>, cache <code>(auditId → artifactHash, deployedAddress)</code> and registry from <code>artifactRegistered</code> / <code>artifactToAuditId</code>.</li><li>On spec invalidation or integrity void → <strong>clear</strong> registry cache for that hash.</li><li>On <code>Exploited</code> → <strong>keep</strong> registry cache (lock stays).</li><li>Periodic reconcile: run <code>validateArtifactRegistryConsistency</code> per indexed <code>auditId</code>.</li><li>Before “submit new audit” for bytecode <code>H</code>: if <code>artifactRegistered[H]</code>, link UI to <code>artifactToAuditId[H]</code>.</li></ol>
+      <h2 id="cell-reads">Cell reads</h2>
+      <table class="doc-table"><thead><tr><th>Read</th><th>Meaning</th></tr></thead><tbody><tr><td><code>auditStateOf(id)</code></td><td>Row state</td></tr><tr><td><code>audits(id).artifactHash</code> / <code>deployedAddress</code></td><td>Pinned hash + target</td></tr><tr><td><code>artifactRegistered(hash)</code></td><td>Lock flag</td></tr><tr><td><code>artifactToAuditId(hash)</code></td><td>Owning audit id</td></tr><tr><td><code>AuditSubmitted</code> event</td><td><code>artifactHash</code>, <code>deployedAddress</code> in logs</td></tr></tbody></table>
+      <h2 id="tests">Tests</h2>
+      <table class="doc-table"><thead><tr><th>Layer</th><th>Command</th></tr></thead><tbody><tr><td>Off-chain (cell)</td><td><code>cd cell &amp;&amp; npm run test:artifact-registry</code></td></tr><tr><td>O9 bundle</td><td><code>cd cell &amp;&amp; npm run test:organs-o9</code></td></tr><tr><td>On-chain oracle</td><td><code>cd testnet &amp;&amp; forge test --match-contract ArtifactRegistryConsistencyTest</code></td></tr></tbody></table>
+      <p>Cathedral monolith cross-check — run from <strong>`testnet/`</strong>.</p>
+      
+      <footer class="doc-page-foot"><a href="docs-integration.html">← Integration</a> · <a href="docs-notebook.html">Notebook</a></footer>
+    </div>
+  </main>
+
+  <aside id="docRail" aria-label="You are here" hidden></aside>
+
+</div>
+<script src="motion.js?v=1"></script>
+<script src="your-links.js?v=5"></script>
+<script src="docs-rail.js?v=5"></script>
+</body>
+</html>

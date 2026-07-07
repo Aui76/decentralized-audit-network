@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>!function(){try{var k="membrane_nav_session",s=sessionStorage.getItem(k);document.documentElement.classList.add(s?"nav-session":"cold-load");if(!s)sessionStorage.setItem(k,"1")}catch(e){}}();</script>
+<title>Fingerprint Technical Note · Fingerprint · Audit Cell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css?v=5">
+</head>
+<body class="page-prose">
+<div class="layout layout-docs">
+
+  <nav>
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink" href="quickstart.html">Quickstart</a>
+    <a class="navlink on" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+
+  <main>
+    <div class="inner">
+
+      <div class="doc-layer-row">
+        <a href="docs-notebook.html" class="doc-layer doc-layer-spec">The Notebook</a>
+        <span class="doc-layer doc-layer-spec">Spec · Fingerprint</span>
+      </div>
+      <h1>Fingerprint Technical Note</h1>
+      <p class="doc-q">How** does a registered tool run become the on-chain <code>resultRoot</code> the cell settles on?</p>
+      <p><strong>Story:</strong> <a href="docs-book-07.html">Book ch  7 — The fingerprint</a></p>
+      <table class="doc-table"><thead><tr><th>Doc</th><th>Role</th></tr></thead><tbody><tr><td>This leaf</td><td>Encoding standard (<code>AUDIT_RESULT_V1</code>) — formula + fields</td></tr><tr><td>`guides/whitepaper.md`</td><td>System overview · why the fingerprint matters</td></tr><tr><td>`<a href="docs-contract.html">7-contract/reference.md</a>`</td><td>On-chain getters that consume <code>resultRoot</code></td></tr></tbody></table>
+      <p><strong>Encoding standard `AUDIT_RESULT_V1`:</strong> how a tool run becomes the <code>resultRoot</code> the contract settles on.</p>
+      <p>Same registered tool, same pinned artifact, same declared spec binding → same <code>resultRoot</code> under this standard. Pass or fail; nothing between. Every verdict and settlement path in the network consumes this commitment.</p>
+      <p>Canonical spec: <code>AUDIT_RESULT_V1</code> in the build repo (status: <strong>LOCKED</strong>). This document is the readable account.</p>
+      <p>On-chain encoding: `../../cell/contracts/tools/AuditResultV1.sol`</p>
+      <p><em>System context:</em> `guides/whitepaper.md<code> *·* </code>guides/whitepaper.md#at-a-glance`</p>
+      <h2 id="invariant">Invariant</h2>
+      <p>Two runs with identical <code>(toolId, artifactHash, specHash, contextRoot)</code> MUST produce identical <code>resultRoot</code>. Non-conforming tools are rejected from the toolkit.</p>
+      <h2 id="formula">Formula</h2>
+      <pre class="mono doc-pre">resultRoot = keccak256(abi.encode(
+    keccak256(&quot;AUDIT_RESULT_V1&quot;),
+    toolId,
+    artifactHash,
+    specHash,
+    contextRoot,
+    verdict,        // uint8: 1 = PASS, 0 = FAIL
+    findingsRoot    // bytes32(0) on PASS
+))</pre>
+      <ul><li>Encoding: <code>abi.encode</code> (fixed-width, length-prefixed). Field order is normative.</li><li>Version tag is inside the hash; <code>V2</code> roots cannot collide with <code>V1</code>.</li></ul>
+      <h2 id="field-definitions">Field definitions</h2>
+      <h3><code>toolId</code></h3>
+      <pre class="mono doc-pre">keccak256(abi.encode(
+    keccak256(&quot;AUDIT_TOOL_V1&quot;),
+    toolName,
+    toolVersion,
+    toolArtifactHash,
+    entrypoint
+))</pre>
+      <p>Tool MUST be reproducible from this manifest. <code>toolArtifactHash</code> <strong>(L-02, normative):</strong> <code>keccak256</code> of the compiled tool library's <strong>runtime bytecode</strong> under the pinned build in <code>contextRoot</code>, with the declared <code>TOOL_ARTIFACT_HASH</code> slot set to <code>bytes32(0)</code> at compile time. Recompute in Genesis:</p>
+      <pre class="mono doc-pre">forge script script/tools/ComputeToolArtifactHash.s.sol:ComputeToolArtifactHash</pre>
+      <p>The published constant in source is that zero-slot hash (embedded metadata means live probe ≠ declared — manifest + <code>ComputeSpecHash</code> are authoritative). <strong>v1.0.0</strong> used a label hash (<code>keccak256(&quot;WithdrawCreditsV1Lib@1.0.0&quot;)</code>) — historical only; <strong>v1.1.0+</strong> use content-bound hashes. Supersede via new <code>toolVersion</code>, never in-place.</p>
+      <h3><code>artifactHash</code></h3>
+      <p>Commitment to the artifact under audit, pinned at submission.</p>
+      <ul><li><strong>EVM path (</strong><code>submitAudit</code><strong>):</strong> codehash of deployed bytecode at <code>deployedAddress</code>.</li><li><strong>Domain-agnostic path (Pillar B,</strong> <code>submitArtifactAudit</code><strong>):</strong> caller-supplied bare <code>bytes32</code> — any content-addressable artifact (build hash, model, dataset) with no on-chain deployment required.</li></ul>
+      <p>Both paths store the same field on the audit row; tools and dispute comparison use <code>(artifactHash, specHash, toolId)</code> regardless of how O was pinned.</p>
+      <h3><code>specHash</code></h3>
+      <p>Commitment to the declared audit specification (invariants, scope, or open-discovery terms).</p>
+      <h3><code>contextRoot</code></h3>
+      <pre class="mono doc-pre">keccak256(abi.encode(
+    keccak256(&quot;AUDIT_CONTEXT_V1&quot;),
+    solcVersion,
+    evmVersion,
+    optimizerRuns,
+    viaIR,
+    toolConfigRoot,
+    seed
+))</pre>
+      <p>Commits everything else that can affect output. Randomness only via <code>seed</code> in <code>contextRoot</code>.</p>
+      <h3><code>findingsRoot</code></h3>
+      <p><strong>PASS:</strong> <code>bytes32(0)</code>.</p>
+      <p><strong>FAIL:</strong> leaves = <code>keccak256(abi.encode(invariantId, locationCommitment, witnessCommitment))</code>, sorted ascending by <code>(invariantId, locationCommitment)</code>; then:</p>
+      <pre class="mono doc-pre">keccak256(abi.encode(keccak256(&quot;AUDIT_FINDINGS_V1&quot;), sortedLeaves))</pre>
+      <p>Sort order makes the root independent of discovery order.</p>
+      <h2 id="determinism-rules">Determinism rules</h2>
+      <p><code>resultRoot</code> MUST NOT depend on:</p>
+      <table class="doc-table"><thead><tr><th>Forbidden</th><th>Notes</th></tr></thead><tbody><tr><td>Wall-clock time, dates, nonces</td><td></td></tr><tr><td>Runner / auditor / claimant address</td><td></td></tr><tr><td>Machine, OS, locale, network state</td><td></td></tr><tr><td>Unpinned randomness</td><td>Use <code>seed</code> in <code>contextRoot</code></td></tr><tr><td>Non-canonical collection order</td><td>Maps/sets: canonical sort</td></tr></tbody></table>
+      <p>Floating point: avoided or normalized. Violations → non-conforming tool.</p>
+      <h2 id="reproduction-procedure">Reproduction procedure</h2>
+      <p>Given published <code>resultRoot</code>:</p>
+      <ol><li>Resolve <code>toolId</code> → build exact tool artifact.</li><li>Fetch bytecode for <code>artifactHash</code>.</li><li>Fetch spec for <code>specHash</code>.</li><li>Reconstruct environment from <code>contextRoot</code>.</li><li>Execute tool.</li><li>Encode per this standard.</li><li>Compare to published root.</li></ol>
+      <p>Mismatch → non-reproducing verdict → reject or slash per cell rules.</p>
+      <p><strong>Operational binding (current):</strong> dispute auditor performs steps 1–7; 14-day window allows any participant to repeat and file a claim. <strong>Optional hardening:</strong> ZK/TEE verifier proves the same statement without trusting the runner; same encoding, added as an organ.</p>
+      <h2 id="versioning">Versioning</h2>
+      <ul><li><code>AUDIT_RESULT_V1</code> is frozen; edits require a new standard (<code>V2</code>, …) alongside.</li><li>First conforming tool may be narrow; the encoding standard is permanent.</li><li>All toolkit tools share this socket.</li></ul>
+      <p><em>Companion:</em> `guides/whitepaper.md`</p>
+      
+      <footer class="doc-page-foot"><a href="docs-notebook.html">← Notebook</a></footer>
+    </div>
+  </main>
+
+  <aside id="docRail" aria-label="You are here" hidden></aside>
+
+</div>
+<script src="motion.js?v=1"></script>
+<script src="your-links.js?v=5"></script>
+<script src="docs-rail.js?v=5"></script>
+</body>
+</html>

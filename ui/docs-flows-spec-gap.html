@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>!function(){try{var k="membrane_nav_session",s=sessionStorage.getItem(k);document.documentElement.classList.add(s?"nav-session":"cold-load");if(!s)sessionStorage.setItem(k,"1")}catch(e){}}();</script>
+<title>Spec-gap overlay · Flows · Audit Cell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css?v=5">
+</head>
+<body class="page-prose">
+<div class="layout layout-docs">
+
+  <nav>
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink" href="quickstart.html">Quickstart</a>
+    <a class="navlink on" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+
+  <main>
+    <div class="inner">
+
+      <div class="doc-layer-row">
+        <a href="docs-flows.html" class="doc-layer doc-layer-spec">Flows</a>
+        <span class="doc-layer doc-layer-spec">Spec · reader</span>
+      </div>
+      <h1>Spec-gap overlay</h1>
+      <p class="doc-q">Real fail proof landed on <strong>O</strong>, but <strong>S never promised to check P</strong> — how does the network <strong>record the fact</strong> without silently rewriting the within-spec PASS?</p>
+      
+      <div class="doc-bridge doc-bridge-story">
+        <p class="doc-bridge-lbl">Story context</p>
+        <ul>
+          <li><a href="docs-book-12.html">Book ch 12 · Overlays</a></li>
+        </ul>
+      </div>
+      <p><strong>Spec-gap</strong> records a reproducible FAIL on pinned contract <strong>O</strong> for property <strong>P</strong> when <strong>P</strong> was not part of declared spec <strong>S</strong> on that audit row. The overlay is <strong>non-destructive</strong>: the original “<strong>O satisfies S</strong>” result stays intact unless a separate within-spec path (Gate C) succeeds.</p>
+      <p>Within-spec misses → <a href="docs-flows-vulnerability.html">Vulnerability disclosure</a> (Gate C). Wrong declaration → <a href="docs-flows-spec-arbiter.html">Spec arbiter</a> (Gate A). Network-wide harness gaps → <a href="docs-structural.html">Structural upgrades</a>.</p>
+      <p><strong>Module:</strong> <code>SpecGapModule.sol</code> + <code>SpecGapLib.sol</code> (L1 satellite).</p>
+      <h2 id="spec-gap-vs-gate-c-routing">Spec-gap vs Gate C (routing)</h2>
+      <p>The network does <strong>not</strong> infer scope from rhetoric. It reads <strong>which evaluator tool you cite</strong>:</p>
+      <table class="doc-table"><thead><tr><th>Evaluator cited</th><th>Path</th><th>Effect on original row</th></tr></thead><tbody><tr><td>Audit's declared <strong>`specToolId`</strong> (within <strong>S</strong>)</td><td><strong>Gate C</strong> — <code>claimVulnerability</code></td><td>Destructive — may → <code>Exploited</code>, <code>failed++</code>, dispute lane</td></tr><tr><td>Different canonical <strong>`isInvariantEvaluator`</strong> (outside <strong>S</strong>)</td><td><strong>Spec-gap</strong> — <code>openSpecGap</code></td><td><strong>Non-destructive</strong> — row stays <code>AwaitingWindow</code>, <code>Audited</code>, or <code>InBlock</code></td></tr></tbody></table>
+      <p>Spec-gap filing does <strong>not</strong> pause the audit for within-S settlement, mark <strong>`Exploited`</strong>, or increment original auditor <strong>`failed++`</strong>.</p>
+      <h2 id="where-it-sits">Where it sits</h2>
+      <pre class="mono doc-pre">Provisional PASS or InBlock on audit row (O, S on file)
+        │
+        │  FAIL witness on O — but evaluator ≠ audit's specToolId
+        ▼
+   openSpecGap  →  protocol concede | contest | decline | adopt
+        │
+        └── original within-S pass unchanged unless Gate C separately wins</pre>
+      <p>May file while claim-eligible: <code>AwaitingWindow</code>, <code>Audited</code>, <code>InBlock</code>.</p>
+      <h2 id="overlay-states">Overlay states</h2>
+      <table class="doc-table"><thead><tr><th>Status</th><th>Meaning</th></tr></thead><tbody><tr><td><code>Filed</code></td><td>FAIL witness + stake posted; protocol decision window open</td></tr><tr><td><code>Confirmed</code></td><td>Protocol concedes — witness violates <strong>P</strong> on <strong>O</strong>; stake returned; <strong>no</strong> discoverer payout yet</td></tr><tr><td><code>Declined</code></td><td>Protocol declines <strong>relevance</strong>; record may still stand if witness was valid</td></tr><tr><td><code>False</code></td><td>Contest replay <strong>PASS</strong> on <strong>P</strong>; filer stake slashed</td></tr><tr><td><code>Adopted</code></td><td>Protocol paid discoverer via <code>adoptSpecGap</code> — <strong>only</strong> payout path</td></tr><tr><td><code>Expired</code></td><td>Abandoned past <code>claimResolutionWindow</code>; liveness clear</td></tr></tbody></table>
+      <h2 id="flow-typical">Flow (typical)</h2>
+      <pre class="mono doc-pre">openSpecGap(O, witness, evaluator, stake)
+        ↓
+  protocolConcedeSpecGap          → Confirmed (stake back)
+  protocolContestSpecGap          → dispute replay → False or Confirmed
+  protocolDeclineSpecGapRelevance → Declined
+  confirmSpecGapSilence           → after protocol window; stake returned
+  adoptSpecGap                    → Adopted (protocol-funded payment)
+  expireSpecGap / expireSpecGapDispute → liveness</pre>
+      <p>Contest settlement: evaluator replay via dispute path — <code>confirmAudit</code> → <code>resolveFromDispute</code> (same binary discipline as other tool paths).</p>
+      <h2 id="functions">Functions</h2>
+      <table class="doc-table"><thead><tr><th>Function</th><th>Meaning</th></tr></thead><tbody><tr><td><code>openSpecGap</code></td><td>Registered auditor files FAIL witness on pinned <code>(O, S)</code> with stake</td></tr><tr><td><code>protocolConcedeSpecGap</code></td><td>Protocol accepts fact; stake returned; gap recorded</td></tr><tr><td><code>protocolContestSpecGap</code></td><td>Protocol disputes; opens evaluator replay</td></tr><tr><td><code>confirmSpecGapSilence</code></td><td>Protocol window elapsed without contest; stake returned</td></tr><tr><td><code>protocolDeclineSpecGapRelevance</code></td><td>Protocol declines relevance; record may stand</td></tr><tr><td><code>adoptSpecGap</code></td><td>Protocol-funded discoverer payment — <strong>only</strong> payout path</td></tr><tr><td><code>expireSpecGap</code> / <code>expireSpecGapDispute</code></td><td>Liveness backstops</td></tr></tbody></table>
+      <h2 id="funding">Funding</h2>
+      <table class="doc-table"><thead><tr><th>Rule</th><th>Meaning</th></tr></thead><tbody><tr><td><strong>Adoption only</strong></td><td>Discoverer paid <strong>only</strong> if protocol calls <code>adoptSpecGap</code></td></tr><tr><td><strong>No mint</strong></td><td>Unadopted gaps do not mint</td></tr><tr><td><strong>No S-escrow draw</strong></td><td>Does not pull original audit bounty for gap reward</td></tr><tr><td><strong>No treasury auto-pay</strong></td><td>Recording ≠ payment</td></tr></tbody></table>
+      <p>Reuses <code>protocolClaimDecisionWindow</code> and <code>claimResolutionWindow</code> from claim/dispute timing.</p>
+      <p><strong>Previous:</strong> <a href="docs-flows-spec-arbiter.html">Spec arbiter</a> · <strong>Next:</strong> <a href="docs-flows-integrity-review.html">Integrity review</a></p>
+      
+      <footer class="doc-page-foot"><a href="docs-flows.html">← Flows</a> · <a href="docs-notebook.html">Notebook</a></footer>
+    </div>
+  </main>
+
+  <aside id="docRail" aria-label="You are here" hidden></aside>
+
+</div>
+<script src="motion.js?v=1"></script>
+<script src="your-links.js?v=5"></script>
+<script src="docs-rail.js?v=5"></script>
+</body>
+</html>

@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>!function(){try{var k="membrane_nav_session",s=sessionStorage.getItem(k);document.documentElement.classList.add(s?"nav-session":"cold-load");if(!s)sessionStorage.setItem(k,"1")}catch(e){}}();</script>
+<title>Scope, spec-quality &amp; fleet · Integration · Audit Cell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css?v=5">
+</head>
+<body class="page-prose">
+<div class="layout layout-docs">
+
+  <nav>
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink" href="quickstart.html">Quickstart</a>
+    <a class="navlink on" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+
+  <main>
+    <div class="inner">
+
+      <div class="doc-layer-row">
+        <a href="docs-integration.html" class="doc-layer doc-layer-spec">Integration</a>
+        <span class="doc-layer doc-layer-spec">Spec · reader</span>
+      </div>
+      <h1>Scope, spec-quality &amp; fleet</h1>
+      <p class="doc-q">How do indexers derive scope manifests and spec-quality warnings** — without auto-settling?</p>
+      
+      <div class="doc-bridge doc-bridge-story">
+        <p class="doc-bridge-lbl">Story context</p>
+        <ul>
+          <li><a href="docs-book-16.html">Book ch 16 · Reputation signals</a></li>
+          <li><a href="docs-book-18.html">Book ch 18 · Scope &amp; spec quality</a></li>
+        </ul>
+      </div>
+      <p>Off-chain scope manifests, spec-quality linter, and fleet correlation log. <strong>No contract settlement gate</strong> on linter labels alone — binary spec dispute stays Gate A + <code>challengeSpecInvalid</code>.</p>
+      <p>Pair with <a href="docs-integration-bob-card.html">Bob card</a> (card attachments) · <a href="docs-flows-gate-a.html">The door (Gate A)</a>.</p>
+      <h2 id="three-layers-in-this-chapter">Three layers in this chapter</h2>
+      <table class="doc-table"><thead><tr><th>Section</th><th>Owns</th><th>Does not own</th></tr></thead><tbody><tr><td>#scope</td><td>Claimed check categories · taxonomy · <code>scopeRoot</code> derivation</td><td>Linter antipatterns · fleet JSONL</td></tr><tr><td>#quality</td><td>Spec-quality linter · Bob <code>specQuality*</code> fields</td><td>Scope symbol validity · on-chain void</td></tr><tr><td>#fleet</td><td>Maintainer correlation log · false-negative notices</td><td>Investor card copy · auto-invalidate</td></tr></tbody></table>
+      <p>Binary spec dispute (void) stays Gate A + <a href="docs-flows-spec-arbiter.html">Spec arbiter</a> — not linter labels alone.</p>
+      <h2 id="scope">Scope — claimed check categories</h2>
+      <p>Off-chain scope manifest from the Gate A spec artifact. <strong>No on-chain `scopeRoot` in the cell</strong> — v1 is indexer + writer convention; pinning deferred until real spec-tool usage converges.</p>
+      <h3>Facts vs interpretation</h3>
+      <p>&quot;Covered&quot; and &quot;not checked&quot; on a Bob card are <strong>reproducible tags</strong> over declared invariants — not a depth score and not a network opinion. Same discipline as <a href="docs-integration-bob-card.html">Bob card</a>.</p>
+      <h3>Writer shape (Gate A artifact)</h3>
+      <p>Each invariant carries tagged scope symbols:</p>
+      <pre class="mono doc-pre">{
+  &quot;invariants&quot;: [
+    {
+      &quot;id&quot;: &quot;swap-rate-fixed&quot;,
+      &quot;statement&quot;: &quot;swap output follows declared rate&quot;,
+      &quot;scope&quot;: [&quot;SWAP-RATE&quot;, &quot;BALANCE-ACCOUNTING&quot;]
+    }
+  ]
+}</pre>
+      <p>Symbols must appear in the v0 taxonomy (#taxonomy · <code>indexer/scopeTaxonomyV0.mjs</code>).</p>
+      <h3>Indexer pipeline (O4)</h3>
+      <table class="doc-table"><thead><tr><th>Module</th><th>Meaning</th></tr></thead><tbody><tr><td><code>deriveScope.mjs</code></td><td>Parse <code>invariants[]</code> → manifest, <code>scopeRoot</code>, covered / not-checked lists</td></tr><tr><td><code>scopeTaxonomyV0.mjs</code></td><td>Registered v0 symbols + <code>categoryId</code> hashes</td></tr><tr><td><code>danIdV0.mjs</code></td><td><code>DAN:SCOPE:v0:{SYMBOL}</code> id grammar (O1)</td></tr><tr><td><code>specReferenceFixture.mjs</code></td><td>Golden reference spec + expected scope fields</td></tr></tbody></table>
+      <p><strong>Bob integration:</strong> pass <code>specInvariants</code> on <code>deriveBobCard</code> input → <code>scopeStatus</code>, <code>scopeCovered[]</code>, <code>scopeNotChecked[]</code>, <code>scopeRoot</code>. Unknown tags → <code>integratorWarnings: SCOPE_UNKNOWN_SYMBOL</code>.</p>
+      <h3>Deterministic manifest</h3>
+      <p>From tagged invariants the indexer derives:</p>
+      <ol><li>Sorted unique <code>categoryId</code> set (order-independent).</li><li><code>scopeRoot = keccak256(abi.encodePacked(sorted categoryIds))</code>.</li></ol>
+      <p>Same invariant order in the JSON file must <strong>not</strong> change <code>scopeRoot</code>.</p>
+      <h3>v2 deferral (on-chain pin)</h3>
+      <table class="doc-table"><thead><tr><th>Layer</th><th>v1 (cell)</th><th>Deferred v2</th></tr></thead><tbody><tr><td>Manifest</td><td>Indexer + spec tool parse <code>invariants[]</code></td><td>—</td></tr><tr><td>Pin</td><td><code>specHash</code> + <code>specErrorsRoot</code> on-chain (Gate A)</td><td><code>scopeRoot</code> at submit / match at accept</td></tr><tr><td>Registry</td><td><code>scopeTaxonomyV0.mjs</code> (15 seed symbols)</td><td>Optional on-chain category registry</td></tr></tbody></table>
+      <p>Do not canonize scope in consensus until off-chain use proves the vocabulary on live audits.</p>
+      <h3>Fixtures</h3>
+      <table class="doc-table"><thead><tr><th>File</th><th>Role</th></tr></thead><tbody><tr><td><code>fixtures/spec-reference-v0.json</code></td><td>Good reference spec (scope golden)</td></tr><tr><td><code>fixtures/spec-antipatterns-v0.json</code></td><td>Named spec-quality antipatterns (pairs with O4 quality linter)</td></tr></tbody></table>
+      <h3>Tests</h3>
+      <pre class="mono doc-pre">cd cell &amp;&amp; npm run test:scope
+cd cell &amp;&amp; npm run test:organs-o4   # full O4 bundle</pre>
+      <h3>Taxonomy — v0 seed categories {#taxonomy}</h3>
+      <p>Foundation vocabulary for <code>scope[]</code> tags on Gate A invariants. <strong>Seed set, not a whitelist</strong> — extend only with dry-run evidence (#taxonomy-dry-run); canonical status is earned by cross-protocol usage.</p>
+      <p>Registry source: <strong>`cell/indexer/scopeTaxonomyV0.mjs`</strong> (<code>V0_SCOPE_SYMBOLS</code>).</p>
+      <h3>How to read an entry</h3>
+      <ul><li><strong>User-question first</strong> — each symbol maps to a plain worry a user actually has.</li><li><strong>Covered = invariant checks</strong> — tag only when an invariant <em>checks</em> that worry, not when marketing mentions it.</li><li><strong>Disjoint by intent</strong> — &quot;Not this&quot; boundaries keep tags from overlapping.</li></ul>
+      <h3>Identifier grammar</h3>
+      <pre class="mono doc-pre">DAN:SCOPE:v0:{SYMBOL}</pre>
+      <p>Helper: <code>categoryIdForSymbol(symbol)</code> in <code>deriveScope.mjs</code> (uses <code>danIdV0.mjs</code>).</p>
+      <h3>The 15 v0 symbols</h3>
+      <table class="doc-table"><thead><tr><th>Symbol</th><th>User asks (plain)</th></tr></thead><tbody><tr><td><code>SWAP-RATE</code></td><td>If I swap X, do I get the Y I expect — no hidden price path?</td></tr><tr><td><code>SUPPLY-CONSERVATION</code></td><td>Can they secretly print more tokens?</td></tr><tr><td><code>BALANCE-ACCOUNTING</code></td><td>Can the contract lose track of my money in transfers?</td></tr><tr><td><code>ACCESS-CONTROL</code></td><td>Can a random address call privileged functions?</td></tr><tr><td><code>GOVERNANCE-DRAIN-PATH</code></td><td>Can the owner/admin take my funds (rug path)?</td></tr><tr><td><code>PRIVILEGED-PARAMETER</code></td><td>Can the owner change rate/fee/limits and wreck my next trade?</td></tr><tr><td><code>STATE-LIFECYCLE</code></td><td>Can someone act after terminal state or skip required steps?</td></tr><tr><td><code>REENTRANCY</code></td><td>Can a callback re-enter and double-spend or bypass checks?</td></tr><tr><td><code>ORACLE-DEPENDENCE</code></td><td>Are price/feed outputs used safely (not manipulable TWAP/reserve abuse)?</td></tr><tr><td><code>ARITHMETIC-SAFETY</code></td><td>Can overflow/rounding break accounting or rates?</td></tr><tr><td><code>TOKEN-INTERFACE</code></td><td>Does ERC-20/721 surface behave as declared (allowance, transfer)?</td></tr><tr><td><code>UPGRADE-PROXY</code></td><td>Can implementation change without the rules users agreed to?</td></tr><tr><td><code>TIME-LOGIC</code></td><td>Do deadlines, epochs, and time locks behave as declared?</td></tr><tr><td><code>EXTERNAL-CALL</code></td><td>Are external calls bounded (return values, failure handling)?</td></tr><tr><td><code>LIQUIDATION-MECHANICS</code></td><td>Can liquidation seize collateral outside declared rules?</td></tr></tbody></table>
+      <p>Full &quot;Covered = / Not this =&quot; prose for each symbol lives in the cathedral oracle doc; the <strong>cell bench</strong> treats <code>scopeTaxonomyV0.mjs</code> as authoritative for symbol validity.</p>
+      <h3>FMEA bridge ids (claims → scope)</h3>
+      <p>Exploit/claim events map <code>vulnerabilityClassId</code> metadata to scope symbols:</p>
+      <pre class="mono doc-pre">DAN:FMEA-SCOPE:v0:{SYMBOL}</pre>
+      <p>Module: <code>fmeaScopeBridgeV0.mjs</code> · test: <code>npm run test:fmea-scope-bridge</code>.</p>
+      <h3>Taxonomy dry-run {#taxonomy-dry-run}</h3>
+      <p>Pressure-test #taxonomy against a <strong>real contract archetype</strong> before changing code or on-chain vocabulary.</p>
+      <p><strong>Rule:</strong> facts not judgment; <strong>covered = checked at least once</strong>, never depth.</p>
+      <h3>Method (5 steps)</h3>
+      <ol><li><strong>Pick one archetype</strong> — concrete contract shape (not &quot;DeFi in general&quot;).</li><li><strong>List 6–10 invariants</strong> — checkable statements an auditor would ask.</li><li><strong>Tag each to one category</strong> — use <strong>Not this</strong> boundaries.</li><li><strong>Flag failures:</strong> GAP · FORCED DOUBLE-CLAIM · NAME/SCOPE SKEW.</li><li><strong>Record validations</strong> — boundaries that worked.</li></ol>
+      <h3>Fix order (lightest first)</h3>
+      <table class="doc-table"><thead><tr><th>Finding</th><th>Action</th></tr></thead><tbody><tr><td>GAP (disjoint concern)</td><td>Add category with Means / Not this</td></tr><tr><td>NAME/SCOPE SKEW</td><td>Broaden + rename existing category</td></tr><tr><td>FORCED DOUBLE-CLAIM</td><td>Clarify <strong>Not this</strong> on both categories</td></tr><tr><td>Coarse category hides distinct FMEA gaps</td><td>Split via <code>parentId</code> (FMEA signal required)</td></tr><tr><td>Clean tag</td><td>Record validation only</td></tr></tbody></table>
+      <p>After dry-run: edit taxonomy table above only unless renames force fixture sync. Run <code>npm run test:organs-o4</code> in <code>cell/indexer/</code>.</p>
+      <h2 id="quality">Quality — linter vocabulary</h2>
+      <p>Off-chain linter + Bob presentation layer. <strong>No contract, no aggregate score, no auto-invalidate</strong> on these labels alone — binary spec dispute stays Gate A + <code>challengeSpecInvalid</code>.</p>
+      <p>Pair with #scope (what categories are <em>claimed</em>) and <a href="docs-integration-bob-card.html#integrator-surface">Bob card § integrator-surface</a> (<code>specQualityLine</code> on the card).</p>
+      <h3>The gap this fills</h3>
+      <table class="doc-table"><thead><tr><th>Layer</th><th>What the cell already does</th></tr></thead><tbody><tr><td>Gate A</td><td>Registered spec tool PASS → <code>specPassDigest</code> on-chain</td></tr><tr><td>Binary dispute</td><td><code>challengeSpecInvalid</code> → arbiter → <strong>Invalidated</strong></td></tr><tr><td>Scope v1</td><td>Lists claimed categories — not vacuity, mis-tags, or marketing honesty</td></tr></tbody></table>
+      <p>Spec-quality instruments name the <strong>middle ground</strong>: machine-PASS specs that are vacuous, mis-tagged, thin, or oversold.</p>
+      <h3>v0 classes</h3>
+      <table class="doc-table"><thead><tr><th>Symbol</th><th>Plain meaning</th><th>Voids audit today?</th></tr></thead><tbody><tr><td><code>SPEC-INVALID</code></td><td>Tool FAIL or arbiter FAIL</td><td><strong>Yes</strong> (on-chain)</td></tr><tr><td><code>SPEC-INAUDITABLE</code></td><td>Cannot re-run to same digest</td><td><strong>Yes</strong> (blocked / challenge)</td></tr><tr><td><code>SPEC-VACUOUS</code></td><td>PASS but invariant rules nothing meaningful</td><td>No — warning</td></tr><tr><td><code>SPEC-MIS-SCOPED</code></td><td><code>scope[]</code> does not match what <code>statement</code> checks</td><td>No — warning</td></tr><tr><td><code>SPEC-THIN</code></td><td>Honest but narrow — large not-checked list</td><td>No — disclosure</td></tr><tr><td><code>SPEC-MARKETING-SKEW</code></td><td>Off-chain copy asserts checks JSON lacks</td><td>No — integrator alarm</td></tr><tr><td><code>SPEC-STALE</code></td><td>Live bytecode ≠ pinned artifact</td><td>No — new audit</td></tr></tbody></table>
+      <p><strong>SPEC-THIN</strong> is disclosure, not fraud. <strong>SPEC-VACUOUS</strong>, <strong>SPEC-MIS-SCOPED</strong>, <strong>SPEC-MARKETING-SKEW</strong> are integrity problems.</p>
+      <h3>O4 modules</h3>
+      <table class="doc-table"><thead><tr><th>Module</th><th>Meaning</th><th>Test</th></tr></thead><tbody><tr><td><code>validateSpecQuality.mjs</code></td><td>Core linter → <code>{ findings[] }</code></td><td><code>npm run test:spec-quality</code></td></tr><tr><td><code>deriveBobSpecQuality.mjs</code></td><td>Bob fields: <code>specQualityLine</code>, <code>specQualityStatus</code>, <code>specQualityItems[]</code></td><td><code>npm run test:bob-spec-quality</code></td></tr><tr><td><code>deriveSpecQualityCorroboration.mjs</code></td><td>Cross-check findings vs closed-window facts</td><td><code>npm run test:spec-quality-correlation</code></td></tr><tr><td><code>deriveSpecQualityFalseNegative.mjs</code></td><td>Fleet/maintainer FALSE_NEGATIVE notice (not on Bob card)</td><td><code>npm run test:spec-quality-false-negative</code></td></tr><tr><td><code>fmeaScopeBridgeV0.mjs</code></td><td>Claims/exploits → <code>implicatedScopeSymbols</code></td><td><code>npm run test:fmea-scope-bridge</code></td></tr></tbody></table>
+      <p>CLI linter: <code>node indexer/validateSpecQuality.mjs path/to/spec.json</code></p>
+      <h3>Fixtures</h3>
+      <table class="doc-table"><thead><tr><th>File</th><th>Role</th></tr></thead><tbody><tr><td><code>fixtures/spec-reference-v0.json</code></td><td>Good spec — linter should stay clean</td></tr><tr><td><code>fixtures/spec-antipatterns-v0.json</code></td><td>One example per antipattern class (<code>_specQualityClass</code>)</td></tr></tbody></table>
+      <h3>Bob card behavior</h3>
+      <p>When <code>specInvariants</code> are present, <code>deriveBobCard</code> attaches spec-quality copy via <code>deriveBobSpecQuality</code>. <strong>Does not change</strong> <code>outcome</code>, <code>action</code>, or <code>confidence</code> — facts layer only.</p>
+      <p>Integrator warnings for missing scope (<code>SCOPE_MANIFEST_UNAVAILABLE</code>, <code>SCOPE_UNKNOWN_SYMBOL</code>) are separate from spec-quality findings.</p>
+      <h3>Outcome correlation</h3>
+      <p><code>deriveSpecQualityCorroboration</code> compares linter findings (<strong>M</strong>) to deterministic audit outcomes (<strong>A</strong>) after the window closes — validates the instrument, does not re-judge the audit.</p>
+      <p><code>deriveSpecQualityFalseNegative</code> fires when the linter was integrity-clean but a falsifying fact appears (spec invalidated, pain in <strong>covered</strong> scope, or manual maintainer filing). <strong>Maintainer/fleet only</strong> — not investor-facing card copy.</p>
+      <p>Fleet JSONL append/report (<code>specQualityFleetLog.mjs</code>) is <strong>O7</strong> — see #fleet.</p>
+      <h3>Full O4 test bundle</h3>
+      <pre class="mono doc-pre">cd cell &amp;&amp; npm run test:organs-o4</pre>
+      <p>Cathedral oracle: same module names under <code>testnet/indexer/</code>.</p>
+      <h2 id="fleet">Fleet — outcome correlation log</h2>
+      <p>Fleet-scale spec scoring — advisory, does not gate settlement.</p>
+      <p>Append-only JSONL fleet log for <strong>outcome correlation</strong>: one closed audit → one row. Validates <code>validateSpecQuality</code> heuristics (<strong>M</strong>) against deterministic audit outcomes (<strong>A</strong>). Maintainer / fleet view — <strong>not</strong> investor Bob card fields.</p>
+      <p>Pair with #quality · #scope · <a href="docs-flows-gate-a.html">The door (Gate A)</a> · <a href="docs-flows-spec-arbiter.html">Spec arbiter</a>.</p>
+      <h3>Modules (<code>cell/indexer/</code>)</h3>
+      <table class="doc-table"><thead><tr><th>Module</th><th>Meaning</th></tr></thead><tbody><tr><td><code>specQualityFleetRecord.mjs</code></td><td>Snapshot → fleet row (also used by O4 false-negative test — <strong>one module</strong>)</td></tr><tr><td><code>specQualityFleetLog.mjs</code></td><td>JSONL append / report CLI</td></tr></tbody></table>
+      <p><strong>Deps (O4/O1):</strong> <code>validateSpecQuality</code>, <code>deriveSpecQualityCorroboration</code>, <code>deriveSpecQualityFalseNegative</code>, <code>deriveScopeFromSpec</code>, <code>fmeaScopeBridgeV0</code>, <code>danIdV0</code> (FMEA-SCOPE ids).</p>
+      <h3>When to run</h3>
+      <ul><li>After <strong>≥10</strong> production or testnet audits with <strong>closed windows</strong>.</li><li>Before changing linter regex thresholds or adding a <code>SPEC-*</code> class.</li><li><strong>Not</strong> on a single audit to auto-tune rules (Goodhart guard — hold linter version fixed across periods).</li></ul>
+      <h3>Per-audit record</h3>
+      <p>For each <code>auditId</code> after window closes:</p>
+      <table class="doc-table"><thead><tr><th>Field</th><th>Source</th></tr></thead><tbody><tr><td><code>specHash</code></td><td>on-chain</td></tr><tr><td><code>findings[]</code></td><td><code>validateSpecQuality(spec)</code></td></tr><tr><td><code>notCheckedSymbols[]</code></td><td><code>deriveScopeFromSpec</code></td></tr><tr><td><code>windowQuiet</code> / <code>windowOpen</code> / <code>specInvalidated</code></td><td>audit outcome flags</td></tr><tr><td><code>implicatedScopeSymbols[]</code></td><td>FMEA bridge from <code>claimEvents</code> / <code>exploitEvents</code></td></tr><tr><td><code>corroboration[]</code></td><td><code>deriveSpecQualityCorroboration(findings, auditOutcome)</code></td></tr><tr><td><code>falseNegativeNotice</code></td><td><code>deriveSpecQualityFalseNegative</code> when integrity-clean + falsifying fact</td></tr><tr><td><code>summary</code></td><td>counts, <code>verdictByClass</code>, <code>thinOnly</code>, <code>falseNegative</code></td></tr></tbody></table>
+      <p>Store as JSONL: <strong>`fixtures/spec-quality-correlation-log-v0.jsonl`</strong> (seed) + production rows. One line per closed audit.</p>
+      <p><strong>Snapshot example:</strong> <code>fixtures/spec-quality-snapshot-example.json</code></p>
+      <h3>CLI</h3>
+      <pre class="mono doc-pre">cd cell
+npm run spec-quality:fleet-append -- fixtures/spec-quality-snapshot-example.json
+npm run spec-quality:fleet-report
+node indexer/specQualityFleetLog.mjs append fixtures/spec-quality-snapshot-example.json [--log path]
+node indexer/specQualityFleetLog.mjs report [--log path]</pre>
+      <p><code>append</code> dedupes by <code>auditId</code> (replace existing row).</p>
+      <h3>FMEA bridge on fleet rows</h3>
+      <p>Claims/exploits carry <code>vulnerabilityClassId</code>. Fleet rows need v0 scope symbols:</p>
+      <pre class="mono doc-pre">metadataHash = danId(&quot;FMEA-SCOPE&quot;, SCOPE_SYMBOL)  →  DAN:FMEA-SCOPE:v0:{SYMBOL}</pre>
+      <table class="doc-table"><thead><tr><th>Snapshot field</th><th>Role</th></tr></thead><tbody><tr><td><code>claimEvents[]</code> / <code>exploitEvents[]</code></td><td><code>{ vulnerabilityClassId, metadataHash? }</code></td></tr><tr><td><code>vulnerabilityClassRegistry</code></td><td><code>classId → { metadataHash, scopeSymbols? }</code></td></tr><tr><td><code>vulnerabilityClassScopeMap</code></td><td>Manual <code>classId → symbol</code> fallback</td></tr><tr><td><code>implicatedScopeDerivation</code></td><td>Output trace (<code>fromFmea</code>, <code>unmappedClassIds</code>)</td></tr></tbody></table>
+      <p><strong>FALSE_NEGATIVE</strong> on fleet rows only — never on default investor Bob cards.</p>
+      <h3>Fleet questions</h3>
+      <table class="doc-table"><thead><tr><th>Question</th><th>Healthy signal</th><th>If unhealthy</th></tr></thead><tbody><tr><td>MIS-SCOPED → CORROBORATED</td><td>High when claims hit mis-tagged classes</td><td>Keep / tighten patterns</td></tr><tr><td>MIS-SCOPED → FALSIFIED</td><td>High on reference-like specs</td><td>Widen patterns (proposal)</td></tr><tr><td>THIN → QUIET</td><td>Honest narrow scope disclosed</td><td>Keep THIN as non-FAIL</td></tr><tr><td>THIN → CORROBORATED (notChecked pain)</td><td>Thin left real gap</td><td>Scope UX, not slash</td></tr><tr><td>VACUOUS → CORROBORATED</td><td>Tracks spec invalidations</td><td>Add vacuous patterns if misses</td></tr><tr><td>FALSE_NEGATIVE rising</td><td>Linter blind spots in <strong>covered</strong> categories</td><td>Proposal → apply new rule</td></tr></tbody></table>
+      <p><strong>No aggregate score.</strong> Report counts and example <code>auditId</code>s only.</p>
+      <h3>Decision rules</h3>
+      <table class="doc-table"><thead><tr><th>Observation</th><th>Do</th><th>Don't</th></tr></thead><tbody><tr><td>Class never CORROBORATED in 20+ audits</td><td>Deprecate rule via proposal</td><td>Auto-delete without apply</td></tr><tr><td>Class &gt;50% FALSIFIED</td><td>Adjust <code>validateSpecQuality.mjs</code> keywords</td><td>Change on-chain Gate A</td></tr><tr><td>Pain always in <code>notChecked</code>, no finding</td><td>THIN threshold / scope UX</td><td>Auto-invalidate</td></tr><tr><td>CORROBORATED + CLEAN outcome</td><td>Investigate implicated map</td><td>Treat as slash signal</td></tr></tbody></table>
+      <h3>Seed log (teaching only)</h3>
+      <p>Three-line seed in <code>fixtures/spec-quality-correlation-log-v0.jsonl</code> — expect non-zero integrity % and thin-only %. Replace with real closed audits before drawing trends.</p>
+      <h3>Tests</h3>
+      <pre class="mono doc-pre">cd cell &amp;&amp; npm run test:spec-quality-fleet
+cd cell &amp;&amp; npm run test:organs-o7</pre>
+      
+      <footer class="doc-page-foot"><a href="docs-integration.html">← Integration</a> · <a href="docs-notebook.html">Notebook</a></footer>
+    </div>
+  </main>
+
+  <aside id="docRail" aria-label="You are here" hidden></aside>
+
+</div>
+<script src="motion.js?v=1"></script>
+<script src="your-links.js?v=5"></script>
+<script src="docs-rail.js?v=5"></script>
+</body>
+</html>

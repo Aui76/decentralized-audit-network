@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>!function(){try{var k="membrane_nav_session",s=sessionStorage.getItem(k);document.documentElement.classList.add(s?"nav-session":"cold-load");if(!s)sessionStorage.setItem(k,"1")}catch(e){}}();</script>
+<title>The positive block · The AUDIT Economy · Audit Cell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css?v=5">
+</head>
+<body class="page-prose">
+<div class="layout layout-docs">
+
+  <nav>
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink" href="quickstart.html">Quickstart</a>
+    <a class="navlink on" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+
+  <main>
+    <div class="inner">
+
+      <div class="doc-layer-row">
+        <a href="docs-economy.html" class="doc-layer doc-layer-spec">The AUDIT Economy</a>
+        <span class="doc-layer doc-layer-spec">Spec · reader</span>
+      </div>
+      <h1>The positive block</h1>
+      <p class="doc-q">When<strong> does fresh mint happen for an auditor — and </strong>what number** is authoritative after confirm?</p>
+      
+      <div class="doc-bridge doc-bridge-story">
+        <p class="doc-bridge-lbl">Story context</p>
+        <ul>
+          <li><a href="docs-book-10.html">Book ch 10 · Issuance &amp; positive blocks</a></li>
+          <li><a href="docs-book-22.html">Book ch 22 · Reading the chain</a></li>
+        </ul>
+      </div>
+      <p>New AUDIT enters circulation when <strong>`IssuanceModule`</strong> pays a confirmed <strong>positive block</strong> — one audit that <strong>survived</strong> challenge window and <strong>`confirmAudit`</strong>.</p>
+      <p>Design rationale: <a href="docs-economy-adaptive-issuance-uncapped-supply-by-choice.html">Adaptive issuance — Uncapped Supply by choice</a>. Live formula: <a href="docs-economy-activity-led-reward.html">Activity-led reward</a>.</p>
+      <h2 id="the-positive-block-reward">What counts as a positive block</h2>
+      <table class="doc-table"><thead><tr><th>Property</th><th>Meaning</th></tr></thead><tbody><tr><td><strong>Survived</strong></td><td>Binary PASS + challenge window elapsed + <code>confirmAudit</code> executed</td></tr><tr><td><strong>Block size</strong></td><td><strong>One (`BS = 1`)</strong> — each successful audit is its own mint anchor</td></tr><tr><td><strong>Supply cap</strong></td><td><strong>Uncapped</strong> — no remaining-supply clamp on this line</td></tr></tbody></table>
+      <h2 id="locked-minter">Locked minter</h2>
+      <p>Genesis wires minter → <code>IssuanceModule</code>, then <strong>`lockMinter()`</strong> one-way. After lock:</p>
+      <table class="doc-table"><thead><tr><th>Allowed mint</th><th>Not allowed</th></tr></thead><tbody><tr><td>POS confirm, UPG adopt, CAN canonization</td><td>Admin discretionary inflation</td></tr><tr><td></td><td>Discoverer pay (reserves only)</td></tr></tbody></table>
+      <h2 id="preview-vs-actual-critical-for-integrators">Preview vs actual (critical for integrators)</h2>
+      <p>Auditor is <strong>not paid at verdict</strong>. Payment waits until window ends and confirm runs.</p>
+      <table class="doc-table"><thead><tr><th></th><th>Function</th><th>When</th><th>Use in UI</th></tr></thead><tbody><tr><td><strong>Preview</strong></td><td><code>nextPositiveBlockReward()</code></td><td>Before confirm</td><td>Label <strong>&quot;estimated&quot;</strong></td></tr><tr><td><strong>Actual</strong></td><td><code>auditBlockRewardMinted(id)</code></td><td>After confirm</td><td><strong>Historical truth</strong> for audit <code>id</code></td></tr></tbody></table>
+      <p>After confirm, <strong>always</strong> <code>auditBlockRewardMinted(id)</code> — never replace with a fresh preview (<a href="docs-integration-settlement-vs-signal.html">Settlement vs signal</a>).</p>
+      <p><strong>Previous:</strong> <a href="docs-economy-value-vs-signal.html">Value vs signal</a> · <strong>Next:</strong> <a href="docs-economy-activity-led-reward.html">Activity-led reward</a></p>
+      
+      <footer class="doc-page-foot"><a href="docs-economy.html">← The AUDIT Economy</a> · <a href="docs-notebook.html">Notebook</a></footer>
+    </div>
+  </main>
+
+  <aside id="docRail" aria-label="You are here" hidden></aside>
+
+</div>
+<script src="motion.js?v=1"></script>
+<script src="your-links.js?v=5"></script>
+<script src="docs-rail.js?v=5"></script>
+</body>
+</html>

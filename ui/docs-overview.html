@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Overview · Docs · Audit Cell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="site.css?v=5"></head>
+<body>
+<div class="layout layout-docs">
+
+  <nav>
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink" href="quickstart.html">Quickstart</a>
+    <a class="navlink on" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+
+  <main>
+    <div class="inner">
+      <p class="eyebrow"><a href="docs.html">Docs</a></p>
+      <p class="doc-fence" style="margin-bottom:16px">This page is a legacy summary. Docs are being rewritten as <a href="docs-book.html">The Book</a> + <a href="docs-notebook.html">The Notebook</a>. Start at <a href="docs.html">Docs home</a>.</p>
+      <h1>Overview</h1>
+      <p class="lede">What the Audit Cell is, and why it exists.</p>
+
+      <h2 id="problem">The problem</h2>
+      <p>A smart contract can't be patched. Once it's deployed, the code is permanent — if it's wrong, the loss is permanent too. So getting it right before deployment isn't a quality goal; it's survival.</p>
+      <p>Today the usual answer is the professional audit: a protocol pays a firm, waits weeks, and gets a report. That has three built-in flaws:</p>
+      <ul>
+        <li><b>The auditor is paid by the audited.</b> The incentive bends toward verdicts that don't create friction.</li>
+        <li><b>No stake after the report.</b> If a missed bug is exploited later, the fee isn't returned.</li>
+        <li><b>The result isn't reproducible.</b> "Audited by X" is an opinion you have to trust — not a result you can recompute.</li>
+      </ul>
+
+      <h2 id="idea">The idea</h2>
+      <p>The Audit Cell replaces the opinion with a result anyone can reproduce. A contract is checked by a named tool against a written spec. The verdict is binary — pass or fail — and anyone can run the same tool on the same code and get the same answer. No firm, no committee, no discretion.</p>
+
+      <h2 id="different">What makes it different</h2>
+      <ul>
+        <li><b>Binary.</b> Pass or fail. Nothing in between.</li>
+        <li><b>Reproducible.</b> Anyone can recompute the result from the live code.</li>
+        <li><b>Open.</b> Anyone who qualifies can take part. No gatekeeper.</li>
+        <li><b>Stake that lasts.</b> The auditor is paid only after the contract survives a challenge period — not at the moment of the verdict.</li>
+        <li><b>Self-funding.</b> The reward comes from the mechanism itself, not from the protocol's goodwill.</li>
+        <li><b>Accumulating.</b> Every audit adds to a shared, growing toolkit of checks.</li>
+      </ul>
+
+      <h2 id="outcomes">The two outcomes</h2>
+      <p><b>Pass.</b> The contract clears its check and survives the challenge period. The auditor is paid, and the toolkit grows.</p>
+      <p><b>A bug is found.</b> An independent auditor re-checks the original contract. If the bug is reproduced, the audit is marked failed and the finder is paid from reserves — never from new supply. If it can't be reproduced, the claim is rejected. Failures are recorded, never rewarded with fresh tokens.</p>
+
+      <h2 id="product">The real product</h2>
+      <p>The point isn't any single verdict. It's the toolkit — a growing, reusable set of machine-checkable checks that anyone can run. Individual audits are how it grows.</p>
+
+      <span class="badge"><span class="live"></span> Testnet · Base Sepolia — test funds only</span>
+    </div>
+  </main>
+
+  <aside id="docRail" aria-label="You are here" hidden></aside>
+
+</div>
+<script src="your-links.js?v=5"></script>
+<script src="docs-rail.js?v=5"></script>
+<script src="motion.js?v=1"></script>
+</body>
+</html>

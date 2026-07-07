@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>!function(){try{var k="membrane_nav_session",s=sessionStorage.getItem(k);document.documentElement.classList.add(s?"nav-session":"cold-load");if(!s)sessionStorage.setItem(k,"1")}catch(e){}}();</script>
+<title>Bob card · Integration · Audit Cell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css?v=5">
+</head>
+<body class="page-prose">
+<div class="layout layout-docs">
+
+  <nav>
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink" href="quickstart.html">Quickstart</a>
+    <a class="navlink on" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+
+  <main>
+    <div class="inner">
+
+      <div class="doc-layer-row">
+        <a href="docs-integration.html" class="doc-layer doc-layer-spec">Integration</a>
+        <span class="doc-layer doc-layer-spec">Spec · reader</span>
+      </div>
+      <h1>Bob card</h1>
+      <p class="doc-q">What JSON does <code>deriveBobCard</code> emit** — and which inputs are production MUSTs?</p>
+      
+      <div class="doc-bridge doc-bridge-story">
+        <p class="doc-bridge-lbl">Story context</p>
+        <ul>
+          <li><a href="docs-book-22.html">Book ch 22 · Reading the chain</a></li>
+        </ul>
+      </div>
+      <p>Presentation layer: turn <strong>on-chain facts + integrator inputs</strong> into a card humans can read. The cell emits state and events; <strong>`cell/indexer/deriveBobCard.mjs`</strong> composes hints and outcomes off-chain.</p>
+      <h2 id="pipeline">Pipeline</h2>
+      <pre class="mono doc-pre">Cell / network facts + events
+        ↓
+Hint tools (PASS | FAIL each)     ← manipulation / assurance axes (HINT_IDS)
+        ↓
+Composer (e.g. **defended-spec-on-wash-line** / `P5d-P2G`)           ← optional multi-hint signals
+        ↓
+Bob card (outcome · shape · action · maturity · phases · flow)
+        ↓
+Optional attachments              ← scope, spec-quality, contagion (helper modules)</pre>
+      <p>Each hint tool answers one narrow question. <strong>PASS</strong> or <strong>FAIL</strong> only — not “audit is safe.” Composers combine hints; <strong>`deriveBobCard(input)`</strong> returns the card JSON integrators render.</p>
+      <h2 id="core-exports-derivebobcardmjs">Core exports (<code>deriveBobCard.mjs</code>)</h2>
+      <table class="doc-table"><thead><tr><th>Export</th><th>Meaning</th></tr></thead><tbody><tr><td><code>deriveBobCard(input)</code></td><td>Full card from audit-line input object</td></tr><tr><td><code>AuditState</code>, <code>GapState</code></td><td>Numeric enums aligned with cell/cathedral</td></tr><tr><td><code>HINT_IDS</code>, <code>COMPOSED_HINT_IDS</code></td><td>Registered hint tool ids</td></tr><tr><td><code>deriveTrustScores</code>, <code>deriveMaturityBand</code>, <code>deriveParticipantPhases</code></td><td>Trust / maturity / phase helpers</td></tr><tr><td><code>derivePortfolioContagion</code>, <code>applyContagionToBobCard</code></td><td>Portfolio fuse (needs <code>portfolioContext</code>) — see <a href="docs-health-portfolio-contagion.html">Portfolio contagion</a></td></tr><tr><td><code>attachScopeToBobCard</code>, <code>attachSpecQualityToBobCard</code></td><td>Scope + spec-quality overlays</td></tr></tbody></table>
+      <p>Phase animation fields on every card: <strong>`derivePhaseAnimation.mjs`</strong> (O3) — see <a href="docs-participants-participant-phases.html">Participant phases (O3)</a>.</p>
+      <h2 id="input-contract-production">Input contract (production)</h2>
+      <p>Integrators must supply enough context or accept <code>integratorWarnings[]</code>:</p>
+      <table class="doc-table"><thead><tr><th>Input</th><th>Meaning if missing</th></tr></thead><tbody><tr><td><code>portfolioContext</code></td><td>Contagion fuse / R₀ not applied (<code>MISSING_PORTFOLIO_CONTEXT</code>)</td></tr><tr><td><code>bounty</code> + <code>activeBounties</code> or <code>bountyDistribution</code></td><td><code>flow.bountyBand</code> defaults to <code>low</code></td></tr><tr><td><code>specInvariants</code></td><td>Scope manifest unavailable</td></tr><tr><td>On-chain dyad stats for <strong>wash-triangle</strong></td><td>Repeat-dyad hint may false-PASS</td></tr></tbody></table>
+      <p>Hint registry: <code>../../meta/hint-registry.md</code>.</p>
+      <h2 id="cluster-map">Cluster map</h2>
+      <table class="doc-table"><thead><tr><th>Doc</th><th>Meaning</th></tr></thead><tbody><tr><td>This chapter</td><td>Card spec · hints · decision trees · fixtures</td></tr><tr><td><a href="docs-integration-integrator-hub.html">Integrator hub</a></td><td>Integrator quickstarts</td></tr><tr><td><a href="docs-integration-protocol-ui-spec.html">Protocol UI spec</a></td><td>Membrane UI MUSTs</td></tr><tr><td><a href="docs-participants-participant-phases.html">Participant phases (O3)</a></td><td>Phase tags (O3)</td></tr><tr><td><a href="docs-health-portfolio-contagion.html">Portfolio contagion</a></td><td>Portfolio fuse</td></tr><tr><td><a href="docs-integration-spec-scope-and-quality.html">Scope, spec-quality &amp; fleet</a></td><td>Scope · quality · fleet</td></tr><tr><td>hint registry</td><td>Hint plain names ↔ code ids</td></tr></tbody></table>
+      <p>Reference implementation: <code>cell/indexer/deriveBobCard.mjs</code>. Tests: <code>cd cell &amp;&amp; npm run test:bob-fixtures</code>.</p>
+      <p>On-chain escalation: <a href="docs-flows-spec-arbiter.html">Spec arbiter</a> · <a href="docs-flows-integrity-review.html">Integrity review</a> · <a href="docs-flows-mutex.html#triangle-alarm">Audit mutex § triangle alarm</a>.</p>
+      <h2 id="signal-vs-settlement-card-discipline">Signal vs settlement (card discipline)</h2>
+      <table class="doc-table"><thead><tr><th>Card field</th><th>Layer</th><th>Meaning</th></tr></thead><tbody><tr><td><code>outcome</code> · <code>action</code> · <code>confidence</code></td><td>Signal</td><td>Suggestive — not payout</td></tr><tr><td><code>integrityReviewSuggested</code></td><td>Signal</td><td>Prompt only — opener calls <code>openIntegrityReview</code></td></tr><tr><td><code>flow.bountyBand</code></td><td>Signal</td><td>Cohort rank — not mint input</td></tr><tr><td>Locked bounty · confirm mint</td><td>Settlement</td><td>On-chain only — <a href="docs-economy-value-vs-signal.html">Economy book</a></td></tr></tbody></table>
+      <h2 id="oracle">Oracle</h2>
+      <table class="doc-table"><thead><tr><th>Layer</th><th>Check</th></tr></thead><tbody><tr><td>Off-chain golden</td><td><code>cd cell &amp;&amp; npm run test:bob-fixtures</code></td></tr><tr><td>On-chain snapshots</td><td>Cathedral <code>testnet/test/BobIndexerFixtures.t.sol</code> (monolith O1/S1 fixtures — cross-check from <code>testnet/</code>)</td></tr></tbody></table>
+      <p>O1 wallet digests: <a href="docs-integration-wallets-and-verification.html">Wallets, re-run &amp; verifier seam</a>.</p>
+      <h2 id="integrator-surface">Integrator surface</h2>
+      <p>Fields integrators render on investor-facing cards (<code>InBlock</code>, <code>AwaitingWindow</code>, <code>Audited</code>):</p>
+      <table class="doc-table"><thead><tr><th>Field group</th><th>Keys</th><th>Notes</th></tr></thead><tbody><tr><td><strong>Verdict read</strong></td><td><code>outcome</code>, <code>shape</code>, <code>action</code>, <code>confidence</code>, <code>patterns[]</code>, <code>implication</code></td><td><code>action</code> is suggestive — not settlement</td></tr><tr><td><strong>Hints</strong></td><td><code>hints{}</code>, <code>composed{}</code></td><td>Per-hint PASS/FAIL; composers e.g. <code>P5d-P2G</code></td></tr><tr><td><strong>Flow / maturity</strong></td><td><code>flow{}</code>, <code>maturityBand</code>, <code>phases{}</code>, <code>sequenceHints</code>, <code>phaseHistory</code>, <code>phaseVelocity</code></td><td>Bounty band needs distribution input</td></tr><tr><td><strong>Escalation</strong></td><td><code>integrityReviewSuggested</code>, <code>reviewTier</code>, <code>integrityReviewHint?</code></td><td>Top-quartile bounty gates integrity suggest</td></tr><tr><td><strong>Scope overlay</strong></td><td><code>scopeStatus</code>, <code>scopeCovered[]</code>, <code>scopeNotChecked[]</code>, <code>scopeRoot</code></td><td>From <code>specInvariants</code> — <a href="docs-integration-spec-scope-and-quality.html#scope">Scope, spec-quality &amp; fleet § scope</a></td></tr><tr><td><strong>Spec-quality overlay</strong></td><td><code>specQualityLine</code>, <code>specQualityStatus</code>, <code>specQualityItems[]</code></td><td>Does <strong>not</strong> change outcome/action — <a href="docs-integration-spec-scope-and-quality.html#quality">Scope, spec-quality &amp; fleet § quality</a></td></tr><tr><td><strong>Contagion</strong></td><td><code>portfolioFuseActive?</code>, <code>portfolioFuseFraming?</code></td><td>After <code>applyContagionToBobCard</code></td></tr><tr><td><strong>Witness exploit</strong></td><td><code>exploitResolution?</code></td><td>F-83 Part A path — auditor not auto-failed</td></tr><tr><td><strong>Warnings</strong></td><td><code>integratorWarnings[]</code></td><td><code>{ code, message }</code> when production inputs missing</td></tr></tbody></table>
+      <h3>Production MUST (investor cards)</h3>
+      <table class="doc-table"><thead><tr><th>Input</th><th>Emitted warning if missing</th></tr></thead><tbody><tr><td><code>portfolioContext</code></td><td><code>MISSING_PORTFOLIO_CONTEXT</code></td></tr><tr><td><code>bountyDistribution</code> or <code>activeBounties</code></td><td><code>MISSING_BOUNTY_DISTRIBUTION</code></td></tr></tbody></table>
+      <p>Minimum <code>portfolioContext</code> shape — full rebuild rules in <a href="docs-integration-protocol-ui-spec.html">Protocol UI spec</a> and <a href="docs-health-appendix-a-organ-hooks.html">Appendix A — Organ hooks</a>:</p>
+      <pre class="mono doc-pre">{
+  &quot;audits&quot;: [{ &quot;id&quot;: 3, &quot;state&quot;: 5, &quot;specToolId&quot;: &quot;0x…&quot;, &quot;vulnerabilityClassId&quot;: &quot;0x…&quot; }],
+  &quot;exploits&quot;: [{ &quot;auditId&quot;: 1, &quot;specToolId&quot;: &quot;0x…&quot;, &quot;vulnerabilityClassId&quot;: &quot;0x…&quot; }],
+  &quot;toolKnownGaps&quot;: { &quot;0xToolId&quot;: [&quot;0xClassId&quot;] }
+}</pre>
+      <p>Show <code>integratorWarnings[]</code> as an amber “incomplete indexer” strip — never hide missing fuse inputs behind a CLEAN+INVEST card.</p>
+      <h2 id="decision-trees">Decision trees</h2>
+      <p>Normative mapping implemented in <code>deriveBobCard.mjs</code>. Golden rows lock these paths — see #fixtures.</p>
+      <h3>Outcome (lifecycle base)</h3>
+      <table class="doc-table"><thead><tr><th>Condition</th><th>Outcome</th><th>Shape</th></tr></thead><tbody><tr><td><code>Invalidated</code></td><td>VOID</td><td>ALARM</td></tr><tr><td><code>Exploited</code> or claim resolved exploited</td><td>BROKEN</td><td>HUNT</td></tr><tr><td><code>specChallengeActive</code></td><td>OPEN</td><td>ALARM</td></tr><tr><td>In progress (<code>Submitted</code> … <code>AwaitingWindow</code>, <code>Claimed</code>)</td><td>OPEN</td><td>LINE / HUNT</td></tr><tr><td><code>InBlock</code> + attested + all <code>bobChecks</code> verified</td><td>CLEAN</td><td>LINE</td></tr><tr><td><code>InBlock</code> else</td><td>WEAK</td><td>LINE</td></tr><tr><td>Gap record (<code>kind: gap</code>)</td><td>OPEN / CLEAN / VOID / BROKEN</td><td>JURY</td></tr></tbody></table>
+      <h3>Hint downgrade (CLEAN only)</h3>
+      <p>Any FAIL on: <code>poison-tool</code>, <code>lazy-spec</code>, <code>trust-dissolve</code>, <code>P2G</code>, <code>code-unverified</code>, <code>spec-unverified</code>, <code>P5d</code> → downgrade <strong>CLEAN → WEAK</strong>.</p>
+      <h3>Action</h3>
+      <ol><li><strong>`P5d-P2G` FAIL</strong> → <code>WALK</code> (with <code>integrityReviewSuggested</code> when bounty in top quartile).</li><li><strong>`P2G` FAIL</strong> → <code>P2G.suggestedAction</code> (often <code>WALK</code> on exploit tail).</li><li><strong>Else `deriveAction(outcome, confidence)`:</strong></li></ol>
+      <table class="doc-table"><thead><tr><th>Outcome</th><th>Confidence</th><th>Action</th></tr></thead><tbody><tr><td>VOID, BROKEN</td><td>any</td><td>WALK</td></tr><tr><td>OPEN, WEAK</td><td>any</td><td>WAIT</td></tr><tr><td>CLEAN</td><td>HIGH</td><td>INVEST</td></tr><tr><td>CLEAN</td><td>MED/LOW</td><td>WAIT</td></tr></tbody></table>
+      <h3>Contagion fuse (portfolio Phase B)</h3>
+      <p>When outbreak exposure hits the audit:</p>
+      <ul><li>CLEAN → WEAK</li><li>INVEST → WAIT</li><li>Confidence capped to LOW (fuse) or MED (advisory)</li><li>Pattern tag <code>portfolio-fuse</code> appended</li></ul>
+      <h3>Confidence (sketch)</h3>
+      <ul><li>Base from <code>bobChecks</code>: all VERIFIED → HIGH on CLEAN; ONCHAIN-only slots → MED; WEAK → LOW.</li><li>Trust scores (<code>specToolTrust</code>, <code>auditorDyadTrust</code>, <code>protocolLineTrust</code>) adjust up/down.</li><li>Single-protocol CLEAN capped at MED (<code>O1-self-tool</code> path).</li><li>Alarm shape or P5d/P2G/trust-dissolve hints → LOW cap.</li></ul>
+      <h2 id="fixtures">Golden fixtures</h2>
+      <p>Normative regression targets for <strong>`cell/indexer/deriveBobCard.mjs`</strong>. Each row is a chain snapshot (or synthetic input) → expected card fields.</p>
+      <p>Fixtures are <strong>indexer QA</strong>, not on-chain truth. Source of truth: <code>indexer/deriveBobCard.fixtures.test.mjs</code>.</p>
+      <pre class="mono doc-pre">cd cell &amp;&amp; npm run test:bob-fixtures</pre>
+      <p>Cathedral cross-check: <code>testnet/test/BobIndexerFixtures.t.sol</code> (run from <code>testnet/</code> — monolith oracle).</p>
+      <h3>Integrator input contract</h3>
+      <p>Production indexers <strong>must</strong> pass the inputs below on every investor-facing <strong>InBlock</strong> card. Golden rows may omit them to test minimal paths — do <strong>not</strong> copy omissions into production.</p>
+      <table class="doc-table"><thead><tr><th>Input</th><th>Production</th><th>Golden fixtures</th></tr></thead><tbody><tr><td><code>portfolioContext</code></td><td>Required</td><td>Omitted on most rows; fuse path → <code>npm run test:bob-contagion</code></td></tr><tr><td><code>bounty</code> + <code>bountyDistribution</code></td><td>Required</td><td>Required on <strong>O1-defended-p2g</strong> / <strong>O1-defended-p2g-low-bounty</strong></td></tr><tr><td><code>specInvariants</code></td><td>Required for scope UI</td><td><strong>O1-scope</strong>, <strong>O1-spec-quality-concern</strong></td></tr></tbody></table>
+      <p><strong>CI lint:</strong> fixtures expecting <code>integrityReviewSuggested: true</code> or <code>flow.bountyBand: top_quartile</code> must include bounty + distribution. Missing production inputs on <strong>InBlock</strong> cards emit <code>integratorWarnings[]</code>.</p>
+      <h3>Summary table (cell golden rows)</h3>
+      <table class="doc-table"><thead><tr><th>ID</th><th>Record</th><th>Outcome</th><th>Shape</th><th>Confidence</th><th>Action</th><th>Notes</th></tr></thead><tbody><tr><td><strong>O1</strong></td><td>audit</td><td>CLEAN</td><td>LINE</td><td>HIGH</td><td>INVEST</td><td>Happy path; <code>L0</code></td></tr><tr><td><strong>O1-scope</strong></td><td>audit</td><td>CLEAN</td><td>LINE</td><td>HIGH</td><td>INVEST</td><td>+ scope manifest from <code>fixtures/spec-reference-v0.json</code></td></tr><tr><td><strong>O1-spec-quality-concern</strong></td><td>audit</td><td>CLEAN</td><td>LINE</td><td>HIGH</td><td>INVEST</td><td>+ spec-quality line (no outcome change)</td></tr><tr><td><strong>O1-prime</strong></td><td>audit</td><td>WEAK</td><td>LINE</td><td>LOW</td><td>WAIT</td><td>No <code>bobChecks</code>; ONCHAIN-only</td></tr><tr><td><strong>O1-self-tool</strong></td><td>audit</td><td>CLEAN</td><td>LINE</td><td>MED</td><td>WAIT</td><td><code>distinctProtocols: 1</code></td></tr><tr><td><strong>O1-poison-tool</strong></td><td>audit</td><td>WEAK</td><td>LINE</td><td>LOW</td><td>WAIT</td><td><code>failedUses &gt; 0</code></td></tr><tr><td><strong>O1-defended</strong></td><td>audit</td><td>WEAK</td><td>LINE</td><td>LOW</td><td>WAIT</td><td>Defend ≠ spec verified</td></tr><tr><td><strong>O1-p2g-self</strong></td><td>audit</td><td>WEAK</td><td>LINE</td><td>LOW</td><td>WAIT</td><td>wash-triangle + single-protocol-tool</td></tr><tr><td><strong>O1-p2g-cold-start</strong></td><td>audit</td><td>WEAK</td><td>LINE</td><td>LOW</td><td>WAIT</td><td>cold maturity</td></tr><tr><td><strong>O1-p2g-exploit-tail</strong></td><td>audit</td><td>WEAK</td><td>LINE</td><td>LOW</td><td>WALK</td><td>hot + exploit tail</td></tr><tr><td><strong>O1-defended-p2g</strong></td><td>audit</td><td>WEAK</td><td>LINE</td><td>LOW</td><td>WALK</td><td>defended-spec-on-wash-line + integrityReviewSuggested</td></tr><tr><td><strong>O1-defended-p2g-low-bounty</strong></td><td>audit</td><td>WEAK</td><td>LINE</td><td>LOW</td><td>WALK</td><td>defended-spec-on-wash-line without integrity suggest</td></tr><tr><td><strong>S1</strong></td><td>gap</td><td>OPEN</td><td>JURY</td><td>MED</td><td>WAIT</td><td>Probation + jury open</td></tr></tbody></table>
+      <p>Phase expectations: <a href="docs-participants-participant-phases.html">Participant phases (O3)</a>.</p>
+      <p>Action rules: #decision-trees.</p>
+      <h3>O1 — ordinary CLEAN</h3>
+      <p><strong>Input sketch:</strong> <code>state: InBlock</code>, <code>specAuditorAttested: true</code>, all <code>bobChecks</code> <strong>VERIFIED</strong>, multi-protocol tool trust.</p>
+      <p><strong>Expected:</strong> <code>outcome: CLEAN</code>, <code>action: INVEST</code>, <code>patterns: [&quot;L0&quot;]</code>, <code>maturityBand: warm</code>.</p>
+      <p><strong>O1-prime variant:</strong> omit <code>bobChecks</code> → <strong>WEAK</strong> / <strong>WAIT</strong> / <code>H-pass</code> — indexers must not emit CLEAN+HIGH on ONCHAIN-only code slot.</p>
+      <h3>O1-scope — scope manifest</h3>
+      <p><strong>Spec:</strong> <code>fixtures/spec-reference-v0.json</code> via <code>specReferenceFixture.mjs</code>.</p>
+      <p><strong>Expected scope:</strong> <code>scopeStatus: has-categories</code>, stable <code>scopeRoot</code>, covered/not-checked counts locked in <code>deriveScope.test.mjs</code>. No coverage score.</p>
+      <h3>O1-defended-p2g — defended spec on wash line</h3>
+      <p><strong>Input:</strong> defended spec challenge + wash-triangle stats + bounty in top quartile.</p>
+      <p><strong>Expected:</strong> <code>action: WALK</code>, <code>integrityReviewSuggested: true</code>, composed hint <strong>`P5d-P2G`</strong> (defended-spec-on-wash-line). Low-bounty variant drops integrity suggest only.</p>
+      <h3>S1 — structural OPEN + JURY</h3>
+      <p><strong>Input:</strong> gap in <strong>Probation</strong>, jury not adopted; patterns <code>S0-pending</code>, <code>SJ-open</code>.</p>
+      <p><strong>Expected:</strong> <code>outcome: OPEN</code>, <code>action: WAIT</code>, filer modifier <strong>INDEP-GAP</strong> in default test filer path.</p>
+      <h3>Adding fixtures</h3>
+      <p>Add a row only when:</p>
+      <ol><li>Outcome, shape, or mandatory alarm mapping changes, and</li><li>A reproducible snapshot exists (Foundry test in cathedral, or deterministic input object in cell).</li></ol>
+      <p>Do not add fixtures for UI copy-only tweaks.</p>
+      
+      <footer class="doc-page-foot"><a href="docs-integration.html">← Integration</a> · <a href="docs-notebook.html">Notebook</a></footer>
+    </div>
+  </main>
+
+  <aside id="docRail" aria-label="You are here" hidden></aside>
+
+</div>
+<script src="motion.js?v=1"></script>
+<script src="your-links.js?v=5"></script>
+<script src="docs-rail.js?v=5"></script>
+</body>
+</html>

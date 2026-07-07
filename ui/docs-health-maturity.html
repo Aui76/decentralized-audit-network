@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>!function(){try{var k="membrane_nav_session",s=sessionStorage.getItem(k);document.documentElement.classList.add(s?"nav-session":"cold-load");if(!s)sessionStorage.setItem(k,"1")}catch(e){}}();</script>
+<title>Maturity · Network Health · Audit Cell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css?v=5">
+</head>
+<body class="page-prose">
+<div class="layout layout-docs">
+
+  <nav>
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink" href="quickstart.html">Quickstart</a>
+    <a class="navlink on" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+
+  <main>
+    <div class="inner">
+
+      <div class="doc-layer-row">
+        <a href="docs-health.html" class="doc-layer doc-layer-spec">Network Health</a>
+        <span class="doc-layer doc-layer-spec">Spec · reader</span>
+      </div>
+      <h1>Maturity</h1>
+      <p class="doc-q">How far along** is an audit or participant — without that label becoming a payout gate?</p>
+      
+      <div class="doc-bridge doc-bridge-story">
+        <p class="doc-bridge-lbl">Story context</p>
+        <ul>
+          <li><a href="docs-book-16.html">Book ch 16 · Reputation signals</a></li>
+          <li><a href="docs-book-22.html">Book ch 22 · Reading the chain</a></li>
+        </ul>
+      </div>
+      <p>How far a subject has moved through its lifecycle. Derived off-chain by <code>derivePhaseAnimation</code> from cell events — advisory, never a gate.</p>
+      <h2 id="maturity">Bands and phases</h2>
+      <p>An audit and each participant carry a <strong>maturity band</strong> — coarse position from new to established. Detail lives in phases:</p>
+      <table class="doc-table"><thead><tr><th>Field</th><th>Meaning</th></tr></thead><tbody><tr><td><code>phases</code></td><td>Lifecycle phases the subject currently occupies</td></tr><tr><td><code>phaseHistory[]</code></td><td>Ordered record of phases passed through</td></tr><tr><td><code>phaseVelocity</code></td><td>How fast the subject moves between phases</td></tr><tr><td><code>sequenceHints</code></td><td>Expected next phases, given history</td></tr></tbody></table>
+      <p>Participant phases (protocol, auditor, tool) use the same pattern — <code>deriveProtocolPhase</code>, <code>deriveToolPhase</code>. Full role tables: <a href="docs-participants-participant-phases.html">Participant phases (O3)</a>.</p>
+      <h2 id="boundary-with-participant-phases-o3">Boundary with Participant phases (O3)</h2>
+      <table class="doc-table"><thead><tr><th>Layer</th><th>This chapter</th><th><a href="docs-participants-participant-phases.html">Participant phases (O3)</a></th></tr></thead><tbody><tr><td><strong>Framing</strong></td><td>Health doctrine — bands vs settlement</td><td>Integrator spec — tag values, animation, tests</td></tr><tr><td><strong>Fields</strong></td><td><code>maturityBand</code>, <code>phaseHistory</code>, <code>phaseVelocity</code></td><td><code>phases.*</code>, <code>sequenceHints</code>, fixture commands</td></tr><tr><td><strong>Settlement</strong></td><td>Never gates pay</td><td>Never gates pay</td></tr></tbody></table>
+      <p>Same indexer output; different book owns <strong>how to wire</strong> vs <strong>why it stays advisory</strong>.</p>
+      <h2 id="what-it-is-for">What it is for</h2>
+      <p>Maturity makes &quot;how far along&quot; legible — a new auditor vs an established one, submission vs deep in the challenge window. It feeds the Bob card (<code>maturityBand</code>) and pairs with <a href="docs-health-thermodynamics-and-flow.html">Network flow</a> for the network's sense of motion.</p>
+      <p>It changes <strong>no verdict and no payout</strong>.</p>
+      <h2 id="contrast-maturity-vs-settlement">Contrast (maturity vs settlement)</h2>
+      <table class="doc-table"><thead><tr><th>Maturity says…</th><th>Settlement says…</th></tr></thead><tbody><tr><td>&quot;This auditor is early in their arc&quot;</td><td>&quot;This confirm minted a positive block&quot;</td></tr><tr><td>Bob card animation / band</td><td><code>confirmAudit</code>, escrow draws, discoverer pay</td></tr><tr><td>Replaceable organ output</td><td>Cell facts only</td></tr></tbody></table>
+      <p><strong>Previous:</strong> <a href="docs-health-facts-vs-health.html">Facts vs health</a> · <strong>Next:</strong> <a href="docs-health-thermodynamics-and-flow.html">Network flow</a></p>
+      
+      <footer class="doc-page-foot"><a href="docs-health.html">← Network Health</a> · <a href="docs-notebook.html">Notebook</a></footer>
+    </div>
+  </main>
+
+  <aside id="docRail" aria-label="You are here" hidden></aside>
+
+</div>
+<script src="motion.js?v=1"></script>
+<script src="your-links.js?v=5"></script>
+<script src="docs-rail.js?v=5"></script>
+</body>
+</html>

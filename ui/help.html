@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Help · Audit Cell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="site.css?v=5"></head>
+<body>
+<div class="layout layout-docs">
+
+  <nav>
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink" href="quickstart.html">Quickstart</a>
+    <a class="navlink" href="resources.html">Resources</a>
+    <a class="navlink on" href="help.html">Help</a>
+  </nav>
+
+  <main>
+    <div class="inner">
+      <p class="eyebrow">Help</p>
+      <h1>Help</h1>
+      <p class="lede">Questions, problems, or ideas? Leave a note — it helps shape what comes next.</p>
+
+      <div class="panel" style="margin-bottom:20px">
+        <h2>What is Audit Cell?</h2>
+        <p class="k" style="margin:0 0 12px">Ten longer answers on how the network works — reproduction vs trust, three gates, AUDIT, and what we do not claim. Not about one audit; for that use the explorer → Find your step.</p>
+        <p style="margin:0"><a class="link" href="network-qa.html">Open network Q&amp;A →</a></p>
+      </div>
+
+      <div class="panel">
+        <h2>Leave your feedback</h2>
+        <label for="fb">Your message</label>
+        <textarea id="fb" placeholder="What worked, what didn't, what you'd want next…"></textarea>
+        <div class="row">
+          <button id="send" disabled>Send feedback</button>
+          <span class="msg" id="msg"></span>
+        </div>
+      </div>
+
+      <p class="note">More ways to reach out — and more fields here — coming.</p>
+
+      <footer class="doc-page-foot">
+        <a href="network-qa.html">Network Q&amp;A</a> · <a href="resources.html">Resources</a>
+      </footer>
+    </div>
+  </main>
+
+  <aside>
+    <div class="lbl">On this page</div>
+    <a href="network-qa.html">Network Q&amp;A</a>
+    <a href="#">Leave your feedback</a>
+  </aside>
+
+</div>
+
+<script>
+  // Set this to where feedback should go.
+  const FEEDBACK_EMAIL = "akerve@gmail.com";
+  const fb = document.getElementById("fb");
+  const send = document.getElementById("send");
+  const msg = document.getElementById("msg");
+  fb.addEventListener("input", () => { send.disabled = fb.value.trim().length === 0; });
+  send.onclick = () => {
+    const body = encodeURIComponent(fb.value.trim());
+    const subject = encodeURIComponent("Audit Cell — feedback");
+    window.location.href = `mailto:${FEEDBACK_EMAIL}?subject=${subject}&body=${body}`;
+    msg.textContent = "Opening your email app…";
+  };
+</script>
+
+<script src="your-links.js?v=5"></script>
+<script src="membrane-rail.js?v=2"></script>
+<script src="motion.js?v=1"></script>
+</body>
+</html>

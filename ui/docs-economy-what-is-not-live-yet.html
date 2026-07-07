@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>!function(){try{var k="membrane_nav_session",s=sessionStorage.getItem(k);document.documentElement.classList.add(s?"nav-session":"cold-load");if(!s)sessionStorage.setItem(k,"1")}catch(e){}}();</script>
+<title>What is not live yet · The AUDIT Economy · Audit Cell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css?v=5">
+</head>
+<body class="page-prose">
+<div class="layout layout-docs">
+
+  <nav>
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink" href="quickstart.html">Quickstart</a>
+    <a class="navlink on" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+
+  <main>
+    <div class="inner">
+
+      <div class="doc-layer-row">
+        <a href="docs-economy.html" class="doc-layer doc-layer-spec">The AUDIT Economy</a>
+        <span class="doc-layer doc-layer-spec">Spec · reader</span>
+      </div>
+      <h1>What is not live yet</h1>
+      <p class="doc-q">Which <strong>economics are spec'd or proxied on testnet</strong> but <strong>must not</strong> be quoted as mainnet-faithful today?</p>
+      
+      <div class="doc-bridge doc-bridge-story">
+        <p class="doc-bridge-lbl">Story context</p>
+        <ul>
+          <li><a href="docs-book-20.html">Book ch 20 · What we defer</a></li>
+        </ul>
+      </div>
+      <p>Sign-off table: <a href="docs-flows-mainnet-gates.html#issuance-gates-issuancemodule">Mainnet gates I-0–I-6</a> · story: <a href="docs-book-20.html">Book ch  20</a>.</p>
+      <p><strong>Live on 84532 today:</strong> activity-led POS mint, dual EMA, manipulation discount, depression floor from escrow, green-light <strong>proxies</strong>, CAN/UPG paths — see Part II chapters.</p>
+      <h2 id="green-light-real-gates">Green-light real gates</h2>
+      <p>Fresh mint backstop when escrow cannot pay full depression floor. Live mechanism: <a href="docs-economy-network-states.html">Issuance network states</a>.</p>
+      <table class="doc-table"><thead><tr><th>#</th><th>Intent</th><th>Testnet proxy</th><th>Mainnet target</th></tr></thead><tbody><tr><td>1</td><td>Escrow depleted</td><td>Pre-draw escrow vs threshold</td><td>Optional post-draw re-read</td></tr><tr><td>2</td><td>Enough alive to recover</td><td><code>fastRatioBps &gt;= recoverabilityFactorBps</code></td><td>aliveRatio + baseline</td></tr><tr><td>3</td><td>Depression genuine</td><td><code>emaFast &gt; prevFast</code> at confirm</td><td>FLOW PASS rate</td></tr><tr><td>4</td><td>Floor not expired</td><td><code>floorDecayBps() &gt; 0</code></td><td>Same</td></tr></tbody></table>
+      <p>Label green-light as <strong>conditional backstop</strong> in investor copy.</p>
+      <h2 id="loyalty-premium">Loyalty premium</h2>
+      <p>Anti–bank-run for auditors who stay through depression. <strong>Not shipped.</strong></p>
+      <table class="doc-table"><thead><tr><th>Piece</th><th>Cell today</th><th>Target</th></tr></thead><tbody><tr><td><code>depressionParticipation</code> counter</td><td>No</td><td>Confirms while depression high</td></tr><tr><td>Recovery <code>emaSlow</code> weight 1.2×</td><td>No</td><td>Alive auditors in Recovery</td></tr><tr><td>Bob display</td><td>No</td><td>Advisory only</td></tr></tbody></table>
+      <p>Do <strong>not</strong> apply 1.2× to off-chain EMA replicas or show &quot;loyalty bonus&quot; from phase tags alone.</p>
+      <h2 id="superseded-mint-plans">Superseded mint plans</h2>
+      <p><strong>Built:</strong> <code>emaSlow × rate</code>, LP cap, uncapped supply.</p>
+      <p><strong>Retired — never build:</strong> <code>alphaBps × (S_max − minted)</code>, hybrid <code>curveAnchor + emaLine</code>, supply tail ceiling.</p>
+      <p>Do <strong>not</strong> model APY with retired formulas.</p>
+      <p><strong>Previous:</strong> <a href="docs-economy-equilibrium.html">Escrow equilibrium</a> · <strong>Next:</strong> <a href="docs-economy-mainnet-calibration.html">Mainnet calibration</a></p>
+      
+      <footer class="doc-page-foot"><a href="docs-economy.html">← The AUDIT Economy</a> · <a href="docs-notebook.html">Notebook</a></footer>
+    </div>
+  </main>
+
+  <aside id="docRail" aria-label="You are here" hidden></aside>
+
+</div>
+<script src="motion.js?v=1"></script>
+<script src="your-links.js?v=5"></script>
+<script src="docs-rail.js?v=5"></script>
+</body>
+</html>

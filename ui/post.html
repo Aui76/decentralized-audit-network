@@ -1,0 +1,419 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Post a bounty — membrane write organ (L2)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="site.css?v=5"></head>
+<body class="page-tool">
+<div class="layout layout-tool">
+  <nav class="side">
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink" href="quickstart.html">Quickstart</a>
+    <a class="navlink" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+  <main>
+<div class="wrap">
+  <h1>Post a bounty</h1>
+  <p class="sub">Membrane <b>write organ</b> (L2) · Base Sepolia · your wallet signs every transaction.</p>
+
+  <div class="card banner">
+    <b>Read this once.</b> This page builds transactions; <b>your wallet</b> sends them. Before you sign,
+    it shows the <b>exact decoded calldata</b> — compare it to what your wallet displays. The page holds no
+    keys and can move nothing on its own. Testnet only (chain 84532). Everything here is also doable from a
+    terminal with <span class="mono">cast</span> (shown at the bottom) — you never have to trust this page.
+  </div>
+
+  <!-- 1. WALLET -->
+  <div class="card">
+    <h2>1 · Wallet</h2>
+    <div id="wallet-root"></div>
+  </div>
+
+  <!-- 2. CELL -->
+  <div class="card">
+    <h2>2 · Cell &amp; token</h2>
+    <label>AuditCell address</label>
+    <input id="cell" placeholder="Phase B — set AuditCell address">
+    <label>CellToken (AUDIT) address</label>
+    <input id="token" placeholder="Phase B — set CellToken address">
+  </div>
+
+  <!-- 3. SPEC -->
+  <div class="card">
+    <h2>3 · Spec &amp; tools <span id="specchk" class="pill">unchecked</span></h2>
+    <p class="tiny">The harness has one registered spec — <b>withdraw-credits v1.1</b>. These are pinned to it.
+      The page <b>verifies each against the chain</b> before letting you submit (so a stale constant can't slip through).</p>
+    <div class="kv" style="margin-top:8px">
+      <div class="k">specHash</div><div class="v" id="v_specHash"></div>
+      <div class="k">specToolId <span id="p_spectool" class="pill">?</span></div><div class="v" id="v_specTool"></div>
+      <div class="k">specErrorsRoot</div><div class="v" id="v_specErrors"></div>
+      <div class="k">verdict tool <span id="p_verdict" class="pill">?</span></div><div class="v" id="v_verdict"></div>
+    </div>
+    <p class="tiny" style="margin-top:8px">Advanced: override the verdict tool only if you know it is registered &amp; non-spec.
+      <input id="verdictOverride" placeholder="0x… (optional override)" style="margin-top:4px"></p>
+  </div>
+
+  <!-- 4. INPUTS -->
+  <div class="card">
+    <h2>4 · What you are posting</h2>
+    <label>Deployed contract address to audit (your O)</label>
+    <input id="target" placeholder="0x… the contract users actually touch">
+    <label>Bounty (AUDIT)</label>
+    <input id="bounty" placeholder="e.g. 40" value="40">
+    <div class="row" style="margin-top:10px">
+      <button class="sec" id="preflight">Run pre-flight checks</button>
+    </div>
+    <div id="pf" style="margin-top:10px"></div>
+  </div>
+
+  <!-- 5. PREVIEW + SIGN -->
+  <div class="card">
+    <h2>5 · Review &amp; sign</h2>
+    <p class="tiny">Posting a bounty is <b>two transactions</b>: (1) approve the cell to pull your bounty, (2) submit the audit.
+      Optionally (3) accept the auto-assigned auditor. Scroll each orange panel before signing — match it to MetaMask.</p>
+
+    <div class="step"><div class="num" id="n1">1</div><div style="flex:1">
+      <b>Approve bounty</b>
+      <div id="hero_approve" class="sign-hero sign-hero--idle"></div>
+      <details class="sign-full"><summary>Full calldata</summary><pre id="cd_approve">connect &amp; pre-flight first…</pre></details>
+      <button id="btn_approve" disabled data-requires-wallet>Sign approve</button>
+    </div></div>
+
+    <div class="step"><div class="num" id="n2">2</div><div style="flex:1">
+      <b>Submit audit</b>
+      <div id="hero_submit" class="sign-hero sign-hero--idle"></div>
+      <details class="sign-full"><summary>Full calldata</summary><pre id="cd_submit">run pre-flight first…</pre></details>
+      <button id="btn_submit" disabled data-requires-wallet>Sign submitAudit</button>
+    </div></div>
+
+    <div class="step"><div class="num" id="n3">3</div><div style="flex:1">
+      <b>Accept assigned auditor</b> <span class="tiny">(optional)</span>
+      <div id="hero_accept" class="sign-hero sign-hero--idle"></div>
+      <details class="sign-full"><summary>Full calldata</summary><pre id="cd_accept">available after submit…</pre></details>
+      <button id="btn_accept" disabled data-requires-wallet>Sign accept</button>
+    </div></div>
+
+    <div class="hr"></div>
+    <div class="log" id="log"></div>
+  </div>
+
+  <!-- 6. FALLBACK -->
+  <div class="card">
+    <h2>6 · Don't trust this page? Use the terminal</h2>
+    <p class="tiny">The same actions via foundry <span class="mono">cast</span> — identical calldata, no page involved.</p>
+    <pre id="castblock">fill the form above to generate the cast commands…</pre>
+  </div>
+
+  <p class="tiny">Check status and verify results in the <a href="explorer.html">Explorer</a>.</p>
+</div>
+  </main>
+</div>
+
+<script src="status-labels.js"></script>
+<script src="wallet-bar.js"></script>
+<script src="sign-hero.js"></script>
+<script>
+/* ---------------- keccak256 (pure JS, validated: keccak("abc")=0x4e03657a…) ---------------- */
+const M=(1n<<64n)-1n;
+const RC=[0x1n,0x8082n,0x800000000000808An,0x8000000080008000n,0x808Bn,0x80000001n,0x8000000080008081n,0x8000000000008009n,0x8An,0x88n,0x80008009n,0x8000000An,0x8000808Bn,0x800000000000008Bn,0x8000000000008089n,0x8000000000008003n,0x8000000000008002n,0x8000000000000080n,0x800An,0x800000008000000An,0x8000000080008081n,0x8000000000008080n,0x80000001n,0x8000000080008008n];
+const RHO=[0,1,62,28,27,36,44,6,55,20,3,10,43,25,39,41,45,15,21,8,18,2,61,56,14];
+const rot=(x,n)=>n===0n?x:((x<<n)|(x>>(64n-n)))&M;
+function keccak(input){let S=new Array(25).fill(0n);const rate=136;const len=input.length,pl=Math.ceil((len+1)/rate)*rate;const p=new Uint8Array(pl);p.set(input);p[len]^=1;p[pl-1]^=0x80;
+ for(let o=0;o<pl;o+=rate){for(let i=0;i<rate/8;i++){let l=0n;for(let j=0;j<8;j++)l|=BigInt(p[o+i*8+j])<<(8n*BigInt(j));S[i]^=l;}
+  for(let r=0;r<24;r++){const C=[0,1,2,3,4].map(x=>S[x]^S[x+5]^S[x+10]^S[x+15]^S[x+20]);const D=[0,1,2,3,4].map(x=>C[(x+4)%5]^rot(C[(x+1)%5],1n));for(let x=0;x<5;x++)for(let y=0;y<5;y++)S[x+5*y]^=D[x];const B=new Array(25).fill(0n);for(let x=0;x<5;x++)for(let y=0;y<5;y++)B[y+5*((2*x+3*y)%5)]=rot(S[x+5*y],BigInt(RHO[x+5*y]));for(let x=0;x<5;x++)for(let y=0;y<5;y++)S[x+5*y]=B[x+5*y]^((~B[(x+1)%5+5*y])&B[(x+2)%5+5*y])&M;S[0]^=RC[r];}}
+ const out=new Uint8Array(32);for(let i=0;i<4;i++){let l=S[i];for(let j=0;j<8;j++)out[i*8+j]=Number((l>>(8n*BigInt(j)))&0xffn);}return out;}
+
+/* ---------------- abi helpers ---------------- */
+const TE=new TextEncoder();
+const hx=u=>"0x"+[...u].map(b=>b.toString(16).padStart(2,"0")).join("");
+const fromHex=h=>{h=(h||"").replace(/^0x/,"");if(h.length%2)h="0"+h;const a=new Uint8Array(h.length/2);for(let i=0;i<a.length;i++)a[i]=parseInt(h.substr(i*2,2),16);return a;};
+const cat=a=>{const n=a.reduce((s,x)=>s+x.length,0),o=new Uint8Array(n);let p=0;for(const x of a){o.set(x,p);p+=x.length;}return o;};
+const w=()=>new Uint8Array(32);
+const u256=v=>{const b=w();let x=BigInt(v);for(let i=31;i>=0;i--){b[i]=Number(x&0xffn);x>>=8n;}return b;};
+const b32=h=>{const u=fromHex(h),b=w();b.set(u.slice(0,32),32-Math.min(32,u.length));return b;};
+const addr=h=>{const u=fromHex(h),b=w();b.set(u.slice(-20),12);return b;};
+function abiEncode(types,vals){const heads=[],tails=[];let off=32*types.length;const enc=[];
+ for(let i=0;i<types.length;i++){const t=types[i],v=vals[i];
+  if(t==="bytes32[]")enc.push({dyn:true,bytes:cat([u256(v.length),...v.map(b32)])});
+  else if(t==="bytes32")enc.push({dyn:false,bytes:b32(v)});
+  else if(t==="address")enc.push({dyn:false,bytes:addr(v)});
+  else enc.push({dyn:false,bytes:u256(v)});}
+ for(const e of enc){if(e.dyn){heads.push(u256(off));tails.push(e.bytes);off+=e.bytes.length;}else heads.push(e.bytes);}
+ return cat([...heads,...tails]);}
+const sel=sig=>hx(keccak(TE.encode(sig)).slice(0,4));
+const SUBMIT_SIG="submitAudit(address,bytes32,bytes32,bytes32,bytes32,uint256,bytes32[],uint256,uint256)";
+const AUDIT_CASE_V1=hx(keccak(TE.encode("AUDIT_CASE_V1")));
+function codehashFromHex(codeHex){
+  const h=(codeHex||"").replace(/^0x/,"");
+  if(!h||h.length<2)return null;
+  return hx(keccak(fromHex(codeHex)));
+}
+function specPassDigest(specHash,specToolId,specErrorsRoot){
+  return hx(keccak(cat([TE.encode("AUDIT_SPEC_RUN_V1"),b32(specHash),b32(specToolId),new Uint8Array([1]),b32(specErrorsRoot)])));
+}
+function caseRootFrom(artifactHash,specHash,specToolId,specPassDigest,tools){
+  const sorted=[...tools].sort((a,b)=>BigInt(a)<BigInt(b)?-1:BigInt(a)>BigInt(b)?1:0);
+  const arr=cat([u256(sorted.length),...sorted.map(b32)]);
+  const head=[b32(AUDIT_CASE_V1),b32(artifactHash),b32(specHash),b32(specToolId),b32(specPassDigest),u256(32*6)];
+  return hx(keccak(cat([...head,arr])));
+}
+const calldata=(sig,types,vals)=>sel(sig)+(types.length?hx(abiEncode(types,vals)).slice(2):"");
+
+/* ---------------- canonical preset (withdraw-credits v1.1) ---------------- */
+const PRESET={
+  specHash:"0x7fe57aec3c363ab9da26d8a45f6bd22f30a5f441b597136e9b8fbcdca38fbe77",
+  specToolId:"0x6b158852c2edaa3e62fa63340ffca6c6eb5836485795e937ae647fdb35c9561b",
+  specErrorsRoot:"0x781f8f2ec1a776740197b3a18452031254b7bf02b49544ce7a5ec35816c814d8",
+  verdictTool:"0xd485f0578dcf1925aa28cfb312584a4a172c4f5da7f05bde4c078c992b598456"
+};
+const DECIMALS=18n;
+
+/* ---------------- state ---------------- */
+let lastId=null;
+const $=id=>document.getElementById(id);
+const log=(m,cls)=>{const d=document.createElement("div");if(cls)d.className=cls;d.innerHTML=m;$("log").prepend(d);};
+const W=MembraneWallet;
+const req=(method,params)=>W.req(method,params);
+async function ethCall(to,data){return req("eth_call",[{to,data},"latest"]);}
+function verdictTool(){const o=($("verdictOverride").value||"").trim();return o?o:PRESET.verdictTool;}
+function toWei(human){const s=String(human).trim();if(!/^\d+(\.\d+)?$/.test(s))throw new Error("bounty must be a number");const[i,f=""]=s.split(".");const frac=(f+"0".repeat(18)).slice(0,18);return BigInt(i)*10n**DECIMALS+BigInt(frac||"0");}
+const fmtAudit=wei=>{wei=BigInt(wei);const i=wei/10n**DECIMALS,f=(wei%10n**DECIMALS).toString().padStart(18,"0").replace(/0+$/,"");return f?`${i}.${f}`:`${i}`;};
+const H=MembraneSignHero;
+
+W.init({
+  root:"#wallet-root",
+  onMultWallet:m=>log(m),
+  onChange:()=>{ document.querySelectorAll("[data-requires-wallet]").forEach(b=>{ b.dataset.walletLock="1"; }); W.syncSignButtons(); }
+});
+document.querySelectorAll("[data-requires-wallet]").forEach(b=>{ b.dataset.walletLock="1"; });
+W.syncSignButtons();
+H.fill("hero_approve",{idle:"Run pre-flight checks first."});
+H.fill("hero_submit",{idle:"Run pre-flight checks first."});
+H.fill("hero_accept",{idle:"Available after you submit the audit."});
+
+/* ---------------- spec/tool on-chain validation ---------------- */
+async function checkTool(id){
+  const res=await ethCall($("cell").value.trim(),calldata("tools(bytes32)",["bytes32"],[id]));
+  const wds=(res||"").replace(/^0x/,"").match(/.{64}/g)||[];
+  return {proposer:"0x"+(wds[0]||"").slice(24),isSpec:(wds[1]||"").endsWith("1"),exists:(wds[4]||"").endsWith("1")};
+}
+async function validateSpec(){
+  $("v_specHash").textContent=PRESET.specHash;
+  $("v_specTool").textContent=PRESET.specToolId;
+  $("v_specErrors").textContent=PRESET.specErrorsRoot;
+  $("v_verdict").textContent=verdictTool();
+  try{
+    const st=await checkTool(PRESET.specToolId);
+    const ok1=st.exists&&st.isSpec;
+    setPill("p_spectool",ok1,st.exists?(st.isSpec?"spec-tool ✓":"not a spec tool"):"not registered");
+    const vt=await checkTool(verdictTool());
+    const ok2=vt.exists&&!vt.isSpec;
+    setPill("p_verdict",ok2,vt.exists?(vt.isSpec?"is a spec tool":"verdict ✓"):"not registered");
+    const all=ok1&&ok2;
+    setPill("specchk",all,all?"chain-verified ✓":"FAILED — do not submit");
+    return all;
+  }catch(e){setPill("specchk",false,"check failed: "+(e.message||e));return false;}
+}
+function setPill(id,ok,txt){const p=$(id);p.textContent=txt;p.className="pill "+(ok?"ok":"bad");}
+
+/* ---------------- pre-flight ---------------- */
+$("preflight").onclick=async()=>{
+  if(!W.account){log('<span class="warnc">connect a wallet first.</span>');return;}
+  const ok=await W.refreshNet();if(!ok){log('<span class="danger">wrong network.</span>');return;}
+  const cell=$("cell").value.trim(),token=$("token").value.trim(),target=$("target").value.trim();
+  if(!cell||!cell.startsWith("0x")||cell.length<42){log('<span class="danger">Set AuditCell address (Phase B deploy).</span>');return;}
+  if(!token||!token.startsWith("0x")||token.length<42){log('<span class="danger">Set CellToken address (Phase B deploy).</span>');return;}
+  let bounty;try{bounty=toWei($("bounty").value);}catch(e){log('<span class="danger">'+e.message+'</span>');return;}
+  const out=[];
+  const specOk=await validateSpec();
+  out.push(row(specOk,"spec &amp; tools chain-verified"));
+  // target has code?
+  let code="0x", codehash=null;
+  try{code=await req("eth_getCode",[target,"latest"]);}catch(e){}
+  const hasCode=code&&code!=="0x"&&code.length>2;
+  if(hasCode)codehash=codehashFromHex(code);
+  out.push(row(hasCode&&codehash,"contract code at target "+(hasCode?"present (codehash ready)":"MISSING — submitAudit reverts")));
+  let auditWindow=600n;
+  try{auditWindow=BigInt(await ethCall(cell,calldata("minAuditWindow()",[],[]))||"0x0")||600n;}catch(e){}
+  let caseNew=true;
+  if(hasCode&&codehash){
+    try{
+      const spd=specPassDigest(PRESET.specHash,PRESET.specToolId,PRESET.specErrorsRoot);
+      const root=caseRootFrom(codehash,PRESET.specHash,PRESET.specToolId,spd,[verdictTool()]);
+      const reg=await ethCall(cell,calldata("caseRootRegistered(bytes32)",["bytes32"],[root]));
+      const dup=BigInt(reg||"0x0")===1n;
+      caseNew=!dup;
+      if(dup){
+        const idh=await ethCall(cell,calldata("caseRootToAuditId(bytes32)",["bytes32"],[root]));
+        out.push(row(false,"this bytecode + spec is ALREADY audited as #"+BigInt(idh||"0x0").toString()+" — submitAudit would revert (CaseAlreadyAudited). Point at a contract whose bytecode is not yet audited under this spec."));
+      }else out.push(row(true,"case is new — this bytecode + spec + tool has not been audited yet"));
+    }catch(e){caseNew=true;out.push(row(true,"dedup check skipped ("+(e.message||e)+") — the cell still enforces it at submit",true));}
+  }
+  // balance
+  const bal=BigInt(await ethCall(token,calldata("balanceOf(address)",["address"],[W.account]))||"0x0");
+  const balOk=bal>=bounty;
+  out.push(row(balOk,`AUDIT balance ${fmtAudit(bal)} ${balOk?"≥":"<"} bounty ${fmtAudit(bounty)}`));
+  // allowance
+  const alw=BigInt(await ethCall(token,calldata("allowance(address,address)",["address","address"],[W.account,cell]))||"0x0");
+  const alwOk=alw>=bounty;
+  out.push(row(alwOk,`allowance ${fmtAudit(alw)} ${alwOk?"≥ bounty (approve optional)":"< bounty (approve needed)"}`,true));
+  $("pf").innerHTML=out.join("");
+  buildPreviews(bounty,target,codehash,auditWindow);
+  const submitReady=specOk&&hasCode&&codehash&&balOk&&caseNew&&W.isReady();
+  refreshSignHeroes(bounty,target,{approveReady:W.isReady()&&balOk,submitReady});
+  $("btn_submit").disabled=!submitReady;
+  $("btn_approve").disabled=!(W.isReady()&&balOk);
+  buildCast(cell,token,target,bounty);
+};
+const row=(ok,t,warn)=>`<div class="step"><div class="num ${ok?"done":""}">${ok?"✓":"!"}</div><div>${ok?'<span class="good">':(warn?'<span class="warnc">':'<span class="danger">')}${t}</span></div></div>`;
+
+/* ---------------- calldata previews ---------------- */
+let TX={};
+function buildPreviews(bounty,target,codehash,auditWindow){
+  const cell=$("cell").value.trim(),token=$("token").value.trim();
+  TX.approve={to:token,data:calldata("approve(address,uint256)",["address","uint256"],[cell,bounty])};
+  $("cd_approve").textContent=
+    `function approve(address,uint256)\n  spender = ${cell}\n  amount  = ${bounty}  (${fmtAudit(bounty)} AUDIT)\n\nto:   ${token} (AUDIT token)\ndata: ${TX.approve.data}`;
+  const vt=verdictTool();
+  TX.submit={to:cell,data:calldata(SUBMIT_SIG,
+    ["address","bytes32","bytes32","bytes32","bytes32","uint256","bytes32[]","uint256","uint256"],
+    [target,codehash,PRESET.specHash,PRESET.specToolId,PRESET.specErrorsRoot,bounty,[vt],0,auditWindow])};
+  $("cd_submit").textContent=
+    `function ${SUBMIT_SIG}\n`+
+    `  deployedAddress     = ${target}\n  expectedCodehash    = ${codehash}\n  specHash            = ${PRESET.specHash}\n`+
+    `  specToolId          = ${PRESET.specToolId}\n  specErrorsRoot      = ${PRESET.specErrorsRoot}\n`+
+    `  bounty              = ${bounty}  (${fmtAudit(bounty)} AUDIT)\n  declaredVerdictTools= [ ${vt} ]\n`+
+    `  supersedesAuditId   = 0\n  auditWindow         = ${auditWindow}\n\nto:   ${cell} (AuditCell)\ndata: ${TX.submit.data}`;
+}
+
+function refreshSignHeroes(bounty,target,opts){
+  const cell=$("cell").value.trim(),token=$("token").value.trim();
+  const vt=verdictTool();
+  if(opts.approveReady){
+    H.arm("hero_approve",{
+      fn:"approve(address,uint256)",
+      args:`spender = ${cell} · amount = ${fmtAudit(bounty)} AUDIT`,
+      to:token,
+      toLabel:"AUDIT token"
+    });
+  }else H.fill("hero_approve",{idle:"Run pre-flight checks first (or connect wallet on Base Sepolia)."});
+  if(opts.submitReady){
+    H.arm("hero_submit",{
+      fn:SUBMIT_SIG,
+      args:`target = ${target} · bounty = ${fmtAudit(bounty)} AUDIT · verdict tool pinned`,
+      to:cell,
+      toLabel:"AuditCell"
+    });
+  }else H.fill("hero_submit",{idle:opts.approveReady?"Complete step 1 (approve) first.":"Run pre-flight checks first."});
+}
+
+/* ---------------- send ---------------- */
+async function send(label,tx,onDone){
+  if(!W.account){log('<span class="danger">connect first</span>');return;}
+  if(!W.isRealMetaMask()){log('<span class="danger">Real MetaMask not connected — disable other wallet extensions.</span>');return;}
+  W.wlog("Checking network before "+label+"…");
+  if(!await W.ensureBaseSepolia(true)){log('<span class="danger">Wrong network — switch MetaMask to Base Sepolia first.</span>');await W.refreshNet();return;}
+  try{
+    log(`<b>${label}</b> — requesting signature… <span class="tiny">compare the decoded args above to your wallet.</span>`);
+    const h=await req("eth_sendTransaction",[{from:W.account,to:tx.to,data:tx.data,value:"0x0"}]);
+    log(`${label} sent: <a target="_blank" href="https://sepolia.basescan.org/tx/${h}">${h.slice(0,14)}…</a> — waiting for receipt…`);
+    const rec=await waitReceipt(h);
+    if(rec.status==="0x1"){log(`<span class="good">${label} confirmed ✓</span>`);onDone&&onDone(rec);}
+    else log(`<span class="danger">${label} reverted.</span> Check the tx on basescan.`);
+  }catch(e){log(`<span class="danger">${label} failed: ${(e.data&&e.data.message)||e.message||e}</span>`);}
+}
+async function waitReceipt(h){for(let i=0;i<120;i++){const r=await req("eth_getTransactionReceipt",[h]);if(r)return r;await new Promise(s=>setTimeout(s,2500));}throw new Error("receipt timeout");}
+
+$("btn_approve").onclick=()=>send("approve",TX.approve,()=>{
+  $("n1").className="num done";
+  $("btn_submit").disabled=false;
+  try{
+    const target=($("target").value||"").trim();
+    const b=toWei($("bounty").value);
+    H.arm("hero_submit",{
+      fn:SUBMIT_SIG,
+      args:`target = ${target} · bounty = ${fmtAudit(b)} AUDIT · verdict tool pinned`,
+      to:$("cell").value.trim(),
+      toLabel:"AuditCell"
+    });
+  }catch(e){}
+});
+$("btn_submit").onclick=()=>send("submitAudit",TX.submit,async()=>{
+  $("n2").className="num done";
+  try{
+    const next=BigInt(await ethCall($("cell").value.trim(),calldata("nextAuditId()",[],[]))||"0x0");
+    lastId=(next-1n).toString();
+    log(`<span class="good">Your audit id is likely <b>#${lastId}</b></span> — confirm on <a href="explorer.html?id=${lastId}">Explorer</a> (Browse). It enters <b>${MembraneStatus.labelFor("Submitted")}</b>, then an auditor is assigned.`);
+    TX.accept={to:$("cell").value.trim(),data:calldata("protocolAcceptAuditor(uint256)",["uint256"],[lastId])};
+    $("cd_accept").textContent=`function protocolAcceptAuditor(uint256)\n  id = ${lastId}\n\nto:   ${$("cell").value.trim()}\ndata: ${TX.accept.data}`;
+    H.arm("hero_accept",{
+      fn:"protocolAcceptAuditor(uint256)",
+      args:`id = ${lastId}`,
+      to:$("cell").value.trim(),
+      toLabel:"AuditCell"
+    });
+    $("btn_accept").disabled=false;
+  }catch(e){log("could not read nextAuditId — check the explorer for your new audit id");}
+});
+$("btn_accept").onclick=()=>send("protocolAcceptAuditor",TX.accept,()=>{$("n3").className="num done";});
+
+/* ---------------- cast fallback ---------------- */
+function buildCast(cell,token,target,bounty){
+  const vt=verdictTool();
+  $("castblock").textContent=
+`# Base Sepolia — export your key first (throwaway harness key only)
+export RPC=https://sepolia.base.org ; export PK=0x<your_key>
+
+# 1. approve the cell to pull the bounty
+cast send ${token} "approve(address,uint256)" ${cell} ${bounty} --rpc-url $RPC --private-key $PK
+
+# 2. submit the audit (expectedCodehash = keccak256 of runtime bytecode at target)
+cast send ${cell} \\
+  "${SUBMIT_SIG}" \\
+  ${target} \\
+  <expectedCodehash> \\
+  ${PRESET.specHash} \\
+  ${PRESET.specToolId} \\
+  ${PRESET.specErrorsRoot} \\
+  ${bounty} \\
+  "[${vt}]" \\
+  0 \\
+  <auditWindow> --rpc-url $RPC --private-key $PK
+
+# 3. (optional) accept the assigned auditor — replace <id> with your audit id
+# cast send ${cell} "protocolAcceptAuditor(uint256)" <id> --rpc-url $RPC --private-key $PK`;
+}
+
+/* ---------------- boot: try to load addresses from the deployment source ---------------- */
+(async()=>{
+  try{
+    const r=await fetch("../deployments/84532-cell.json");
+    if(r.ok){const j=await r.json();if(j.AuditCell)$("cell").value=j.AuditCell;if(j.CellToken)$("token").value=j.CellToken;
+      if(j.AuditCell)log('<span class="tiny good">Live cell addresses loaded ✓</span>');
+      else log('<span class="tiny warnc">84532-cell.json is PENDING — fill addresses after Phase B deploy.</span>');}
+  }catch(e){log('<span class="tiny warnc">No live deploy yet — set cell and token after Phase B.</span>');}
+  const pre=new URLSearchParams(location.search).get("target");
+  if(pre&&/^0x[a-fA-F0-9]{40}$/.test(pre)){$("target").value=pre;log('<span class="tiny">Target pre-filled from want-board handoff ✓</span>');}
+  $("v_specHash").textContent=PRESET.specHash;
+  $("v_specTool").textContent=PRESET.specToolId;
+  $("v_specErrors").textContent=PRESET.specErrorsRoot;
+  $("v_verdict").textContent=PRESET.verdictTool;
+  // self-test keccak so a tampered file is visible
+  const t=hx(keccak(TE.encode("abc")));
+  if(t!=="0x4e03657aea45a94fc7d47ba826c8d667c0d1e6e33a64a036ec44f58fa12d6c45")
+    log('<span class="danger">keccak self-test FAILED — this file is corrupted, do not use.</span>');
+})();
+</script>
+
+<script src="your-links.js?v=5"></script>
+<script src="membrane-rail.js?v=2"></script>
+<script src="motion.js?v=1"></script>
+</body>
+</html>

@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rewards · Docs · Audit Cell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="site.css?v=5"></head>
+<body>
+<div class="layout layout-docs">
+
+  <nav>
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink" href="quickstart.html">Quickstart</a>
+    <a class="navlink on" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+
+  <main>
+    <div class="inner">
+      <p class="eyebrow"><a href="docs.html">Docs</a></p>
+      <h1>Rewards</h1>
+      <p class="lede">Who gets paid, when, and from where — and why the token only exists because real work was done.</p>
+
+      <h2 id="when">Paid at confirmation</h2>
+      <p>An auditor isn't paid when they submit a verdict — only at confirmation, after the challenge period closes with no bug found. That's the stake: the reward depends on the contract surviving scrutiny, not just on a verdict being filed.</p>
+
+      <h2 id="auditor">What an auditor earns</h2>
+      <p>A confirmed pass pays the bounty back from escrow, plus a freshly minted block reward. That mint follows network activity — busier periods mint more per block, subject to liquidity pacing — not a “early network earns more because supply is empty” curve. A dispute re-auditor earns the dispute bounty for re-checking the original contract, with no fresh mint.</p>
+
+      <h2 id="split">Treasury slice</h2>
+      <p>Each block also mints a matching treasury share: most lands in LP liquidity; the rest timelocks into escrow reserves that fund discoverers and floor supplements. See <a href="tokenomics.html">Tokenomics</a> for the full split.</p>
+
+      <h2 id="token">Where the tokens come from</h2>
+      <p>New tokens enter circulation only through confirmed audits. Every token in existence is the record of a real audit that survived the challenge period — the network funds itself from its own work, not from anyone's goodwill.</p>
+
+      <h2 id="reserves">Reserves and discoverers</h2>
+      <p>Part of each reward feeds a reserve. When a bug is reproduced on a contract, the finder is paid from that reserve — never from new supply. Failures draw down reserves; they are never rewarded with fresh tokens.</p>
+
+      <span class="badge"><span class="live"></span> Testnet · Base Sepolia — test funds only</span>
+    </div>
+  </main>
+
+  <aside id="docRail" aria-label="You are here" hidden></aside>
+
+</div>
+<script src="your-links.js?v=5"></script>
+<script src="docs-rail.js?v=5"></script>
+<script src="motion.js?v=1"></script>
+</body>
+</html>

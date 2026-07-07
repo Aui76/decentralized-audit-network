@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>!function(){try{var k="membrane_nav_session",s=sessionStorage.getItem(k);document.documentElement.classList.add(s?"nav-session":"cold-load");if(!s)sessionStorage.setItem(k,"1")}catch(e){}}();</script>
+<title>Facts vs health · Network Health · Audit Cell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css?v=5">
+</head>
+<body class="page-prose">
+<div class="layout layout-docs">
+
+  <nav>
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink" href="quickstart.html">Quickstart</a>
+    <a class="navlink on" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+
+  <main>
+    <div class="inner">
+
+      <div class="doc-layer-row">
+        <a href="docs-health.html" class="doc-layer doc-layer-spec">Network Health</a>
+        <span class="doc-layer doc-layer-spec">Spec · reader</span>
+      </div>
+      <h1>Facts vs health</h1>
+      <p class="doc-q">What is &quot;health&quot;** — and why can it never move money or change a verdict?</p>
+      
+      <div class="doc-bridge doc-bridge-story">
+        <p class="doc-bridge-lbl">Story context</p>
+        <ul>
+          <li><a href="docs-book-04.html">Book ch 4 · The core model</a></li>
+          <li><a href="docs-book-22.html">Book ch 22 · Reading the chain</a></li>
+        </ul>
+      </div>
+      <p>No single audit holds network health. It is the whole organism's state — derived off-chain and <strong>advisory</strong>. It changes no verdict and triggers no settlement action.</p>
+      <h2 id="facts-vs-health-placement">Facts vs health (placement)</h2>
+      <table class="doc-table"><thead><tr><th>Layer</th><th>What it is</th><th>Who writes it</th><th>Can gate pay?</th></tr></thead><tbody><tr><td><strong>Facts</strong></td><td>On-chain cell events — submit, verdict, confirm, exploit</td><td>Cell contracts</td><td><strong>Yes</strong> — only facts gate settlement</td></tr><tr><td><strong>Health</strong></td><td>Off-chain synthesis — maturity, flow, signals, contagion</td><td>Indexer organs (<code>deriveBobCard</code>, …)</td><td><strong>No</strong> — suggest only</td></tr></tbody></table>
+      <p>Money rules: <a href="docs-economy-value-vs-signal.html">The AUDIT Economy</a>. Card wiring: <a href="docs-integration-bob-card.html">Integration — Bob card</a>.</p>
+      <h2 id="four-dimensions">Four dimensions</h2>
+      <table class="doc-table"><thead><tr><th>Dimension</th><th>Question</th><th>Header</th></tr></thead><tbody><tr><td><strong>Maturity</strong></td><td>How far through its lifecycle?</td><td><a href="docs-health-maturity.html">Maturity</a></td></tr><tr><td><strong>Thermodynamics</strong></td><td>How much is moving — hot or idle?</td><td><a href="docs-health-thermodynamics-and-flow.html">Network flow</a></td></tr><tr><td><strong>Signals</strong></td><td>What flags do organs raise, and who may act?</td><td><a href="docs-health-signals.html">Signals</a></td></tr><tr><td><strong>Exposure</strong></td><td>Which contracts share an unfound weakness?</td><td><a href="docs-health-portfolio-contagion.html">Portfolio contagion</a></td></tr></tbody></table>
+      <h2 id="source">Source</h2>
+      <p>Health is derived by off-chain organs — <code>deriveBobCard</code>, <code>derivePhaseAnimation</code>, contagion (O5), the <a href="docs-integration-claim-scorecard.html">Claim-resolution scorecard</a> — all reading cell events. The cell emits facts; health synthesizes them.</p>
+      <p>Card surface and fixtures: <a href="docs-integration-bob-card.html#integrator-surface">Bob card § integrator</a>.</p>
+      <h2 id="the-one-rule">The one rule</h2>
+      <p>Health makes the network legible without moving settled truth — facts on-chain, judgment of state off-chain. Doctrine detail: <a href="docs-health-signals.html">Signals</a> · <a href="docs-flows-mutex.html#triangle-alarm">Audit mutex § triangle-alarm</a>.</p>
+      <p><strong>Next:</strong> <a href="docs-health-maturity.html">Maturity</a></p>
+      
+      <footer class="doc-page-foot"><a href="docs-health.html">← Network Health</a> · <a href="docs-notebook.html">Notebook</a></footer>
+    </div>
+  </main>
+
+  <aside id="docRail" aria-label="You are here" hidden></aside>
+
+</div>
+<script src="motion.js?v=1"></script>
+<script src="your-links.js?v=5"></script>
+<script src="docs-rail.js?v=5"></script>
+</body>
+</html>

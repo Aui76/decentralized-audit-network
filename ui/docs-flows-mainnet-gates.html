@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>!function(){try{var k="membrane_nav_session",s=sessionStorage.getItem(k);document.documentElement.classList.add(s?"nav-session":"cold-load");if(!s)sessionStorage.setItem(k,"1")}catch(e){}}();</script>
+<title>Mainnet gates · Flows · Audit Cell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css?v=5">
+</head>
+<body class="page-prose">
+<div class="layout layout-docs">
+
+  <nav>
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink" href="quickstart.html">Quickstart</a>
+    <a class="navlink on" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+
+  <main>
+    <div class="inner">
+
+      <div class="doc-layer-row">
+        <a href="docs-flows.html" class="doc-layer doc-layer-spec">Flows</a>
+        <span class="doc-layer doc-layer-spec">Spec · reader</span>
+      </div>
+      <h1>Mainnet gates</h1>
+      <p class="doc-q">What must be <strong>true</strong> before removing the <strong>demo / testnet-grade</strong> label and treating the network as <strong>mainnet-ready for real value</strong>?</p>
+      
+      <div class="doc-bridge doc-bridge-story">
+        <p class="doc-bridge-lbl">Story context</p>
+        <ul>
+          <li><a href="docs-book-20.html">Book ch 20 · What we defer</a></li>
+        </ul>
+      </div>
+      <p><strong>Mainnet gates</strong> are the checklist for when a <strong>testnet-grade deployment</strong> may carry <strong>real economic weight</strong> — not when the mechanism first becomes reproducible. Base Sepolia <strong>today</strong> already runs the full settlement railroad (cell, overlays, confirm, claim, dispute); mainnet is the <strong>same bytecode</strong> with <strong>production parameters</strong>, hardened organs, and issuance signals enforced at confirm.</p>
+      <p><strong>One mechanism rule:</strong> cell bytecode is <strong>identical testnet ↔ mainnet</strong>; divergence is <strong>parameters and posture only</strong> — not a second settlement story (<a href="docs-book-20.html">What we defer (story)</a>).</p>
+      <h2 id="two-axes-do-not-conflate">Two axes (do not conflate)</h2>
+      <table class="doc-table"><thead><tr><th>Axis</th><th>Sepolia today</th><th>Mainnet gate</th></tr></thead><tbody><tr><td><strong>Settlement</strong></td><td>Reproduction settles; txs falsifiable on-chain</td><td>Same artifact — already proven in exercises</td></tr><tr><td><strong>Posture</strong></td><td>Compressed windows, operator exercises, no production-scale bounties</td><td>Production windows, launch params, external review, real bounties</td></tr></tbody></table>
+      <p>Removing the demo label is about <strong>posture and maturity</strong>, not “turning settlement on.”</p>
+      <h2 id="launch-gates-summary">Launch gates (summary)</h2>
+      <table class="doc-table"><thead><tr><th>Gate</th><th>Meaning</th></tr></thead><tbody><tr><td><strong>Cell frozen</strong></td><td>Freeze gate passes — ABI, AppStorage layout, settlement seams final</td></tr><tr><td><strong>Cold-green</strong></td><td>Full suite from clean build; under EIP-170; deploy script matches wiring</td></tr><tr><td><strong>Decisions resolved</strong></td><td>Cutover forks (ledger §4b) closed for real value — e.g. D-1 assignment built, D-2/D-3 closed</td></tr><tr><td><strong>Production parameters</strong></td><td>e.g. <code>auditWindow</code> 14d, <code>claimResolutionWindow</code> 30d, <code>claimFilingStake</code> 100 AUDIT; real bounties; demo label removed</td></tr><tr><td><strong>Launch parameters</strong></td><td>Seed price, genesis mint, initial LP per locked launch worksheet</td></tr><tr><td><strong>Organs live</strong></td><td>Bob, contagion, scorecard, fleet, validators wired; monitoring running</td></tr><tr><td><strong>Entropy provider</strong></td><td>Production commit-reveal via <code>entropyProvider</code> — not testnet <code>BlockhashEntropy</code> alone</td></tr><tr><td><strong>Library deploy path</strong></td><td>Mainnet: linked libraries with plain <strong>CREATE</strong> (explorer verification)</td></tr><tr><td><strong>Issuance organ</strong></td><td><strong>`IssuanceModule`</strong> on activity-led mint path — not retired <code>alphaBps</code> / hybrid <code>curveAnchor</code>; swap module on Sepolia if still on older wiring (<a href="docs-economy-mainnet-calibration.html">Mainnet calibration</a>)</td></tr></tbody></table>
+      <p>Evidence trail: DEPLOYMENT-LOG · roadmap.</p>
+      <h2 id="issuance-gates-issuancemodule">Issuance gates (<code>IssuanceModule</code>)</h2>
+      <p><strong>Placement:</strong> this table is the <strong>procedure checklist</strong> for mainnet cutover — <em>when</em> issuance signals must be enforced at confirm. <strong>Mechanism and deferral detail</strong> live in the Economy book: <a href="docs-economy-network-states.html">Issuance network states</a> (live rules) · <a href="docs-economy-what-is-not-live-yet.html">What is not live yet</a> (deferral annex) · <a href="docs-economy-mainnet-calibration.html">Mainnet calibration</a> (worksheets). Do not duplicate I-0–I-6 formulas here.</p>
+      <p>Core issuance <strong>runs on Sepolia today</strong> (dual EMA, manipulation discount, depression floor, green-light backstop). Mainnet is <strong>not</strong> “enable issuance from zero” — it is <strong>replace testnet proxies with signals enforced at `confirm`</strong>. Ship in dependency order; do not half-wire (<a href="docs-book-20.html">What we defer</a>).</p>
+      <table class="doc-table"><thead><tr><th>#</th><th>Gate</th><th>Sepolia today</th><th>Mainnet pass condition</th></tr></thead><tbody><tr><td><strong>I-0</strong></td><td>Activity-led mint</td><td>Built — <code>nextPositiveBlockReward</code> from <code>emaSlow</code>, LP cap</td><td>Same module + params locked at deploy; <code>increment</code> locked</td></tr><tr><td><strong>I-1</strong></td><td>On-chain participant phase</td><td><strong>Proxy</strong> — <code>emaSlowUnprovenWeightBps</code> / successful-count</td><td>Alive / declining / detrimental on-chain; <strong>alive-only floor</strong> payout (<a href="docs-economy-adaptive-issuance-uncapped-supply-by-choice.html">§6.4</a>); full phase weights in <code>emaSlow</code></td></tr><tr><td><strong>I-2</strong></td><td>FLOW at confirm</td><td>Indexer / Bob card only</td><td>FLOW-FAIL excluded from <code>emaSlow</code>; thermodynamic input on settlement path</td></tr><tr><td><strong>I-3</strong></td><td>Green-light real gates</td><td><strong>F-64 proxies</strong> — <code>fastRatioBps</code>, <code>emaFast &gt; prevFast</code></td><td>On-chain <strong>aliveRatio + `healthBaseline`</strong> (cond. 2) and <strong>FLOW PASS rate</strong> (cond. 3); UI <strong>not</strong> “FLOW verified” until then (<a href="docs-economy-what-is-not-live-yet.html#green-light-real-gates">Green-light real gates</a>)</td></tr><tr><td><strong>I-4</strong></td><td>Adaptive baseline</td><td>Fixed bps (<code>recoverabilityFactorBps</code>, etc.)</td><td>On-chain <strong>`healthBaseline`</strong> — EMA of aliveRatio in clean periods (<a href="docs-economy-adaptive-issuance-uncapped-supply-by-choice.html">Adaptive issuance §8</a>)</td></tr><tr><td><strong>I-5</strong></td><td>Floor decay Signal B</td><td><strong>`failedRecoveryAttempts` only</strong></td><td><strong>`baselineDecay`</strong> when network memory of healthy drifts down</td></tr><tr><td><strong>I-6</strong></td><td>Loyalty premium</td><td><strong>Not shipped</strong></td><td><code>depressionParticipation</code> counter + 1.2× recovery <code>emaSlow</code> weight — <strong>after I-1, I-3 stable</strong> (<a href="docs-economy-what-is-not-live-yet.html#loyalty-premium">Loyalty premium</a>)</td></tr></tbody></table>
+      <p><strong>Retired — do not reopen:</strong> hybrid <code>curveAnchor + emaLine</code> mint; capped <code>alphaBps × remainingSupply()</code> (<a href="docs-economy-what-is-not-live-yet.html#superseded-mint-plans">Superseded mint plans</a>).</p>
+      <p><strong>Sign-off annex:</strong> <a href="docs-economy-what-is-not-live-yet.html">What is not live yet</a> · <strong>Design spec:</strong> <a href="docs-economy-adaptive-issuance-uncapped-supply-by-choice.html">Adaptive issuance — Uncapped Supply by choice</a> · <strong>Parameter worksheet:</strong> <a href="docs-economy-mainnet-calibration.html">Mainnet calibration</a>.</p>
+      <h2 id="issuance-gates-issuancemodule">Integrator rule</h2>
+      <p>Do <strong>not</strong> quote mainnet-faithful APY from Bob-card phase tags, FLOW hints, or <code>greenLightMintAllowed()</code> alone — those remain <strong>proxies through I-3</strong>. Label testnet posture honestly in UI and copy.</p>
+      <h2 id="posture-demo-label">Posture (demo label)</h2>
+      <p>The <strong>demo / testnet-grade</strong> label marks <strong>deployment posture</strong> — compressed windows, exercise-driven log, no production-scale bounties — <strong>not</strong> whether fail-on-pin pays from escrow on Sepolia.</p>
+      <p>Remove the label only when <strong>launch gates</strong> and <strong>issuance gates</strong> evidence justify real value — not at first deploy.</p>
+      <p><strong>Previous:</strong> <a href="docs-structural.html">Structural upgrades</a> · <strong>Appendix:</strong> <a href="docs-flows-appendix-a.html">Appendix A — Module wiring</a></p>
+      
+      <footer class="doc-page-foot"><a href="docs-flows.html">← Flows</a> · <a href="docs-notebook.html">Notebook</a></footer>
+    </div>
+  </main>
+
+  <aside id="docRail" aria-label="You are here" hidden></aside>
+
+</div>
+<script src="motion.js?v=1"></script>
+<script src="your-links.js?v=5"></script>
+<script src="docs-rail.js?v=5"></script>
+</body>
+</html>

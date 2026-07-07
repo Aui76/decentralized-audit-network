@@ -1,0 +1,34 @@
+# Audit Cell — settlement core (self-contained Foundry project)
+
+[profile.default]
+src = "contracts"
+test = "test"
+script = "script"
+out = "out"
+libs = ["lib"]
+solc = "0.8.20"
+optimizer = true
+optimizer_runs = 1
+via_ir = true
+remappings = [
+  "forge-std/=lib/forge-std/src/",
+  "genesis-tools/=contracts/tools/",
+  "demo-lp/=../body/tools/lp-demo-pool/contracts/",
+]
+
+fs_permissions = [
+  { access = "read-write", path = "./deployments" },
+  { access = "read", path = "../body/tools/lp-demo-pool" },
+  { access = "read", path = "../body/deployments" },
+]
+
+[rpc_endpoints]
+base_sepolia = "${BASE_SEPOLIA_RPC_URL}"
+
+# Etherscan API v2 — pass key on CLI for Basescan verify:
+#   forge verify-contract ... --chain base-sepolia --etherscan-api-key $env:ETHERSCAN_API_KEY
+# Sourcify (no key): rename .env aside, then --verifier sourcify --chain-id 84532
+etherscan_api_version = "v2"
+
+# Intentionally no [etherscan] block — avoids requiring ETHERSCAN_API_KEY for every forge command.
+# Basescan verify still works via --etherscan-api-key (reads from .env in your shell).

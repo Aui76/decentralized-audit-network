@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>!function(){try{var k="membrane_nav_session",s=sessionStorage.getItem(k);document.documentElement.classList.add(s?"nav-session":"cold-load");if(!s)sessionStorage.setItem(k,"1")}catch(e){}}();</script>
+<title>5 · Definitions · The Book · Audit Cell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css?v=5">
+</head>
+<body class="page-prose">
+<div class="layout layout-docs">
+
+  <nav>
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink" href="quickstart.html">Quickstart</a>
+    <a class="navlink on" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+
+  <main>
+    <div class="inner">
+
+      <div class="doc-layer-row">
+        <a href="docs-book.html" class="doc-layer doc-layer-story">The Book · II</a>
+        <span class="doc-layer doc-layer-story">Story · chapter 5</span>
+      </div>
+      <h1>Definitions</h1>
+      <p class="doc-q">What do <strong>claim</strong>, <strong>claimed</strong>, and <strong>resolution</strong> mean here — narrowly enough that later chapters do not blur?</p>
+      
+      <div class="doc-bridge">
+        <p class="doc-bridge-lbl">Go deeper — notebook spec</p>
+        <ul>
+          <li><a href="docs-flows-vulnerability.html">Vulnerability disclosure</a></li>
+          <li><a href="docs-flows-lifecycle.html">Audit lifecycle</a></li>
+        </ul>
+      </div>
+      <h2 id="why-definitions-come-first">Why definitions come first</h2>
+      <p>Mechanics chapters tempt you to skim for escrow and minting. Skip this chapter and words start to blur: a “claim” sounds like a support ticket, “resolution” sounds like a committee.</p>
+      <p>The network uses those words <strong>narrowly</strong>. This chapter locks vocabulary before the machinery runs.</p>
+      <p><strong>Not here:</strong> which gate owns which fight — <a href="docs-book-06.html">Chapter 6</a>. Full break-path procedure — <a href="docs-book-11.html">Chapter 11</a>.</p>
+      <table class="doc-table"><thead><tr><th>Term (this chapter)</th><th>Not confused with</th></tr></thead><tbody><tr><td><strong>Proof-bearing claim</strong></td><td>Support ticket · allegation</td></tr><tr><td><strong>Claimed</strong></td><td>Accusation tone · forum heat</td></tr><tr><td><strong>Resolution</strong></td><td>Judge · severity panel</td></tr></tbody></table>
+      <h2 id="proof-bearing-claim">Proof-bearing claim</h2>
+      <p>A claim is <strong>proof submitted under published rules</strong>. The pinned contract, a reproducible FAIL <strong>`resultRoot`</strong>, stake from an eligible party — all checked before the chain moves state.</p>
+      <table class="doc-table"><thead><tr><th>Outcome</th><th>Meaning</th></tr></thead><tbody><tr><td>Transaction succeeds</td><td>Mechanism accepted it</td></tr><tr><td>Transaction reverts</td><td>Nothing was accepted</td></tr></tbody></table>
+      <p>There is no “under review” phase where rhetoric earns leverage.</p>
+      <h2 id="claimed">Claimed</h2>
+      <p>On-chain <strong>claimed</strong> names a <strong>state</strong>, not a tone. Acceptable proof landed that the pass was wrong, so the audit <strong>stops short of “finished”</strong> until the <strong>challenge procedure (break path)</strong> completes. The <strong>success path (positive path)</strong> cannot close while that challenge is active.</p>
+      <p>Pause in finality — not the opening act of a debate.</p>
+      <h2 id="resolution">Resolution</h2>
+      <p>There is no judge. After a claim is accepted, the network runs the <strong>challenge procedure (break path)</strong>: independent re-run on the pinned artifact, match the filed FAIL <strong>`resultRoot`</strong>, pay or slash by rule, restore or fail the line. Silence → deadlines advance the same machinery — <strong>liveness</strong>, not mercy.</p>
+      <p>Think procedure, not court.</p>
+      <h2 id="dont-mix-the-rails">Don't mix the rails</h2>
+      <table class="doc-table"><thead><tr><th>Someone brings…</th><th>Belongs on…</th></tr></thead><tbody><tr><td>Vague intent · “we meant a different spec”</td><td><strong>The door (Gate A)</strong> — <a href="docs-book-06.html">chapter 6</a></td></tr><tr><td>Reproducible fail + stake on pinned code</td><td><strong>The challenge (Gate C)</strong></td></tr></tbody></table>
+      <p>The noun tells you which procedure applies.</p>
+      <h2 id="before-you-turn-the-page">Before you turn the page</h2>
+      <p><strong>Proof-bearing claim</strong> — valid transaction backed by reproducible fail proof. Not a ticket.</p>
+      <p><strong>Claimed</strong> — acceptance on the record; positive path paused. Not a thread.</p>
+      <p><strong>Resolution</strong> — re-run, compare, pay or slash — on deadlines. Not charisma.</p>
+      
+      <footer class="doc-page-foot"><a href="docs-book.html">← The Book</a> · <a href="docs.html">Docs</a></footer>
+    </div>
+  </main>
+
+  <aside id="docRail" aria-label="You are here" hidden></aside>
+
+</div>
+<script src="motion.js?v=1"></script>
+<script src="your-links.js?v=5"></script>
+<script src="docs-rail.js?v=5"></script>
+</body>
+</html>

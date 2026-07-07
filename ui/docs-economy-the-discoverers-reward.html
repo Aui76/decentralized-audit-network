@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>!function(){try{var k="membrane_nav_session",s=sessionStorage.getItem(k);document.documentElement.classList.add(s?"nav-session":"cold-load");if(!s)sessionStorage.setItem(k,"1")}catch(e){}}();</script>
+<title>The discoverer's reward · The AUDIT Economy · Audit Cell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css?v=5">
+</head>
+<body class="page-prose">
+<div class="layout layout-docs">
+
+  <nav>
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink" href="quickstart.html">Quickstart</a>
+    <a class="navlink on" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+
+  <main>
+    <div class="inner">
+
+      <div class="doc-layer-row">
+        <a href="docs-economy.html" class="doc-layer doc-layer-spec">The AUDIT Economy</a>
+        <span class="doc-layer doc-layer-spec">Spec · reader</span>
+      </div>
+      <h1>The discoverer's reward</h1>
+      <p class="doc-q">How much<strong> can a discoverer draw — and </strong>from where**?</p>
+      
+      <div class="doc-bridge doc-bridge-story">
+        <p class="doc-bridge-lbl">Story context</p>
+        <ul>
+          <li><a href="docs-book-08.html">Book ch 8 · Value &amp; escrow</a></li>
+          <li><a href="docs-book-11.html">Book ch 11 · The break path</a></li>
+          <li><a href="docs-book-14.html">Book ch 14 · Bounties &amp; pricing</a></li>
+          <li><a href="docs-book-16.html">Book ch 16 · Reputation signals</a></li>
+        </ul>
+      </div>
+      <p>When a <strong>reproduced claim</strong> succeeds — independent re-audit confirms FAIL on pinned contract — discoverer is paid from <strong>escrow reserves</strong>. <strong>Never fresh mint.</strong></p>
+      <p>Procedure: <a href="docs-flows-vulnerability.html">Vulnerability disclosure</a>.</p>
+      <h2 id="payment-formula">Payment formula</h2>
+      <pre class="mono doc-pre">paid = min( bounty × boost,
+            max( escrowBalance × discoveryCapBps / 10_000,
+                 bounty × discoveryFloorBps / 10_000 ) )</pre>
+      <table class="doc-table"><thead><tr><th>Parameter</th><th>Default</th><th>Meaning</th></tr></thead><tbody><tr><td>Boost subject</td><td><code>lastDiscoverer</code>, else first PASS auditor; FAIL-at-audit = 1×</td><td>Whose history sets boost</td></tr><tr><td><code>maxBoostFactor</code></td><td>4</td><td>Boost range 1×–5×</td></tr><tr><td><code>discoveryCapBps</code></td><td>500</td><td>Cap = 5% of <strong>general</strong> escrow</td></tr><tr><td><code>discoveryFloorBps</code></td><td>5000</td><td>Floor = 50% of bounty</td></tr><tr><td><code>claimFilingStake</code></td><td>100 AUDIT</td><td>At claim; refunded on success path</td></tr><tr><td><code>claimResolutionWindow</code></td><td>30 days</td><td>Expire if stuck</td></tr></tbody></table>
+      <p>Network subsidy <code>≈ bounty × (boost − 1)</code> draws <strong>escrow first</strong>; locked bounty tops up if pot fixed at claim time.</p>
+      <p><strong>Boost</strong> = reputation history — <strong>not</strong> assurance tier badges (<a href="docs-integration-assurance-tiers.html">Assurance tiers</a>).</p>
+      <h2 id="deadline-path">Deadline path</h2>
+      <p>Claim expires without resolution → <strong>no pay</strong>; filing stake slashed. <strong>Liveness</strong>, not guilt — does <strong>not</strong> increment original auditor <code>failed</code>.</p>
+      <h2 id="what-discoverer-pay-is-not">What discoverer pay is not</h2>
+      <table class="doc-table"><thead><tr><th>Not this</th><th>Because</th></tr></thead><tbody><tr><td>Mint on demand</td><td>Reserves only</td></tr><tr><td>Clawback of auditor POS mint</td><td>History stands</td></tr><tr><td>Protocol veto</td><td>Payer cannot block reproduction once rules satisfied</td></tr></tbody></table>
+      <p><strong>Previous:</strong> <a href="docs-economy-the-auditors-reward.html">The auditor's reward</a> · <strong>Next:</strong> <a href="docs-economy-equilibrium.html">Escrow equilibrium</a></p>
+      
+      <footer class="doc-page-foot"><a href="docs-economy.html">← The AUDIT Economy</a> · <a href="docs-notebook.html">Notebook</a></footer>
+    </div>
+  </main>
+
+  <aside id="docRail" aria-label="You are here" hidden></aside>
+
+</div>
+<script src="motion.js?v=1"></script>
+<script src="your-links.js?v=5"></script>
+<script src="docs-rail.js?v=5"></script>
+</body>
+</html>
