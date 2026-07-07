@@ -1,0 +1,1363 @@
+{
+  "meta": {
+    "chainId": 84532,
+    "cell": "0xB8BFC2dd2CDFF79e018479C8a97B6AeC1979ff6d",
+    "cellToken": "0x756bD73C62C33eb4E4fD7028b9fe14314a94851F",
+    "deployment": "p1-base-sepolia",
+    "fromBlock": "43317152",
+    "claimVerifier": "0x0000000000000000000000000000000000000000",
+    "trustMode": "declare-only · testnet-grade",
+    "audits": 14,
+    "claimableCount": 9,
+    "positiveBlocks": 10,
+    "successful": 10,
+    "auditWindowSec": 600,
+    "claimResolutionWindowSec": 600,
+    "claimFilingStakeEth": "100",
+    "claimStakeBps": 5000,
+    "defaultClaimToolId": "0xd485f0578dcf1925aa28cfb312584a4a172c4f5da7f05bde4c078c992b598456",
+    "latestBlockHash": "0xe8b75e6e03abe5a3c729f0c24dcec327f9dfafda43b9bf4114e935c4b2d1efff",
+    "withdrawCreditsTool": {
+      "toolId": "0xd485f0578dcf1925aa28cfb312584a4a172c4f5da7f05bde4c078c992b598456",
+      "proposer": "0xb0A35411b350038aCd79b9bEf455b77f03b9EC55",
+      "canonical": true,
+      "successfulUses": 9
+    },
+    "rollout": {
+      "m1Complete": true,
+      "m2Complete": true,
+      "phaseCAuditId": 1,
+      "phaseDAuditId": 2,
+      "phaseHCanonAuditId": 10
+    },
+    "networkTimeline": [
+      {
+        "i": "badge-check",
+        "label": "Tool canonized",
+        "detail": "tool 0xd485f0…8456",
+        "tx": "0x8e794cf1abd522a6fa9d430ce64dceda1b515bc24f1791a5587ef4ec98e20c3e"
+      },
+      {
+        "i": "badge-check",
+        "label": "Tool canonized",
+        "detail": "tool 0x6b1588…561b",
+        "tx": "0x8e794cf1abd522a6fa9d430ce64dceda1b515bc24f1791a5587ef4ec98e20c3e"
+      },
+      {
+        "i": "sparkles",
+        "label": "CAN mint",
+        "detail": "4.166982264400914277 AUDIT → 0xb0A354…EC55",
+        "tx": "0x8e794cf1abd522a6fa9d430ce64dceda1b515bc24f1791a5587ef4ec98e20c3e"
+      },
+      {
+        "i": "sparkles",
+        "label": "CAN mint",
+        "detail": "4.166982264400914277 AUDIT → 0xb0A354…EC55",
+        "tx": "0x8e794cf1abd522a6fa9d430ce64dceda1b515bc24f1791a5587ef4ec98e20c3e"
+      }
+    ],
+    "specHash": "0x7fe57aec3c363ab9da26d8a45f6bd22f30a5f441b597136e9b8fbcdca38fbe77",
+    "specToolId": "0x6b158852c2edaa3e62fa63340ffca6c6eb5836485795e937ae647fdb35c9561b",
+    "specErrorsRoot": "0x781f8f2ec1a776740197b3a18452031254b7bf02b49544ce7a5ec35816c814d8",
+    "rpcUrl": "https://sepolia.base.org",
+    "generatedAt": "2026-07-01T01:04:40.686Z",
+    "explorer": {
+      "cell": "https://sepolia.basescan.org/address/0xB8BFC2dd2CDFF79e018479C8a97B6AeC1979ff6d",
+      "token": "https://sepolia.basescan.org/address/0x756bD73C62C33eb4E4fD7028b9fe14314a94851F"
+    },
+    "reproduce": {
+      "spec": "../../RealDeal/notebook/specs/withdraw-credits-v1.md",
+      "manifest": "../tools/withdraw-credits-v1.1/manifest.json",
+      "lifeRun": "../tools/withdraw-credits-v1.1/run.ps1",
+      "runbook": "../../RealDeal/notebook/predecessor/dispute-auditor-runbook.md",
+      "forge": "# cell sibling: cd ../cell && forge script script/tools/RunWithdrawCreditsV1.s.sol:RunWithdrawCreditsV1"
+    },
+    "guides": {
+      "registerAuditor": "# ../../RealDeal/notebook/operator/runbooks/CUTOVER-RUNBOOK.md — register() on live cell",
+      "postAudit": "# membrane/post.html or ../../RealDeal/notebook/operator/runbooks/CUTOVER-RUNBOOK.md",
+      "concern": "membrane/concern.html",
+      "ideas": "ideas.html"
+    },
+    "fmeaRegistry": "0x51b4e0d1611043c1430B6d91E5F064D6b67cA7eD",
+    "integrityReviewModule": "0xD57c1f0a0D4D4E04b40934927aFcF2b1E7d0CEbC",
+    "specArbiterModule": "0xEeCCb6696D5bd47c78bB0E78296F05ce6D48A3E1",
+    "cellDependency": "../../RealDeal/notebook/ops/cell-dependency.md"
+  },
+  "audits": [
+    {
+      "id": 0,
+      "kind": "audit",
+      "state": "InBlock",
+      "outcome": "Settled · paid",
+      "protocol": "0xb0A35411b350038aCd79b9bEf455b77f03b9EC55",
+      "auditor": "0xB909cA5651c1893486a1EAFB1189E4Db9d15f071",
+      "target": "0xed490EA0335fc99dF42c3c7Bc95D623DFc6B87A8",
+      "bounty": "5000",
+      "bountyWei": "5000000000000000000000",
+      "specToolId": "0x6b158852c2edaa3e62fa63340ffca6c6eb5836485795e937ae647fdb35c9561b",
+      "specHash": "0xecfe3195122da49b2997ea87b7c16f12b20815c96637188611a7619acd325c17",
+      "resultRoot": "0xa3114b8ae385ec7a7d5ca71b26955781014eaab117605990e6b8973769c006d3",
+      "verdictPass": true,
+      "verdictLabel": "PASS",
+      "linkedAuditId": null,
+      "caseRoot": "0x2a9c504803dfb60461448ad7a2da86d846bfe314714886758f4ab26730fc59ca",
+      "claimable": true,
+      "claimStakeEth": "2500",
+      "hasOpenDispute": false,
+      "disputeAuditId": null,
+      "claim": null,
+      "integrityReviewStatus": 0,
+      "specChallengeActive": false,
+      "fmea": {
+        "specToolId": "0x6b158852c2edaa3e62fa63340ffca6c6eb5836485795e937ae647fdb35c9561b",
+        "knownClassIds": [
+          "0x0aca3b3a64dd0321e71c4c127bdf00699ebd3b83ed8e6b98c05892df16bb4216"
+        ]
+      },
+      "scope": {
+        "status": "unavailable",
+        "covered": [],
+        "notChecked": [],
+        "specHash": "0xecfe3195122da49b2997ea87b7c16f12b20815c96637188611a7619acd325c17"
+      },
+      "reproduce": {
+        "label": "Verdict / claim root",
+        "expectedRoot": "0xa3114b8ae385ec7a7d5ca71b26955781014eaab117605990e6b8973769c006d3",
+        "target": "0xed490EA0335fc99dF42c3c7Bc95D623DFc6B87A8",
+        "toolId": "0xd485f0578dcf1925aa28cfb312584a4a172c4f5da7f05bde4c078c992b598456",
+        "spec": "../../RealDeal/notebook/specs/withdraw-credits-v1.md",
+        "manifest": "../tools/withdraw-credits-v1.1/manifest.json",
+        "runbook": null,
+        "harness": "# From Life repo root — recompute root on pinned target O\n$env:TARGET_ADDRESS=\"0xed490EA0335fc99dF42c3c7Bc95D623DFc6B87A8\"\n.\\tools\\withdraw-credits-v1.1\\run.ps1",
+        "verifyCast": "cast call 0xB8BFC2dd2CDFF79e018479C8a97B6AeC1979ff6d \"auditProofHash(uint256)\" 0 --rpc-url base_sepolia",
+        "linkedOriginalId": null
+      },
+      "timeline": [
+        {
+          "i": "plus",
+          "label": "Submitted",
+          "detail": "bounty 5000 AUDIT",
+          "tx": "0xdeb576ddf2c9ec3e22d4dfa862e96a668690c2455e7ae03abfc827bac9ec6089"
+        },
+        {
+          "i": "circle-check",
+          "label": "Verdict PASS",
+          "detail": "tool 0xd37d9e…3ed3 · root 0xa3114b…06d3",
+          "tx": "0x4b9f39770a5d50364ac1a573d13f3d819467928ab38bd296bf10e917a54a20b5"
+        },
+        {
+          "i": "cube",
+          "label": "Confirmed",
+          "detail": "→ InBlock",
+          "tx": "0xfa8a793444be2cd4bbbb7adae0ab6e801a31dfece5badb3312b3930d16cc4f2d"
+        },
+        {
+          "i": "coin",
+          "label": "Positive block mint",
+          "detail": "height 1 · reward 312.5 AUDIT",
+          "tx": "0xfa8a793444be2cd4bbbb7adae0ab6e801a31dfece5badb3312b3930d16cc4f2d"
+        }
+      ],
+      "explorer": {
+        "cell": "https://sepolia.basescan.org/address/0xB8BFC2dd2CDFF79e018479C8a97B6AeC1979ff6d",
+        "target": "https://sepolia.basescan.org/address/0xed490EA0335fc99dF42c3c7Bc95D623DFc6B87A8"
+      }
+    },
+    {
+      "id": 1,
+      "kind": "audit",
+      "state": "InBlock",
+      "outcome": "Settled · paid",
+      "protocol": "0xb0A35411b350038aCd79b9bEf455b77f03b9EC55",
+      "auditor": "0xB909cA5651c1893486a1EAFB1189E4Db9d15f071",
+      "target": "0xecf8bfD5A6647aF5D27dfEed2548fD9C930B33C1",
+      "bounty": "40",
+      "bountyWei": "40000000000000000000",
+      "specToolId": "0x6b158852c2edaa3e62fa63340ffca6c6eb5836485795e937ae647fdb35c9561b",
+      "specHash": "0x7fe57aec3c363ab9da26d8a45f6bd22f30a5f441b597136e9b8fbcdca38fbe77",
+      "resultRoot": "0x3a366743cfcf868eb5896f50ce294925351af4f9dd5eb7c689ded087d95f6054",
+      "verdictPass": true,
+      "verdictLabel": "PASS",
+      "linkedAuditId": null,
+      "caseRoot": "0xfaa3985cf00a2fc0343a391aecc49d5516160e00f51ed709313da7a9242f9416",
+      "claimable": true,
+      "claimStakeEth": "100",
+      "hasOpenDispute": false,
+      "disputeAuditId": null,
+      "claim": null,
+      "integrityReviewStatus": 0,
+      "specChallengeActive": false,
+      "fmea": {
+        "specToolId": "0x6b158852c2edaa3e62fa63340ffca6c6eb5836485795e937ae647fdb35c9561b",
+        "knownClassIds": [
+          "0x0aca3b3a64dd0321e71c4c127bdf00699ebd3b83ed8e6b98c05892df16bb4216"
+        ]
+      },
+      "scope": {
+        "status": "declared-empty",
+        "covered": [],
+        "notChecked": [
+          "GOVERNANCE-DRAIN-PATH",
+          "ACCESS-CONTROL",
+          "ARITHMETIC-SAFETY",
+          "BALANCE-ACCOUNTING",
+          "INPUT-VALIDATION",
+          "ORACLE-DEPENDENCE",
+          "PAUSE-EMERGENCY",
+          "PRIVILEGED-PARAMETER",
+          "REENTRANCY",
+          "STATE-LIFECYCLE",
+          "SUPPLY-CONSERVATION",
+          "SWAP-RATE",
+          "TIME-LOGIC",
+          "TOKEN-INTERFACE",
+          "UPGRADE-PROXY"
+        ],
+        "scopeRoot": "0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470",
+        "specHash": "0x7fe57aec3c363ab9da26d8a45f6bd22f30a5f441b597136e9b8fbcdca38fbe77"
+      },
+      "reproduce": {
+        "label": "Verdict / claim root",
+        "expectedRoot": "0x3a366743cfcf868eb5896f50ce294925351af4f9dd5eb7c689ded087d95f6054",
+        "target": "0xecf8bfD5A6647aF5D27dfEed2548fD9C930B33C1",
+        "toolId": "0xd485f0578dcf1925aa28cfb312584a4a172c4f5da7f05bde4c078c992b598456",
+        "spec": "../../RealDeal/notebook/specs/withdraw-credits-v1.md",
+        "manifest": "../tools/withdraw-credits-v1.1/manifest.json",
+        "runbook": null,
+        "harness": "# From Life repo root — recompute root on pinned target O\n$env:TARGET_ADDRESS=\"0xecf8bfD5A6647aF5D27dfEed2548fD9C930B33C1\"\n.\\tools\\withdraw-credits-v1.1\\run.ps1",
+        "verifyCast": "cast call 0xB8BFC2dd2CDFF79e018479C8a97B6AeC1979ff6d \"auditProofHash(uint256)\" 1 --rpc-url base_sepolia",
+        "linkedOriginalId": null
+      },
+      "timeline": [
+        {
+          "i": "plus",
+          "label": "Submitted",
+          "detail": "bounty 40 AUDIT",
+          "tx": "0xc1dded087021847efe9e3f9b1147e00957ba1bcda4df84f187fa8b7bf7496a0d"
+        },
+        {
+          "i": "circle-check",
+          "label": "Verdict PASS",
+          "detail": "tool 0xd485f0…8456 · root 0x3a3667…6054",
+          "tx": "0xaa21c912b9f56053e4096bbd9095c932e94064488d7cc37144db0f1f81536a4b"
+        },
+        {
+          "i": "cube",
+          "label": "Confirmed",
+          "detail": "→ InBlock",
+          "tx": "0xf284040482a102808084072f03441357304e3c3517812989f47cb9e9b42e5287"
+        },
+        {
+          "i": "coin",
+          "label": "Positive block mint",
+          "detail": "height 2 · reward 3.75 AUDIT",
+          "tx": "0xf284040482a102808084072f03441357304e3c3517812989f47cb9e9b42e5287"
+        }
+      ],
+      "explorer": {
+        "cell": "https://sepolia.basescan.org/address/0xB8BFC2dd2CDFF79e018479C8a97B6AeC1979ff6d",
+        "target": "https://sepolia.basescan.org/address/0xecf8bfD5A6647aF5D27dfEed2548fD9C930B33C1"
+      }
+    },
+    {
+      "id": 2,
+      "kind": "audit",
+      "state": "Exploited",
+      "outcome": "Bug confirmed",
+      "protocol": "0xb0A35411b350038aCd79b9bEf455b77f03b9EC55",
+      "auditor": "0x216D23BBa1Fb785853d3D0f219BAE71C8D60a3AF",
+      "target": "0xbf1dBdbc535071046f6d4312ae6511A0357CFdC1",
+      "bounty": "40",
+      "bountyWei": "40000000000000000000",
+      "specToolId": "0x6b158852c2edaa3e62fa63340ffca6c6eb5836485795e937ae647fdb35c9561b",
+      "specHash": "0x7fe57aec3c363ab9da26d8a45f6bd22f30a5f441b597136e9b8fbcdca38fbe77",
+      "resultRoot": "0x22b290e60bf37818e1ff2d9e2642c1c2236d7d204b88b780b0cf20598858ba48",
+      "verdictPass": true,
+      "verdictLabel": "PASS",
+      "linkedAuditId": null,
+      "caseRoot": "0x358d73c5477756edec27d90462e1322a9024feede10554a68a85e8a446c5fd10",
+      "claimable": false,
+      "claimStakeEth": "100",
+      "hasOpenDispute": false,
+      "disputeAuditId": null,
+      "claim": {
+        "claimant": "0x67890D4cbD646AD78F72241CA591b9a60456C64E",
+        "toolId": "0xd485f0578dcf1925aa28cfb312584a4a172c4f5da7f05bde4c078c992b598456",
+        "resultRoot": "0x5fe0871a6c726c8849a0f96dfcafa33b138312960813f97bab4e6129ba49049f",
+        "stake": "100",
+        "resolved": true
+      },
+      "integrityReviewStatus": 0,
+      "specChallengeActive": false,
+      "fmea": {
+        "specToolId": "0x6b158852c2edaa3e62fa63340ffca6c6eb5836485795e937ae647fdb35c9561b",
+        "knownClassIds": [
+          "0x0aca3b3a64dd0321e71c4c127bdf00699ebd3b83ed8e6b98c05892df16bb4216"
+        ]
+      },
+      "scope": {
+        "status": "declared-empty",
+        "covered": [],
+        "notChecked": [
+          "GOVERNANCE-DRAIN-PATH",
+          "ACCESS-CONTROL",
+          "ARITHMETIC-SAFETY",
+          "BALANCE-ACCOUNTING",
+          "INPUT-VALIDATION",
+          "ORACLE-DEPENDENCE",
+          "PAUSE-EMERGENCY",
+          "PRIVILEGED-PARAMETER",
+          "REENTRANCY",
+          "STATE-LIFECYCLE",
+          "SUPPLY-CONSERVATION",
+          "SWAP-RATE",
+          "TIME-LOGIC",
+          "TOKEN-INTERFACE",
+          "UPGRADE-PROXY"
+        ],
+        "scopeRoot": "0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470",
+        "specHash": "0x7fe57aec3c363ab9da26d8a45f6bd22f30a5f441b597136e9b8fbcdca38fbe77"
+      },
+      "reproduce": {
+        "label": "Verdict / claim root",
+        "expectedRoot": "0x5fe0871a6c726c8849a0f96dfcafa33b138312960813f97bab4e6129ba49049f",
+        "target": "0xbf1dBdbc535071046f6d4312ae6511A0357CFdC1",
+        "toolId": "0xd485f0578dcf1925aa28cfb312584a4a172c4f5da7f05bde4c078c992b598456",
+        "spec": "../../RealDeal/notebook/specs/withdraw-credits-v1.md",
+        "manifest": "../tools/withdraw-credits-v1.1/manifest.json",
+        "runbook": null,
+        "harness": "# From Life repo root — recompute root on pinned target O\n$env:TARGET_ADDRESS=\"0xbf1dBdbc535071046f6d4312ae6511A0357CFdC1\"\n.\\tools\\withdraw-credits-v1.1\\run.ps1",
+        "verifyCast": "cast call 0xB8BFC2dd2CDFF79e018479C8a97B6AeC1979ff6d \"auditProofHash(uint256)\" 2 --rpc-url base_sepolia",
+        "linkedOriginalId": null
+      },
+      "timeline": [
+        {
+          "i": "plus",
+          "label": "Submitted",
+          "detail": "bounty 40 AUDIT",
+          "tx": "0x423135cabd829b358704e9a853978395a6abf60b68d778320b74ba0702856c0a"
+        },
+        {
+          "i": "circle-check",
+          "label": "Verdict PASS",
+          "detail": "tool 0xd485f0…8456 · root 0x22b290…ba48",
+          "tx": "0x28fcc4f61b92f990a7791f82cb1ce5aeb5fea416216e330da96bdc8183acfe7c"
+        },
+        {
+          "i": "cube",
+          "label": "Confirmed",
+          "detail": "→ InBlock",
+          "tx": "0x0c43cb22ea71ffa1bce539605e1894948de0da8e8e84f76bd5179290ee47687f"
+        },
+        {
+          "i": "alert-triangle",
+          "label": "Claimed",
+          "detail": "by 0x67890D…C64E · root 0x5fe087…049f",
+          "tx": "0xb45e6c8acc973ba7ab616911ad807e01d34b493a6c0a5bed530fe45faa7c9a78"
+        },
+        {
+          "i": "coin",
+          "label": "Exploited",
+          "detail": "paid 20 to 0x67890D…C64E",
+          "tx": "0x4d0ae8973ec52f56cd0920636739e2eee2a9735d5b81b6d34e698ab01c8c687a"
+        },
+        {
+          "i": "coin",
+          "label": "Positive block mint",
+          "detail": "height 3 · reward 3.8521875 AUDIT",
+          "tx": "0x0c43cb22ea71ffa1bce539605e1894948de0da8e8e84f76bd5179290ee47687f"
+        }
+      ],
+      "explorer": {
+        "cell": "https://sepolia.basescan.org/address/0xB8BFC2dd2CDFF79e018479C8a97B6AeC1979ff6d",
+        "target": "https://sepolia.basescan.org/address/0xbf1dBdbc535071046f6d4312ae6511A0357CFdC1"
+      }
+    },
+    {
+      "id": 3,
+      "kind": "dispute",
+      "state": "InBlock",
+      "outcome": "Settled · paid",
+      "protocol": "0xb0A35411b350038aCd79b9bEf455b77f03b9EC55",
+      "auditor": "0xB909cA5651c1893486a1EAFB1189E4Db9d15f071",
+      "target": "0xbf1dBdbc535071046f6d4312ae6511A0357CFdC1",
+      "bounty": "20",
+      "bountyWei": "20000000000000000000",
+      "specToolId": "0x6b158852c2edaa3e62fa63340ffca6c6eb5836485795e937ae647fdb35c9561b",
+      "specHash": "0x7fe57aec3c363ab9da26d8a45f6bd22f30a5f441b597136e9b8fbcdca38fbe77",
+      "resultRoot": "0x5fe0871a6c726c8849a0f96dfcafa33b138312960813f97bab4e6129ba49049f",
+      "verdictPass": false,
+      "verdictLabel": "FAIL",
+      "linkedAuditId": 2,
+      "caseRoot": "0x358d73c5477756edec27d90462e1322a9024feede10554a68a85e8a446c5fd10",
+      "claimable": false,
+      "claimStakeEth": "100",
+      "hasOpenDispute": false,
+      "disputeAuditId": 3,
+      "claim": null,
+      "integrityReviewStatus": 0,
+      "specChallengeActive": false,
+      "fmea": {
+        "specToolId": "0x6b158852c2edaa3e62fa63340ffca6c6eb5836485795e937ae647fdb35c9561b",
+        "knownClassIds": [
+          "0x0aca3b3a64dd0321e71c4c127bdf00699ebd3b83ed8e6b98c05892df16bb4216"
+        ]
+      },
+      "scope": {
+        "status": "declared-empty",
+        "covered": [],
+        "notChecked": [
+          "GOVERNANCE-DRAIN-PATH",
+          "ACCESS-CONTROL",
+          "ARITHMETIC-SAFETY",
+          "BALANCE-ACCOUNTING",
+          "INPUT-VALIDATION",
+          "ORACLE-DEPENDENCE",
+          "PAUSE-EMERGENCY",
+          "PRIVILEGED-PARAMETER",
+          "REENTRANCY",
+          "STATE-LIFECYCLE",
+          "SUPPLY-CONSERVATION",
+          "SWAP-RATE",
+          "TIME-LOGIC",
+          "TOKEN-INTERFACE",
+          "UPGRADE-PROXY"
+        ],
+        "scopeRoot": "0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470",
+        "specHash": "0x7fe57aec3c363ab9da26d8a45f6bd22f30a5f441b597136e9b8fbcdca38fbe77"
+      },
+      "reproduce": {
+        "label": "Dispute FAIL reproduction (pinned O)",
+        "expectedRoot": "0x5fe0871a6c726c8849a0f96dfcafa33b138312960813f97bab4e6129ba49049f",
+        "target": "0xbf1dBdbc535071046f6d4312ae6511A0357CFdC1",
+        "toolId": "0xd485f0578dcf1925aa28cfb312584a4a172c4f5da7f05bde4c078c992b598456",
+        "spec": "../../RealDeal/notebook/specs/withdraw-credits-v1.md",
+        "manifest": "../tools/withdraw-credits-v1.1/manifest.json",
+        "runbook": "../../RealDeal/notebook/predecessor/dispute-auditor-runbook.md",
+        "harness": "# From Life repo root — recompute root on pinned target O\n$env:TARGET_ADDRESS=\"0xbf1dBdbc535071046f6d4312ae6511A0357CFdC1\"\n.\\tools\\withdraw-credits-v1.1\\run.ps1",
+        "verifyCast": "cast call 0xB8BFC2dd2CDFF79e018479C8a97B6AeC1979ff6d \"auditProofHash(uint256)\" 3 --rpc-url base_sepolia",
+        "linkedOriginalId": 2
+      },
+      "timeline": [
+        {
+          "i": "circle-x",
+          "label": "Verdict FAIL",
+          "detail": "tool 0xd485f0…8456 · root 0x5fe087…049f",
+          "tx": "0xf6cf63f170fc6ddb80f87be547e517e7d98bbdbdbb104cca38c09aebf4c7e8c6"
+        },
+        {
+          "i": "cube",
+          "label": "Confirmed",
+          "detail": "→ InBlock",
+          "tx": "0x4d0ae8973ec52f56cd0920636739e2eee2a9735d5b81b6d34e698ab01c8c687a"
+        }
+      ],
+      "explorer": {
+        "cell": "https://sepolia.basescan.org/address/0xB8BFC2dd2CDFF79e018479C8a97B6AeC1979ff6d",
+        "target": "https://sepolia.basescan.org/address/0xbf1dBdbc535071046f6d4312ae6511A0357CFdC1"
+      }
+    },
+    {
+      "id": 4,
+      "kind": "audit",
+      "state": "Assigned",
+      "outcome": "In review · assigned",
+      "protocol": "0xb0A35411b350038aCd79b9bEf455b77f03b9EC55",
+      "auditor": "0x216D23BBa1Fb785853d3D0f219BAE71C8D60a3AF",
+      "target": "0x6B6F73a0d8Cda8A7Fd5918aC6670a3747C0Cf75D",
+      "bounty": "40",
+      "bountyWei": "40000000000000000000",
+      "specToolId": "0x6b158852c2edaa3e62fa63340ffca6c6eb5836485795e937ae647fdb35c9561b",
+      "specHash": "0x7fe57aec3c363ab9da26d8a45f6bd22f30a5f441b597136e9b8fbcdca38fbe77",
+      "resultRoot": null,
+      "verdictPass": null,
+      "verdictLabel": null,
+      "linkedAuditId": null,
+      "caseRoot": "0xf0000897764d84a8805cf0fca167328c80a95b38218af4e1c98f92a5d90286d4",
+      "claimable": false,
+      "claimStakeEth": "100",
+      "hasOpenDispute": false,
+      "disputeAuditId": null,
+      "claim": null,
+      "integrityReviewStatus": 0,
+      "specChallengeActive": false,
+      "fmea": {
+        "specToolId": "0x6b158852c2edaa3e62fa63340ffca6c6eb5836485795e937ae647fdb35c9561b",
+        "knownClassIds": [
+          "0x0aca3b3a64dd0321e71c4c127bdf00699ebd3b83ed8e6b98c05892df16bb4216"
+        ]
+      },
+      "scope": {
+        "status": "declared-empty",
+        "covered": [],
+        "notChecked": [
+          "GOVERNANCE-DRAIN-PATH",
+          "ACCESS-CONTROL",
+          "ARITHMETIC-SAFETY",
+          "BALANCE-ACCOUNTING",
+          "INPUT-VALIDATION",
+          "ORACLE-DEPENDENCE",
+          "PAUSE-EMERGENCY",
+          "PRIVILEGED-PARAMETER",
+          "REENTRANCY",
+          "STATE-LIFECYCLE",
+          "SUPPLY-CONSERVATION",
+          "SWAP-RATE",
+          "TIME-LOGIC",
+          "TOKEN-INTERFACE",
+          "UPGRADE-PROXY"
+        ],
+        "scopeRoot": "0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470",
+        "specHash": "0x7fe57aec3c363ab9da26d8a45f6bd22f30a5f441b597136e9b8fbcdca38fbe77"
+      },
+      "reproduce": null,
+      "timeline": [
+        {
+          "i": "plus",
+          "label": "Submitted",
+          "detail": "bounty 40 AUDIT",
+          "tx": "0xa1f603a95fa45271e27405b5c1a210468cb63514d2757285c5efc31413434661"
+        }
+      ],
+      "explorer": {
+        "cell": "https://sepolia.basescan.org/address/0xB8BFC2dd2CDFF79e018479C8a97B6AeC1979ff6d",
+        "target": "https://sepolia.basescan.org/address/0x6B6F73a0d8Cda8A7Fd5918aC6670a3747C0Cf75D"
+      }
+    },
+    {
+      "id": 5,
+      "kind": "audit",
+      "state": "InBlock",
+      "outcome": "Settled · paid",
+      "protocol": "0xb0A35411b350038aCd79b9bEf455b77f03b9EC55",
+      "auditor": "0x67890D4cbD646AD78F72241CA591b9a60456C64E",
+      "target": "0x5CA393ca79e20fa969F4cfaCA7DEAe2B26A7d87d",
+      "bounty": "40",
+      "bountyWei": "40000000000000000000",
+      "specToolId": "0x6b158852c2edaa3e62fa63340ffca6c6eb5836485795e937ae647fdb35c9561b",
+      "specHash": "0x7fe57aec3c363ab9da26d8a45f6bd22f30a5f441b597136e9b8fbcdca38fbe77",
+      "resultRoot": "0xb9d1e9cdfe77acc4aedd9278769ceb81f335f4923ce8a1e43bf9f7a700d7fc2e",
+      "verdictPass": true,
+      "verdictLabel": "PASS",
+      "linkedAuditId": null,
+      "caseRoot": "0x237ae62d489f0ac63730e449e9c6e2cf171a5e8126bb7e0f7f683b68573189c2",
+      "claimable": true,
+      "claimStakeEth": "100",
+      "hasOpenDispute": false,
+      "disputeAuditId": null,
+      "claim": null,
+      "integrityReviewStatus": 3,
+      "specChallengeActive": false,
+      "fmea": {
+        "specToolId": "0x6b158852c2edaa3e62fa63340ffca6c6eb5836485795e937ae647fdb35c9561b",
+        "knownClassIds": [
+          "0x0aca3b3a64dd0321e71c4c127bdf00699ebd3b83ed8e6b98c05892df16bb4216"
+        ]
+      },
+      "scope": {
+        "status": "declared-empty",
+        "covered": [],
+        "notChecked": [
+          "GOVERNANCE-DRAIN-PATH",
+          "ACCESS-CONTROL",
+          "ARITHMETIC-SAFETY",
+          "BALANCE-ACCOUNTING",
+          "INPUT-VALIDATION",
+          "ORACLE-DEPENDENCE",
+          "PAUSE-EMERGENCY",
+          "PRIVILEGED-PARAMETER",
+          "REENTRANCY",
+          "STATE-LIFECYCLE",
+          "SUPPLY-CONSERVATION",
+          "SWAP-RATE",
+          "TIME-LOGIC",
+          "TOKEN-INTERFACE",
+          "UPGRADE-PROXY"
+        ],
+        "scopeRoot": "0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470",
+        "specHash": "0x7fe57aec3c363ab9da26d8a45f6bd22f30a5f441b597136e9b8fbcdca38fbe77"
+      },
+      "reproduce": {
+        "label": "Verdict / claim root",
+        "expectedRoot": "0xb9d1e9cdfe77acc4aedd9278769ceb81f335f4923ce8a1e43bf9f7a700d7fc2e",
+        "target": "0x5CA393ca79e20fa969F4cfaCA7DEAe2B26A7d87d",
+        "toolId": "0xd485f0578dcf1925aa28cfb312584a4a172c4f5da7f05bde4c078c992b598456",
+        "spec": "../../RealDeal/notebook/specs/withdraw-credits-v1.md",
+        "manifest": "../tools/withdraw-credits-v1.1/manifest.json",
+        "runbook": null,
+        "harness": "# From Life repo root — recompute root on pinned target O\n$env:TARGET_ADDRESS=\"0x5CA393ca79e20fa969F4cfaCA7DEAe2B26A7d87d\"\n.\\tools\\withdraw-credits-v1.1\\run.ps1",
+        "verifyCast": "cast call 0xB8BFC2dd2CDFF79e018479C8a97B6AeC1979ff6d \"auditProofHash(uint256)\" 5 --rpc-url base_sepolia",
+        "linkedOriginalId": null
+      },
+      "timeline": [
+        {
+          "i": "plus",
+          "label": "Submitted",
+          "detail": "bounty 40 AUDIT",
+          "tx": "0xac248c85ec839e3dd8a824b19266cb5b7cb0abe71a9dade596858356e591b8da"
+        },
+        {
+          "i": "circle-check",
+          "label": "Verdict PASS",
+          "detail": "tool 0xd485f0…8456 · root 0xb9d1e9…fc2e",
+          "tx": "0xda9d2648d62b4164a1f515ed90cd96ce42e3fcd8605954f71ac423ddbc3e9c98"
+        },
+        {
+          "i": "cube",
+          "label": "Confirmed",
+          "detail": "→ InBlock",
+          "tx": "0xa3616b25a58a00d50a011585a28ba0be62e60738a6ae776b2b5683fdbf9d8b75"
+        },
+        {
+          "i": "coin",
+          "label": "Positive block mint",
+          "detail": "height 4 · reward 3.8991 AUDIT",
+          "tx": "0xa3616b25a58a00d50a011585a28ba0be62e60738a6ae776b2b5683fdbf9d8b75"
+        }
+      ],
+      "explorer": {
+        "cell": "https://sepolia.basescan.org/address/0xB8BFC2dd2CDFF79e018479C8a97B6AeC1979ff6d",
+        "target": "https://sepolia.basescan.org/address/0x5CA393ca79e20fa969F4cfaCA7DEAe2B26A7d87d"
+      }
+    },
+    {
+      "id": 6,
+      "kind": "audit",
+      "state": "Audited",
+      "outcome": "Settled",
+      "protocol": "0x216D23BBa1Fb785853d3D0f219BAE71C8D60a3AF",
+      "auditor": "0x67890D4cbD646AD78F72241CA591b9a60456C64E",
+      "target": "0xecf8bfD5A6647aF5D27dfEed2548fD9C930B33C1",
+      "bounty": "0",
+      "bountyWei": "0",
+      "specToolId": "0x6b158852c2edaa3e62fa63340ffca6c6eb5836485795e937ae647fdb35c9561b",
+      "specHash": "0x57d0a0e45917b3b8f3fb349332f05512445042ead5f30ff092b76a22e45f680f",
+      "resultRoot": "0xbc12a703c1006128fe987929ecebda8056cdc755f24aaedc1e7dc0e09d31185e",
+      "verdictPass": false,
+      "verdictLabel": "FAIL",
+      "linkedAuditId": 1,
+      "caseRoot": null,
+      "claimable": true,
+      "claimStakeEth": "100",
+      "hasOpenDispute": false,
+      "disputeAuditId": null,
+      "claim": null,
+      "integrityReviewStatus": 0,
+      "specChallengeActive": false,
+      "fmea": {
+        "specToolId": "0x6b158852c2edaa3e62fa63340ffca6c6eb5836485795e937ae647fdb35c9561b",
+        "knownClassIds": [
+          "0x0aca3b3a64dd0321e71c4c127bdf00699ebd3b83ed8e6b98c05892df16bb4216"
+        ]
+      },
+      "scope": {
+        "status": "unavailable",
+        "covered": [],
+        "notChecked": [],
+        "specHash": "0x57d0a0e45917b3b8f3fb349332f05512445042ead5f30ff092b76a22e45f680f"
+      },
+      "reproduce": {
+        "label": "Verdict / claim root",
+        "expectedRoot": "0xbc12a703c1006128fe987929ecebda8056cdc755f24aaedc1e7dc0e09d31185e",
+        "target": "0xecf8bfD5A6647aF5D27dfEed2548fD9C930B33C1",
+        "toolId": "0xd485f0578dcf1925aa28cfb312584a4a172c4f5da7f05bde4c078c992b598456",
+        "spec": "../../RealDeal/notebook/specs/withdraw-credits-v1.md",
+        "manifest": "../tools/withdraw-credits-v1.1/manifest.json",
+        "runbook": null,
+        "harness": "# From Life repo root — recompute root on pinned target O\n$env:TARGET_ADDRESS=\"0xecf8bfD5A6647aF5D27dfEed2548fD9C930B33C1\"\n.\\tools\\withdraw-credits-v1.1\\run.ps1",
+        "verifyCast": "cast call 0xB8BFC2dd2CDFF79e018479C8a97B6AeC1979ff6d \"auditProofHash(uint256)\" 6 --rpc-url base_sepolia",
+        "linkedOriginalId": null
+      },
+      "timeline": [
+        {
+          "i": "plus",
+          "label": "Submitted",
+          "detail": "bounty 40 AUDIT",
+          "tx": "0x2b3051cac0f3a72401af1be2f87377160c5abe28d4d36c6153902f86831e3d40"
+        }
+      ],
+      "explorer": {
+        "cell": "https://sepolia.basescan.org/address/0xB8BFC2dd2CDFF79e018479C8a97B6AeC1979ff6d",
+        "target": "https://sepolia.basescan.org/address/0xecf8bfD5A6647aF5D27dfEed2548fD9C930B33C1"
+      }
+    },
+    {
+      "id": 7,
+      "kind": "audit",
+      "state": "InBlock",
+      "outcome": "Settled · paid",
+      "protocol": "0x216D23BBa1Fb785853d3D0f219BAE71C8D60a3AF",
+      "auditor": "0x67890D4cbD646AD78F72241CA591b9a60456C64E",
+      "target": "0x557c8Cd411251255A704f89d465EeEB465a5dB8e",
+      "bounty": "40",
+      "bountyWei": "40000000000000000000",
+      "specToolId": "0x6b158852c2edaa3e62fa63340ffca6c6eb5836485795e937ae647fdb35c9561b",
+      "specHash": "0x7fe57aec3c363ab9da26d8a45f6bd22f30a5f441b597136e9b8fbcdca38fbe77",
+      "resultRoot": "0x0044fbdf4d3d0eba1386b3602014f7398b277ae0a5744abd55e51c6b92db135e",
+      "verdictPass": true,
+      "verdictLabel": "PASS",
+      "linkedAuditId": 1,
+      "caseRoot": null,
+      "claimable": true,
+      "claimStakeEth": "100",
+      "hasOpenDispute": false,
+      "disputeAuditId": null,
+      "claim": null,
+      "integrityReviewStatus": 0,
+      "specChallengeActive": false,
+      "fmea": {
+        "specToolId": "0x6b158852c2edaa3e62fa63340ffca6c6eb5836485795e937ae647fdb35c9561b",
+        "knownClassIds": [
+          "0x0aca3b3a64dd0321e71c4c127bdf00699ebd3b83ed8e6b98c05892df16bb4216"
+        ]
+      },
+      "scope": {
+        "status": "declared-empty",
+        "covered": [],
+        "notChecked": [
+          "GOVERNANCE-DRAIN-PATH",
+          "ACCESS-CONTROL",
+          "ARITHMETIC-SAFETY",
+          "BALANCE-ACCOUNTING",
+          "INPUT-VALIDATION",
+          "ORACLE-DEPENDENCE",
+          "PAUSE-EMERGENCY",
+          "PRIVILEGED-PARAMETER",
+          "REENTRANCY",
+          "STATE-LIFECYCLE",
+          "SUPPLY-CONSERVATION",
+          "SWAP-RATE",
+          "TIME-LOGIC",
+          "TOKEN-INTERFACE",
+          "UPGRADE-PROXY"
+        ],
+        "scopeRoot": "0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470",
+        "specHash": "0x7fe57aec3c363ab9da26d8a45f6bd22f30a5f441b597136e9b8fbcdca38fbe77"
+      },
+      "reproduce": {
+        "label": "Verdict / claim root",
+        "expectedRoot": "0x0044fbdf4d3d0eba1386b3602014f7398b277ae0a5744abd55e51c6b92db135e",
+        "target": "0x557c8Cd411251255A704f89d465EeEB465a5dB8e",
+        "toolId": "0xd485f0578dcf1925aa28cfb312584a4a172c4f5da7f05bde4c078c992b598456",
+        "spec": "../../RealDeal/notebook/specs/withdraw-credits-v1.md",
+        "manifest": "../tools/withdraw-credits-v1.1/manifest.json",
+        "runbook": null,
+        "harness": "# From Life repo root — recompute root on pinned target O\n$env:TARGET_ADDRESS=\"0x557c8Cd411251255A704f89d465EeEB465a5dB8e\"\n.\\tools\\withdraw-credits-v1.1\\run.ps1",
+        "verifyCast": "cast call 0xB8BFC2dd2CDFF79e018479C8a97B6AeC1979ff6d \"auditProofHash(uint256)\" 7 --rpc-url base_sepolia",
+        "linkedOriginalId": null
+      },
+      "timeline": [
+        {
+          "i": "plus",
+          "label": "Submitted",
+          "detail": "bounty 40 AUDIT",
+          "tx": "0x9a1ab170e238a315c752c1772ef28eeef90538e5f516ccea3ecf6c3e271d8cc0"
+        },
+        {
+          "i": "circle-check",
+          "label": "Verdict PASS",
+          "detail": "tool 0xd485f0…8456 · root 0x0044fb…135e",
+          "tx": "0x003a9ebb6fa138cea68a86245e4cd6de39d04d76e4316cd113a48f2172c2905c"
+        },
+        {
+          "i": "cube",
+          "label": "Confirmed",
+          "detail": "→ InBlock",
+          "tx": "0x78cc9f81b42cf39a5a7b38175da31a0b66494369a7825845e558bdc42ffc8906"
+        },
+        {
+          "i": "coin",
+          "label": "Positive block mint",
+          "detail": "height 5 · reward 3.9465941503125 AUDIT",
+          "tx": "0x78cc9f81b42cf39a5a7b38175da31a0b66494369a7825845e558bdc42ffc8906"
+        }
+      ],
+      "explorer": {
+        "cell": "https://sepolia.basescan.org/address/0xB8BFC2dd2CDFF79e018479C8a97B6AeC1979ff6d",
+        "target": "https://sepolia.basescan.org/address/0x557c8Cd411251255A704f89d465EeEB465a5dB8e"
+      }
+    },
+    {
+      "id": 8,
+      "kind": "audit",
+      "state": "InBlock",
+      "outcome": "Settled · paid",
+      "protocol": "0xb0A35411b350038aCd79b9bEf455b77f03b9EC55",
+      "auditor": "0x216D23BBa1Fb785853d3D0f219BAE71C8D60a3AF",
+      "target": "0x9A265eCc1675910427F2564cdFdcF662d3Fe336a",
+      "bounty": "40",
+      "bountyWei": "40000000000000000000",
+      "specToolId": "0x6b158852c2edaa3e62fa63340ffca6c6eb5836485795e937ae647fdb35c9561b",
+      "specHash": "0x7fe57aec3c363ab9da26d8a45f6bd22f30a5f441b597136e9b8fbcdca38fbe77",
+      "resultRoot": "0x48930d948e8408e28f4c909bbc840a948e2b182c12010f5fbfbab724a4aef345",
+      "verdictPass": true,
+      "verdictLabel": "PASS",
+      "linkedAuditId": null,
+      "caseRoot": "0x08cf893d419517df545ddceeccb1c46d25101794b85a65c48b09d94061a53c08",
+      "claimable": true,
+      "claimStakeEth": "100",
+      "hasOpenDispute": false,
+      "disputeAuditId": null,
+      "claim": null,
+      "integrityReviewStatus": 0,
+      "specChallengeActive": false,
+      "fmea": {
+        "specToolId": "0x6b158852c2edaa3e62fa63340ffca6c6eb5836485795e937ae647fdb35c9561b",
+        "knownClassIds": [
+          "0x0aca3b3a64dd0321e71c4c127bdf00699ebd3b83ed8e6b98c05892df16bb4216"
+        ]
+      },
+      "scope": {
+        "status": "declared-empty",
+        "covered": [],
+        "notChecked": [
+          "GOVERNANCE-DRAIN-PATH",
+          "ACCESS-CONTROL",
+          "ARITHMETIC-SAFETY",
+          "BALANCE-ACCOUNTING",
+          "INPUT-VALIDATION",
+          "ORACLE-DEPENDENCE",
+          "PAUSE-EMERGENCY",
+          "PRIVILEGED-PARAMETER",
+          "REENTRANCY",
+          "STATE-LIFECYCLE",
+          "SUPPLY-CONSERVATION",
+          "SWAP-RATE",
+          "TIME-LOGIC",
+          "TOKEN-INTERFACE",
+          "UPGRADE-PROXY"
+        ],
+        "scopeRoot": "0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470",
+        "specHash": "0x7fe57aec3c363ab9da26d8a45f6bd22f30a5f441b597136e9b8fbcdca38fbe77"
+      },
+      "reproduce": {
+        "label": "Verdict / claim root",
+        "expectedRoot": "0x48930d948e8408e28f4c909bbc840a948e2b182c12010f5fbfbab724a4aef345",
+        "target": "0x9A265eCc1675910427F2564cdFdcF662d3Fe336a",
+        "toolId": "0xd485f0578dcf1925aa28cfb312584a4a172c4f5da7f05bde4c078c992b598456",
+        "spec": "../../RealDeal/notebook/specs/withdraw-credits-v1.md",
+        "manifest": "../tools/withdraw-credits-v1.1/manifest.json",
+        "runbook": null,
+        "harness": "# From Life repo root — recompute root on pinned target O\n$env:TARGET_ADDRESS=\"0x9A265eCc1675910427F2564cdFdcF662d3Fe336a\"\n.\\tools\\withdraw-credits-v1.1\\run.ps1",
+        "verifyCast": "cast call 0xB8BFC2dd2CDFF79e018479C8a97B6AeC1979ff6d \"auditProofHash(uint256)\" 8 --rpc-url base_sepolia",
+        "linkedOriginalId": null
+      },
+      "timeline": [
+        {
+          "i": "plus",
+          "label": "Submitted",
+          "detail": "bounty 40 AUDIT",
+          "tx": "0x1478ee5a37e765501ce26bbe20adbbfdacc1f39bac99227e860954184b3ffd74"
+        },
+        {
+          "i": "circle-check",
+          "label": "Verdict PASS",
+          "detail": "tool 0xd485f0…8456 · root 0x48930d…f345",
+          "tx": "0x8975355d6003dbe6c289a2d3df96ff7aa4af018838a7d26f7b93c553e2a208d6"
+        },
+        {
+          "i": "cube",
+          "label": "Confirmed",
+          "detail": "→ InBlock",
+          "tx": "0x84cf3e3e73c4f92419c1d72f90ed6e743505ae69d5a50240fcaf0888bd08f19d"
+        },
+        {
+          "i": "coin",
+          "label": "Positive block mint",
+          "detail": "height 6 · reward 3.99466681541625 AUDIT",
+          "tx": "0x84cf3e3e73c4f92419c1d72f90ed6e743505ae69d5a50240fcaf0888bd08f19d"
+        }
+      ],
+      "explorer": {
+        "cell": "https://sepolia.basescan.org/address/0xB8BFC2dd2CDFF79e018479C8a97B6AeC1979ff6d",
+        "target": "https://sepolia.basescan.org/address/0x9A265eCc1675910427F2564cdFdcF662d3Fe336a"
+      }
+    },
+    {
+      "id": 9,
+      "kind": "audit",
+      "state": "InBlock",
+      "outcome": "Settled · paid",
+      "protocol": "0xb0A35411b350038aCd79b9bEf455b77f03b9EC55",
+      "auditor": "0xB909cA5651c1893486a1EAFB1189E4Db9d15f071",
+      "target": "0x81A63CE8780C9bA1e323aEa6a33D9F92b648c1f6",
+      "bounty": "40",
+      "bountyWei": "40000000000000000000",
+      "specToolId": "0x6b158852c2edaa3e62fa63340ffca6c6eb5836485795e937ae647fdb35c9561b",
+      "specHash": "0x7fe57aec3c363ab9da26d8a45f6bd22f30a5f441b597136e9b8fbcdca38fbe77",
+      "resultRoot": "0x39328023d7d9cacb6ae8469add31dd30271ca8d6078e568b704785cb1ae52603",
+      "verdictPass": true,
+      "verdictLabel": "PASS",
+      "linkedAuditId": null,
+      "caseRoot": "0xba137e519df01abe8820badb4e345725e68f7c4408232a6e35c8f73e0c8b2ed0",
+      "claimable": true,
+      "claimStakeEth": "100",
+      "hasOpenDispute": false,
+      "disputeAuditId": null,
+      "claim": null,
+      "integrityReviewStatus": 0,
+      "specChallengeActive": false,
+      "fmea": {
+        "specToolId": "0x6b158852c2edaa3e62fa63340ffca6c6eb5836485795e937ae647fdb35c9561b",
+        "knownClassIds": [
+          "0x0aca3b3a64dd0321e71c4c127bdf00699ebd3b83ed8e6b98c05892df16bb4216"
+        ]
+      },
+      "scope": {
+        "status": "declared-empty",
+        "covered": [],
+        "notChecked": [
+          "GOVERNANCE-DRAIN-PATH",
+          "ACCESS-CONTROL",
+          "ARITHMETIC-SAFETY",
+          "BALANCE-ACCOUNTING",
+          "INPUT-VALIDATION",
+          "ORACLE-DEPENDENCE",
+          "PAUSE-EMERGENCY",
+          "PRIVILEGED-PARAMETER",
+          "REENTRANCY",
+          "STATE-LIFECYCLE",
+          "SUPPLY-CONSERVATION",
+          "SWAP-RATE",
+          "TIME-LOGIC",
+          "TOKEN-INTERFACE",
+          "UPGRADE-PROXY"
+        ],
+        "scopeRoot": "0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470",
+        "specHash": "0x7fe57aec3c363ab9da26d8a45f6bd22f30a5f441b597136e9b8fbcdca38fbe77"
+      },
+      "reproduce": {
+        "label": "Verdict / claim root",
+        "expectedRoot": "0x39328023d7d9cacb6ae8469add31dd30271ca8d6078e568b704785cb1ae52603",
+        "target": "0x81A63CE8780C9bA1e323aEa6a33D9F92b648c1f6",
+        "toolId": "0xd485f0578dcf1925aa28cfb312584a4a172c4f5da7f05bde4c078c992b598456",
+        "spec": "../../RealDeal/notebook/specs/withdraw-credits-v1.md",
+        "manifest": "../tools/withdraw-credits-v1.1/manifest.json",
+        "runbook": null,
+        "harness": "# From Life repo root — recompute root on pinned target O\n$env:TARGET_ADDRESS=\"0x81A63CE8780C9bA1e323aEa6a33D9F92b648c1f6\"\n.\\tools\\withdraw-credits-v1.1\\run.ps1",
+        "verifyCast": "cast call 0xB8BFC2dd2CDFF79e018479C8a97B6AeC1979ff6d \"auditProofHash(uint256)\" 9 --rpc-url base_sepolia",
+        "linkedOriginalId": null
+      },
+      "timeline": [
+        {
+          "i": "plus",
+          "label": "Submitted",
+          "detail": "bounty 40 AUDIT",
+          "tx": "0xba0d7019ba0b836d75bbb2b7ea1f64a9ea8f55b6c5784a5c4030493afb981271"
+        },
+        {
+          "i": "circle-check",
+          "label": "Verdict PASS",
+          "detail": "tool 0xd485f0…8456 · root 0x393280…2603",
+          "tx": "0xd8766f996ee008d749303396b269b5fcecb1a9a254b20be4845e9adda3cbddef"
+        },
+        {
+          "i": "cube",
+          "label": "Confirmed",
+          "detail": "→ InBlock",
+          "tx": "0x23705248f9ea27956b1947370ab94cc76a691430199c1b6c8b7f14db6ad6476c"
+        },
+        {
+          "i": "coin",
+          "label": "Positive block mint",
+          "detail": "height 7 · reward 4.043325043930752187 AUDIT",
+          "tx": "0x23705248f9ea27956b1947370ab94cc76a691430199c1b6c8b7f14db6ad6476c"
+        }
+      ],
+      "explorer": {
+        "cell": "https://sepolia.basescan.org/address/0xB8BFC2dd2CDFF79e018479C8a97B6AeC1979ff6d",
+        "target": "https://sepolia.basescan.org/address/0x81A63CE8780C9bA1e323aEa6a33D9F92b648c1f6"
+      }
+    },
+    {
+      "id": 10,
+      "kind": "audit",
+      "state": "InBlock",
+      "outcome": "Settled · paid",
+      "protocol": "0xb0A35411b350038aCd79b9bEf455b77f03b9EC55",
+      "auditor": "0x67890D4cbD646AD78F72241CA591b9a60456C64E",
+      "target": "0xC5fc73262cbe0a4B28802F874B12073142a2b571",
+      "bounty": "40",
+      "bountyWei": "40000000000000000000",
+      "specToolId": "0x6b158852c2edaa3e62fa63340ffca6c6eb5836485795e937ae647fdb35c9561b",
+      "specHash": "0x7fe57aec3c363ab9da26d8a45f6bd22f30a5f441b597136e9b8fbcdca38fbe77",
+      "resultRoot": "0x10e83be26fa1bea2a756feb2c1a6c061bd1719228272b264939559eda07a97a2",
+      "verdictPass": true,
+      "verdictLabel": "PASS",
+      "linkedAuditId": null,
+      "caseRoot": "0x11efe2af9610a43a320323f3dfea932b3e06f5cc518bce0d1fad4e86bbd037ca",
+      "claimable": true,
+      "claimStakeEth": "100",
+      "hasOpenDispute": false,
+      "disputeAuditId": null,
+      "claim": null,
+      "integrityReviewStatus": 0,
+      "specChallengeActive": false,
+      "fmea": {
+        "specToolId": "0x6b158852c2edaa3e62fa63340ffca6c6eb5836485795e937ae647fdb35c9561b",
+        "knownClassIds": [
+          "0x0aca3b3a64dd0321e71c4c127bdf00699ebd3b83ed8e6b98c05892df16bb4216"
+        ]
+      },
+      "scope": {
+        "status": "declared-empty",
+        "covered": [],
+        "notChecked": [
+          "GOVERNANCE-DRAIN-PATH",
+          "ACCESS-CONTROL",
+          "ARITHMETIC-SAFETY",
+          "BALANCE-ACCOUNTING",
+          "INPUT-VALIDATION",
+          "ORACLE-DEPENDENCE",
+          "PAUSE-EMERGENCY",
+          "PRIVILEGED-PARAMETER",
+          "REENTRANCY",
+          "STATE-LIFECYCLE",
+          "SUPPLY-CONSERVATION",
+          "SWAP-RATE",
+          "TIME-LOGIC",
+          "TOKEN-INTERFACE",
+          "UPGRADE-PROXY"
+        ],
+        "scopeRoot": "0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470",
+        "specHash": "0x7fe57aec3c363ab9da26d8a45f6bd22f30a5f441b597136e9b8fbcdca38fbe77"
+      },
+      "reproduce": {
+        "label": "Verdict / claim root",
+        "expectedRoot": "0x10e83be26fa1bea2a756feb2c1a6c061bd1719228272b264939559eda07a97a2",
+        "target": "0xC5fc73262cbe0a4B28802F874B12073142a2b571",
+        "toolId": "0xd485f0578dcf1925aa28cfb312584a4a172c4f5da7f05bde4c078c992b598456",
+        "spec": "../../RealDeal/notebook/specs/withdraw-credits-v1.md",
+        "manifest": "../tools/withdraw-credits-v1.1/manifest.json",
+        "runbook": null,
+        "harness": "# From Life repo root — recompute root on pinned target O\n$env:TARGET_ADDRESS=\"0xC5fc73262cbe0a4B28802F874B12073142a2b571\"\n.\\tools\\withdraw-credits-v1.1\\run.ps1",
+        "verifyCast": "cast call 0xB8BFC2dd2CDFF79e018479C8a97B6AeC1979ff6d \"auditProofHash(uint256)\" 10 --rpc-url base_sepolia",
+        "linkedOriginalId": null
+      },
+      "timeline": [
+        {
+          "i": "plus",
+          "label": "Submitted",
+          "detail": "bounty 40 AUDIT",
+          "tx": "0x907f1665bb58aefc8433f595261fa66fc7a75db4a6106dfe509426e6d85b4eb7"
+        },
+        {
+          "i": "circle-check",
+          "label": "Verdict PASS",
+          "detail": "tool 0xd485f0…8456 · root 0x10e83b…97a2",
+          "tx": "0xa55f266ac17288b67a774c4861e1920d25a9d19ea346ef9bad9452f34138af7a"
+        },
+        {
+          "i": "cube",
+          "label": "Confirmed",
+          "detail": "→ InBlock",
+          "tx": "0x8e794cf1abd522a6fa9d430ce64dceda1b515bc24f1791a5587ef4ec98e20c3e"
+        },
+        {
+          "i": "coin",
+          "label": "Positive block mint",
+          "detail": "height 8 · reward 4.092575968485142387 AUDIT",
+          "tx": "0x8e794cf1abd522a6fa9d430ce64dceda1b515bc24f1791a5587ef4ec98e20c3e"
+        }
+      ],
+      "explorer": {
+        "cell": "https://sepolia.basescan.org/address/0xB8BFC2dd2CDFF79e018479C8a97B6AeC1979ff6d",
+        "target": "https://sepolia.basescan.org/address/0xC5fc73262cbe0a4B28802F874B12073142a2b571"
+      }
+    },
+    {
+      "id": 11,
+      "kind": "audit",
+      "state": "InBlock",
+      "outcome": "Settled · paid",
+      "protocol": "0xb0A35411b350038aCd79b9bEf455b77f03b9EC55",
+      "auditor": "0x67890D4cbD646AD78F72241CA591b9a60456C64E",
+      "target": "0xD16C15210452E43702ec1807F9eC2187506563F4",
+      "bounty": "5",
+      "bountyWei": "5000000000000000000",
+      "specToolId": "0x6b158852c2edaa3e62fa63340ffca6c6eb5836485795e937ae647fdb35c9561b",
+      "specHash": "0x7fe57aec3c363ab9da26d8a45f6bd22f30a5f441b597136e9b8fbcdca38fbe77",
+      "resultRoot": "0x01ade7269256be7dd18d55351cd1340adea553d6a7a851900cf7c9c181a532d2",
+      "verdictPass": true,
+      "verdictLabel": "PASS",
+      "linkedAuditId": null,
+      "caseRoot": "0xa8bcec10c27ecb25e7cef28f7125c1b9dccbc6c298d8cc3f3ef635a0ee68728e",
+      "claimable": true,
+      "claimStakeEth": "100",
+      "hasOpenDispute": false,
+      "disputeAuditId": null,
+      "claim": null,
+      "integrityReviewStatus": 0,
+      "specChallengeActive": false,
+      "fmea": {
+        "specToolId": "0x6b158852c2edaa3e62fa63340ffca6c6eb5836485795e937ae647fdb35c9561b",
+        "knownClassIds": [
+          "0x0aca3b3a64dd0321e71c4c127bdf00699ebd3b83ed8e6b98c05892df16bb4216"
+        ]
+      },
+      "scope": {
+        "status": "declared-empty",
+        "covered": [],
+        "notChecked": [
+          "GOVERNANCE-DRAIN-PATH",
+          "ACCESS-CONTROL",
+          "ARITHMETIC-SAFETY",
+          "BALANCE-ACCOUNTING",
+          "INPUT-VALIDATION",
+          "ORACLE-DEPENDENCE",
+          "PAUSE-EMERGENCY",
+          "PRIVILEGED-PARAMETER",
+          "REENTRANCY",
+          "STATE-LIFECYCLE",
+          "SUPPLY-CONSERVATION",
+          "SWAP-RATE",
+          "TIME-LOGIC",
+          "TOKEN-INTERFACE",
+          "UPGRADE-PROXY"
+        ],
+        "scopeRoot": "0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470",
+        "specHash": "0x7fe57aec3c363ab9da26d8a45f6bd22f30a5f441b597136e9b8fbcdca38fbe77"
+      },
+      "reproduce": {
+        "label": "Verdict / claim root",
+        "expectedRoot": "0x01ade7269256be7dd18d55351cd1340adea553d6a7a851900cf7c9c181a532d2",
+        "target": "0xD16C15210452E43702ec1807F9eC2187506563F4",
+        "toolId": "0xd485f0578dcf1925aa28cfb312584a4a172c4f5da7f05bde4c078c992b598456",
+        "spec": "../../RealDeal/notebook/specs/withdraw-credits-v1.md",
+        "manifest": "../tools/withdraw-credits-v1.1/manifest.json",
+        "runbook": null,
+        "harness": "# From Life repo root — recompute root on pinned target O\n$env:TARGET_ADDRESS=\"0xD16C15210452E43702ec1807F9eC2187506563F4\"\n.\\tools\\withdraw-credits-v1.1\\run.ps1",
+        "verifyCast": "cast call 0xB8BFC2dd2CDFF79e018479C8a97B6AeC1979ff6d \"auditProofHash(uint256)\" 11 --rpc-url base_sepolia",
+        "linkedOriginalId": null
+      },
+      "timeline": [
+        {
+          "i": "plus",
+          "label": "Submitted",
+          "detail": "bounty 5 AUDIT",
+          "tx": "0x369799a53393f6518747ad9764cd025a2ff57da46017164b937d06f46c9e7493"
+        },
+        {
+          "i": "circle-check",
+          "label": "Verdict PASS",
+          "detail": "tool 0xd485f0…8456 · root 0x01ade7…32d2",
+          "tx": "0x4f56bd8014823d0b470bc88d236a95c1768ef975eca0c00872e978f4ceb50498"
+        },
+        {
+          "i": "cube",
+          "label": "Confirmed",
+          "detail": "→ InBlock",
+          "tx": "0x74143d645dd9ef9e9f3fd6fd6c1b4ce387cd67a826d9e977df308e9a65e9eca5"
+        },
+        {
+          "i": "coin",
+          "label": "Positive block mint",
+          "detail": "height 9 · reward 4.166982264400914277 AUDIT",
+          "tx": "0x74143d645dd9ef9e9f3fd6fd6c1b4ce387cd67a826d9e977df308e9a65e9eca5"
+        }
+      ],
+      "explorer": {
+        "cell": "https://sepolia.basescan.org/address/0xB8BFC2dd2CDFF79e018479C8a97B6AeC1979ff6d",
+        "target": "https://sepolia.basescan.org/address/0xD16C15210452E43702ec1807F9eC2187506563F4"
+      }
+    },
+    {
+      "id": 12,
+      "kind": "audit",
+      "state": "Exploited",
+      "outcome": "Bug confirmed",
+      "protocol": "0xb0A35411b350038aCd79b9bEf455b77f03b9EC55",
+      "auditor": "0x216D23BBa1Fb785853d3D0f219BAE71C8D60a3AF",
+      "target": "0xE5a314F1e498CFA6012D6845dB796e1aC2166421",
+      "bounty": "2",
+      "bountyWei": "2000000000000000000",
+      "specToolId": "0x6b158852c2edaa3e62fa63340ffca6c6eb5836485795e937ae647fdb35c9561b",
+      "specHash": "0x7fe57aec3c363ab9da26d8a45f6bd22f30a5f441b597136e9b8fbcdca38fbe77",
+      "resultRoot": "0xbd85216de0683ddf5c7726fd9fba0ce8a8386dadd36d2748e2102d2afece44cc",
+      "verdictPass": true,
+      "verdictLabel": "PASS",
+      "linkedAuditId": null,
+      "caseRoot": "0x633a9a26d2731c62a00e488a8cc15a9ae956b627caf9a01c1040e333abb577c7",
+      "claimable": false,
+      "claimStakeEth": "100",
+      "hasOpenDispute": false,
+      "disputeAuditId": null,
+      "claim": {
+        "claimant": "0x67890D4cbD646AD78F72241CA591b9a60456C64E",
+        "toolId": "0xaa281e1d54308b520023044ae0f41651147d32cf5c06d024f70a706a45ac2f36",
+        "resultRoot": "0x809683c745fc0909a8edc854956c0bdb368c337b3ec79a78412a62a041451645",
+        "stake": "100",
+        "resolved": true
+      },
+      "integrityReviewStatus": 0,
+      "specChallengeActive": false,
+      "fmea": {
+        "specToolId": "0x6b158852c2edaa3e62fa63340ffca6c6eb5836485795e937ae647fdb35c9561b",
+        "knownClassIds": [
+          "0x0aca3b3a64dd0321e71c4c127bdf00699ebd3b83ed8e6b98c05892df16bb4216"
+        ]
+      },
+      "scope": {
+        "status": "declared-empty",
+        "covered": [],
+        "notChecked": [
+          "GOVERNANCE-DRAIN-PATH",
+          "ACCESS-CONTROL",
+          "ARITHMETIC-SAFETY",
+          "BALANCE-ACCOUNTING",
+          "INPUT-VALIDATION",
+          "ORACLE-DEPENDENCE",
+          "PAUSE-EMERGENCY",
+          "PRIVILEGED-PARAMETER",
+          "REENTRANCY",
+          "STATE-LIFECYCLE",
+          "SUPPLY-CONSERVATION",
+          "SWAP-RATE",
+          "TIME-LOGIC",
+          "TOKEN-INTERFACE",
+          "UPGRADE-PROXY"
+        ],
+        "scopeRoot": "0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470",
+        "specHash": "0x7fe57aec3c363ab9da26d8a45f6bd22f30a5f441b597136e9b8fbcdca38fbe77"
+      },
+      "reproduce": {
+        "label": "Verdict / claim root",
+        "expectedRoot": "0x809683c745fc0909a8edc854956c0bdb368c337b3ec79a78412a62a041451645",
+        "target": "0xE5a314F1e498CFA6012D6845dB796e1aC2166421",
+        "toolId": "0xaa281e1d54308b520023044ae0f41651147d32cf5c06d024f70a706a45ac2f36",
+        "spec": "../../RealDeal/notebook/specs/withdraw-credits-v1.md",
+        "manifest": "../tools/withdraw-credits-v1.1/manifest.json",
+        "runbook": null,
+        "harness": "# From Life repo root — recompute root on pinned target O\n$env:TARGET_ADDRESS=\"0xE5a314F1e498CFA6012D6845dB796e1aC2166421\"\n.\\tools\\withdraw-credits-v1.1\\run.ps1",
+        "verifyCast": "cast call 0xB8BFC2dd2CDFF79e018479C8a97B6AeC1979ff6d \"auditProofHash(uint256)\" 12 --rpc-url base_sepolia",
+        "linkedOriginalId": null
+      },
+      "timeline": [
+        {
+          "i": "plus",
+          "label": "Submitted",
+          "detail": "bounty 2 AUDIT",
+          "tx": "0xb8760054b2080cfb8c3b62ead87a3500ee7060099ea51f38fddc20e9b6650dc0"
+        },
+        {
+          "i": "circle-check",
+          "label": "Verdict PASS",
+          "detail": "tool 0xd485f0…8456 · root 0xbd8521…44cc",
+          "tx": "0x424bddc25feb48b566294b1ab57c236c4e9503e4328730f3b20d177b925bbf9f"
+        },
+        {
+          "i": "cube",
+          "label": "Confirmed",
+          "detail": "→ InBlock",
+          "tx": "0x3fcaac0c1b60b83f31a481a4f9bd947f30c3a22836aa923f9bf08966edd1b0e4"
+        },
+        {
+          "i": "alert-triangle",
+          "label": "Claimed",
+          "detail": "by 0x67890D…C64E · root 0x809683…1645",
+          "tx": "0x09615e5f789dd9954bbee0d904bbcfe71a6e37c36977b4e9dbda5eebdf3d5906"
+        },
+        {
+          "i": "coin",
+          "label": "Exploited",
+          "detail": "paid 4 to 0x67890D…C64E",
+          "tx": "0x89b15149a1a6a7f31dd92d8bd1e19779231c3d749d4e33440dd7bbb94517d645"
+        },
+        {
+          "i": "coin",
+          "label": "Positive block mint",
+          "detail": "height 10 · reward 4.267738780148769001 AUDIT",
+          "tx": "0x3fcaac0c1b60b83f31a481a4f9bd947f30c3a22836aa923f9bf08966edd1b0e4"
+        }
+      ],
+      "explorer": {
+        "cell": "https://sepolia.basescan.org/address/0xB8BFC2dd2CDFF79e018479C8a97B6AeC1979ff6d",
+        "target": "https://sepolia.basescan.org/address/0xE5a314F1e498CFA6012D6845dB796e1aC2166421"
+      }
+    },
+    {
+      "id": 13,
+      "kind": "dispute",
+      "state": "InBlock",
+      "outcome": "Settled · paid",
+      "protocol": "0xb0A35411b350038aCd79b9bEf455b77f03b9EC55",
+      "auditor": "0x4B9B66A6603e27098a3Ff4b806D973391Fa324Cd",
+      "target": "0xE5a314F1e498CFA6012D6845dB796e1aC2166421",
+      "bounty": "1",
+      "bountyWei": "1000000000000000000",
+      "specToolId": "0x6b158852c2edaa3e62fa63340ffca6c6eb5836485795e937ae647fdb35c9561b",
+      "specHash": "0x7fe57aec3c363ab9da26d8a45f6bd22f30a5f441b597136e9b8fbcdca38fbe77",
+      "resultRoot": "0x809683c745fc0909a8edc854956c0bdb368c337b3ec79a78412a62a041451645",
+      "verdictPass": false,
+      "verdictLabel": "FAIL",
+      "linkedAuditId": 12,
+      "caseRoot": "0x633a9a26d2731c62a00e488a8cc15a9ae956b627caf9a01c1040e333abb577c7",
+      "claimable": false,
+      "claimStakeEth": "100",
+      "hasOpenDispute": false,
+      "disputeAuditId": 13,
+      "claim": null,
+      "integrityReviewStatus": 0,
+      "specChallengeActive": false,
+      "fmea": {
+        "specToolId": "0x6b158852c2edaa3e62fa63340ffca6c6eb5836485795e937ae647fdb35c9561b",
+        "knownClassIds": [
+          "0x0aca3b3a64dd0321e71c4c127bdf00699ebd3b83ed8e6b98c05892df16bb4216"
+        ]
+      },
+      "scope": {
+        "status": "declared-empty",
+        "covered": [],
+        "notChecked": [
+          "GOVERNANCE-DRAIN-PATH",
+          "ACCESS-CONTROL",
+          "ARITHMETIC-SAFETY",
+          "BALANCE-ACCOUNTING",
+          "INPUT-VALIDATION",
+          "ORACLE-DEPENDENCE",
+          "PAUSE-EMERGENCY",
+          "PRIVILEGED-PARAMETER",
+          "REENTRANCY",
+          "STATE-LIFECYCLE",
+          "SUPPLY-CONSERVATION",
+          "SWAP-RATE",
+          "TIME-LOGIC",
+          "TOKEN-INTERFACE",
+          "UPGRADE-PROXY"
+        ],
+        "scopeRoot": "0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470",
+        "specHash": "0x7fe57aec3c363ab9da26d8a45f6bd22f30a5f441b597136e9b8fbcdca38fbe77"
+      },
+      "reproduce": {
+        "label": "Dispute FAIL reproduction (pinned O)",
+        "expectedRoot": "0x809683c745fc0909a8edc854956c0bdb368c337b3ec79a78412a62a041451645",
+        "target": "0xE5a314F1e498CFA6012D6845dB796e1aC2166421",
+        "toolId": "0xd485f0578dcf1925aa28cfb312584a4a172c4f5da7f05bde4c078c992b598456",
+        "spec": "../../RealDeal/notebook/specs/withdraw-credits-v1.md",
+        "manifest": "../tools/withdraw-credits-v1.1/manifest.json",
+        "runbook": "../../RealDeal/notebook/predecessor/dispute-auditor-runbook.md",
+        "harness": "# From Life repo root — recompute root on pinned target O\n$env:TARGET_ADDRESS=\"0xE5a314F1e498CFA6012D6845dB796e1aC2166421\"\n.\\tools\\withdraw-credits-v1.1\\run.ps1",
+        "verifyCast": "cast call 0xB8BFC2dd2CDFF79e018479C8a97B6AeC1979ff6d \"auditProofHash(uint256)\" 13 --rpc-url base_sepolia",
+        "linkedOriginalId": 12
+      },
+      "timeline": [
+        {
+          "i": "circle-x",
+          "label": "Verdict FAIL",
+          "detail": "tool 0xaa281e…2f36 · root 0x809683…1645",
+          "tx": "0xa54e3223e8820573e350ecc42faad2f4f8dd04c02453dd066a3acc9751e412ed"
+        },
+        {
+          "i": "cube",
+          "label": "Confirmed",
+          "detail": "→ InBlock",
+          "tx": "0x89b15149a1a6a7f31dd92d8bd1e19779231c3d749d4e33440dd7bbb94517d645"
+        }
+      ],
+      "explorer": {
+        "cell": "https://sepolia.basescan.org/address/0xB8BFC2dd2CDFF79e018479C8a97B6AeC1979ff6d",
+        "target": "https://sepolia.basescan.org/address/0xE5a314F1e498CFA6012D6845dB796e1aC2166421"
+      }
+    }
+  ]
+}
