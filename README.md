@@ -1,5 +1,8 @@
 # DAN — Decentralized Audit Network
 
+**▶ Live demo:** **https://decentralized-audit-network.vercel.app/explorer.html** — the on-chain audit explorer,
+running live against Base Sepolia. No install needed; just open it.
+
 **The problem.** When a smart contract is "audited" today, you're trusting a firm's PDF — you can't check it
 yourself, and money still gets stolen from audited contracts.
 
@@ -43,7 +46,8 @@ forge build
 forge test
 ```
 
-**UI** (static — any local server):
+**UI** — easiest is the [**live demo**](https://decentralized-audit-network.vercel.app/explorer.html) (nothing to
+install). To run it locally instead (static — any local server):
 
 ```bash
 cd ui
