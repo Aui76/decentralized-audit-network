@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Economy — Audit Cell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css?v=7">
+<style>
+  .kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:16px 0 22px}
+  .kpi b{font-family:var(--mono)}
+  .kpi .src{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--mut-faint);margin-top:2px}
+  .kpi .src.live{color:var(--acc)}
+  .mintchart{width:100%;height:auto;display:block;background:var(--well);border:1px solid var(--bd);border-radius:var(--radius);padding:6px}
+  .chart-note{font-size:var(--fs-xs);color:var(--mut-faint);margin:6px 0 0}
+  .earn{width:100%;border-collapse:collapse;font-size:var(--fs-small);margin-top:6px}
+  .earn th,.earn td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--bd)}
+  .earn th{color:var(--mut-faint);font-size:var(--fs-xs);text-transform:uppercase;letter-spacing:.06em;font-weight:500}
+  .earn td.num,.earn th.num{text-align:right;font-family:var(--mono)}
+  .earn tr:last-child td{border-bottom:0}
+  .earn .pass{color:var(--ok)} .earn .fail{color:var(--bad)}
+  .split-row{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 0}
+  .split-chip{font-size:var(--fs-xs);color:var(--mut);border:1px solid var(--bd);border-left:3px solid var(--acc-border);border-radius:var(--radius-sm);padding:5px 10px;background:var(--panel)}
+  .genesis-call{border:1px solid var(--banner-bd);background:var(--banner-bg);color:var(--banner-ink);border-radius:var(--radius-sm);padding:10px 14px;font-size:var(--fs-small);margin:0 0 14px}
+  .genesis-call b{font-family:var(--mono);color:var(--banner-ink)}
+  .tabs{display:flex;gap:4px;margin:4px 0 16px;border-bottom:1px solid var(--bd)}
+  .tab{font:inherit;font-size:var(--fs-small);color:var(--mut);background:none;border:0;border-bottom:2px solid transparent;padding:8px 14px;cursor:pointer;margin-bottom:-1px}
+  .tab:hover{color:var(--fg)}
+  .tab.on{color:var(--acc);border-bottom-color:var(--acc)}
+  .tabpane{display:none} .tabpane.on{display:block}
+</style>
+</head>
+<body class="page-tool">
+<div class="layout layout-tool">
+  <nav class="side">
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink" href="quickstart.html">Quickstart</a>
+    <a class="navlink" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+  <main>
+    <div class="wrap">
+      <p class="eyebrow">Economy · issuance record</p>
+      <h1>What the network has minted</h1>
+      <p class="lede">Every settled audit that reaches a positive block mints new AUDIT to the auditor. This is
+        the running record of that issuance and who earned it. Total supply is read live from the token;
+        the rest is the latest indexed snapshot.</p>
+
+      <span class="badge"><span class="live"></span> Testnet · Base Sepolia</span>
+      <p class="testnote">Running on testnet. Test funds only.</p>
+
+      <div class="tabs" id="tabs">
+        <button type="button" class="tab on" data-pane="issuance">Issuance</button>
+        <button type="button" class="tab" data-pane="auditors">Auditors</button>
+      </div>
+
+      <div id="pane-issuance" class="tabpane on"><div class="card">Loading economy data…</div></div>
+      <div id="pane-auditors" class="tabpane"></div>
+
+      <footer class="doc-page-foot">
+        <a href="explorer.html">Explorer</a> · <a href="tokenomics.html">Tokenomics</a> · <a href="resources.html">Resources</a>
+      </footer>
+    </div>
+  </main>
+</div>
+
+<script src="./view-model.js"></script>
+<script>
+(function(){
+  var M = window.__MODEL;
+  var paneI = document.getElementById('pane-issuance');
+  var paneA = document.getElementById('pane-auditors');
+  if(!M || !M.audits){ paneI.innerHTML='<div class="card">No economy data yet. Check back after audits settle on testnet.</div>'; return; }
+
+  function num(x){ var n=parseFloat(x); return isNaN(n)?0:n; }
+  function fmt(n){ if(n===0) return '0'; var s=n.toFixed(4).replace(/0+$/,'').replace(/\.$/,''); return s; }
+  function fmt2(n){ return n.toLocaleString(undefined,{maximumFractionDigits:2}); }
+  function short(a){ return !a?'—':(a.length>12?a.slice(0,6)+'…'+a.slice(-4):a); }
+
+  // ---- parse mints ---------------------------------------------------------------
+  var blocks=[];
+  M.audits.forEach(function(a){
+    (a.timeline||[]).forEach(function(t){
+      if(t.label==='Positive block mint'){
+        var h=(/height\s+(\d+)/.exec(t.detail)||[])[1];
+        var r=(/reward\s+([\d.]+)/.exec(t.detail)||[])[1];
+        blocks.push({height:h?+h:null, reward:num(r), auditor:a.auditor, auditId:a.id});
+      }
+    });
+  });
+  blocks.sort(function(x,y){ return (x.height||0)-(y.height||0); });
+
+  var canMints=[];
+  ((M.meta&&M.meta.networkTimeline)||[]).forEach(function(t){
+    if(t.label==='CAN mint'){
+      var m=/([\d.]+)\s+AUDIT\s*→\s*(0x[0-9a-fA-F…]+)/.exec(t.detail||'');
+      if(m) canMints.push({amount:num(m[1]), to:m[2]});
+    }
+  });
+
+  var genesis = blocks.filter(function(b){ return b.height===1; })[0] || null;
+  var organic = blocks.filter(function(b){ return b.height && b.height>1; });
+  var blockTotal = blocks.reduce(function(s,b){ return s+b.reward; },0);
+  var canTotal = canMints.reduce(function(s,c){ return s+c.amount; },0);
+
+  var earn={};
+  blocks.forEach(function(b){ if(!b.auditor) return; earn[b.auditor]=earn[b.auditor]||{audit:0,can:0}; earn[b.auditor].audit+=b.reward; });
+  canMints.forEach(function(c){ earn[c.to]=earn[c.to]||{audit:0,can:0}; earn[c.to].can+=c.amount; });
+  var earnerCount = Object.keys(earn).length;
+
+  var latest = organic.length ? organic[organic.length-1] : null;
+  var first  = organic.length ? organic[0] : null;
+  var climbPct = (first && latest && first.reward>0) ? ((latest.reward-first.reward)/first.reward*100) : 0;
+
+  // ---- KPIs ----------------------------------------------------------------------
+  function stat(k,v,srcHtml,id){ return '<div class="stat kpi"><span class="k">'+k+'</span><b'+(id?' id="'+id+'"':'')+'>'+v+'</b>'+(srcHtml||'')+'</div>'; }
+  var kpis='<div class="kpi-grid">'
+    + stat('Token total supply','reading…','<span class="src" id="supplySrc">on-chain</span>','kpiSupply')
+    + stat('Positive blocks', (M.meta.positiveBlocks!=null?M.meta.positiveBlocks:blocks.length),'<span class="src">snapshot</span>')
+    + stat('Auditor rewards paid', fmt2(blockTotal),'<span class="src">snapshot</span>')
+    + stat('Genesis mint', genesis?fmt(genesis.reward):'—','<span class="src">bootstrap</span>')
+    + stat('Latest block reward', latest?fmt(latest.reward):'—','<span class="src">snapshot</span>')
+    + stat('Canonization mints', canMints.length+(canMints.length?' · '+fmt2(canTotal):''),'<span class="src">snapshot</span>')
+    + '</div>';
+
+  // ---- genesis callout + trajectory ----------------------------------------------
+  var gcall = genesis ? '<p class="genesis-call">Block&nbsp;1 is the <b>genesis bootstrap</b> mint: <b>'+fmt(genesis.reward)
+    +' AUDIT</b> — off-scale versus organic blocks, so it sits outside the chart below.</p>' : '';
+
+  var svg='';
+  if(organic.length>=2){
+    var W=680,H=220,padL=52,padR=16,padT=18,padB=34;
+    var vmax=Math.max.apply(null,organic.map(function(b){return b.reward;}));
+    var vmin=Math.min.apply(null,organic.map(function(b){return b.reward;}));
+    var span=(vmax-vmin)||1, lo=vmin-span*0.25, hi=vmax+span*0.25;
+    function X(i){ return padL+(W-padL-padR)*(organic.length<2?0:i/(organic.length-1)); }
+    function Y(v){ return padT+(H-padT-padB)*(1-(v-lo)/(hi-lo)); }
+    var pts=organic.map(function(b,i){ return X(i)+','+Y(b.reward); });
+    var area='M'+X(0)+','+Y(lo)+' L'+pts.join(' L')+' L'+X(organic.length-1)+','+Y(lo)+' Z';
+    var ticks=[lo+(hi-lo)*0.15, (lo+hi)/2, hi-(hi-lo)*0.15];
+    var grid=ticks.map(function(v){ return '<line x1="'+padL+'" y1="'+Y(v)+'" x2="'+(W-padR)+'" y2="'+Y(v)+'" stroke="var(--bd)" stroke-width="1"/>'
+        +'<text x="'+(padL-8)+'" y="'+(Y(v)+4)+'" text-anchor="end" fill="var(--mut-faint)" font-size="11" font-family="JetBrains Mono,monospace">'+fmt(v)+'</text>'; }).join('');
+    var dots=organic.map(function(b,i){ return '<circle cx="'+X(i)+'" cy="'+Y(b.reward)+'" r="3.5" fill="var(--acc)"><title>block '+b.height+' · '+fmt(b.reward)+' AUDIT · auditor '+short(b.auditor)+'</title></circle>'; }).join('');
+    var xlabels=organic.map(function(b,i){ return (i===0||i===organic.length-1||organic.length<=8)?'<text x="'+X(i)+'" y="'+(H-padB+18)+'" text-anchor="middle" fill="var(--mut-faint)" font-size="11" font-family="JetBrains Mono,monospace">'+b.height+'</text>':''; }).join('');
+    svg='<svg class="mintchart" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="AUDIT minted per organic positive block">'
+      + grid
+      + '<path d="'+area+'" fill="var(--acc-glow)" stroke="none"/>'
+      + '<polyline points="'+pts.join(' ')+'" fill="none" stroke="var(--acc)" stroke-width="2"/>'
+      + dots + xlabels
+      + '<text x="'+padL+'" y="'+(padT-4)+'" fill="var(--mut-faint)" font-size="11">AUDIT per positive block</text>'
+      + '<text x="'+(W/2)+'" y="'+(H-4)+'" text-anchor="middle" fill="var(--mut-faint)" font-size="11">block height →</text>'
+      + '</svg>'
+      + '<p class="chart-note">Organic blocks '+first.height+'–'+latest.height+'. Reward '+(climbPct>=0?'rose':'fell')+' '
+        + Math.abs(climbPct).toFixed(1)+'% across the run as the slow activity average grew. Y-axis zoomed to the organic range; genesis excluded (see above).</p>';
+  }
+  var chartCard='<div class="card"><p class="k" style="margin:0 0 8px">Issuance trajectory</p>'+gcall+svg+'</div>';
+
+  var split='<div class="card"><p class="k" style="margin:0 0 6px">Where each positive-block mint goes</p>'
+    +'<div class="split-row"><span class="split-chip">Auditor reward</span><span class="split-chip">Treasury escrow</span><span class="split-chip">Founder share</span></div>'
+    +'<p class="chart-note">Total supply above therefore exceeds the auditor rewards line: it also carries the treasury and founder shares of every mint, plus tool-canonization mints.</p></div>';
+
+  paneI.innerHTML = kpis + chartCard + split;
+
+  // ---- live RPC read: token.totalSupply() ----------------------------------------
+  (function(){
+    var el=document.getElementById('kpiSupply'), src=document.getElementById('supplySrc');
+    var token=M.meta&&M.meta.cellToken, rpc=M.meta&&M.meta.rpcUrl;
+    if(!el||!token||!rpc){ if(el){el.textContent='—';} if(src){src.textContent='unavailable';} return; }
+    fetch(rpc,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:1,method:'eth_call',params:[{to:token,data:'0x18160ddd'},'latest']})})
+      .then(function(r){ return r.json(); })
+      .then(function(j){
+        if(!j||!j.result||j.result==='0x'){ throw new Error('no result'); }
+        var supply=Number(BigInt(j.result))/1e18;
+        el.innerHTML=fmt2(supply)+' <span style="font-size:14px;color:var(--mut-faint)">AUDIT</span>';
+        src.textContent='live · on-chain'; src.className='src live';
+      })
+      .catch(function(){
+        el.innerHTML=fmt2(blockTotal+canTotal)+' <span style="font-size:14px;color:var(--mut-faint)">AUDIT</span>';
+        src.textContent='snapshot (live read unavailable)';
+      });
+  })();
+
+  // ---- AUDITORS tab: scorecard ---------------------------------------------------
+  var sc={};
+  function row(addr){ sc[addr]=sc[addr]||{addr:addr,audits:0,pass:0,fail:0,disputes:0,exploits:0,protos:{},earned:(earn[addr]?earn[addr].audit+earn[addr].can:0)}; return sc[addr]; }
+  M.audits.forEach(function(a){
+    if(a.auditor){ var r=row(a.auditor);
+      r.audits++;
+      if(a.verdictLabel==='PASS') r.pass++; else if(a.verdictLabel==='FAIL') r.fail++;
+      if(a.kind==='dispute') r.disputes++;
+      if(a.protocol) r.protos[a.protocol]=1;
+    }
+    if(a.claim&&a.claim.claimant&&a.state==='Exploited'){ row(a.claim.claimant).exploits++; }
+  });
+  var cards=Object.keys(sc).map(function(k){ var r=sc[k]; r.distinct=Object.keys(r.protos).length; return r; })
+                  .sort(function(a,b){ return b.earned-a.earned; });
+  var scRows=cards.map(function(r){
+    return '<tr><td class="mono">'+short(r.addr)+'</td>'
+      +'<td class="num">'+r.audits+'</td>'
+      +'<td class="num pass">'+(r.pass||'—')+'</td>'
+      +'<td class="num fail">'+(r.fail||'—')+'</td>'
+      +'<td class="num">'+(r.exploits||'—')+'</td>'
+      +'<td class="num">'+(r.distinct||'—')+'</td>'
+      +'<td class="num">'+fmt2(r.earned)+'</td></tr>';
+  }).join('');
+  paneA.innerHTML='<div class="card"><p class="k" style="margin:0 0 8px">Auditor track record</p>'
+    +'<table class="earn"><thead><tr><th>Address</th><th class="num">Audits</th><th class="num">Pass</th><th class="num">Fail</th><th class="num">Bugs caught</th><th class="num">Protocols</th><th class="num">AUDIT earned</th></tr></thead>'
+    +'<tbody>'+scRows+'</tbody></table>'
+    +'<p class="chart-note">Every column is read from settled on-chain history — no committee, no reputation score. "Bugs caught" = disputes/claims this address won as the exploiter. "Protocols" = distinct protocols this address has audited.</p></div>';
+
+  // ---- tabs ----------------------------------------------------------------------
+  var tabs=document.getElementById('tabs');
+  tabs.addEventListener('click', function(e){
+    var b=e.target.closest('.tab'); if(!b) return;
+    Array.prototype.forEach.call(tabs.querySelectorAll('.tab'), function(t){ t.classList.toggle('on', t===b); });
+    var want=b.dataset.pane;
+    paneI.classList.toggle('on', want==='issuance');
+    paneA.classList.toggle('on', want==='auditors');
+  });
+})();
+</script>
+<script src="organ-bar.js?v=5"></script>
+<script src="your-links.js?v=5"></script>
+<script src="membrane-rail.js?v=2"></script>
+<script src="motion.js?v=1"></script>
+</body>
+</html>

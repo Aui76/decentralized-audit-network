@@ -3146,3 +3146,49 @@ textarea { caret-color: var(--acc); }
 .nav-watch:hover { color: var(--fg); text-decoration: none; }
 
 .nav-watch--changed { color: var(--warn); }
+
+/* ── Decentralized Audit Network organism strip (organ-bar.js) ───────── */
+.organ-bar{
+  display:flex; align-items:center; gap:18px;
+  padding:8px 46px 8px 18px;   /* right pad clears the fixed 34px toolbelt strip */
+  background:var(--panel); border-bottom:1px solid var(--bd);
+  font-family:var(--mono); font-size:12px;
+  white-space:nowrap;
+  position:sticky; top:0; z-index:95;   /* above the toolbelt (z-index:90) */
+}
+/* only the organs row scrolls — the brand stays fully visible on the right */
+.organ-bar .ob-organs{display:flex; align-items:center; gap:4px; flex:1 1 auto; min-width:0; overflow-x:auto; overflow-y:hidden}
+.organ-bar .ob-organs::-webkit-scrollbar{height:0}
+.ob-organ{
+  display:inline-flex; align-items:center; gap:6px;
+  padding:3px 8px; border:0; background:none; border-radius:var(--radius-sm);
+  color:var(--mut-faint); text-decoration:none; transition:color .15s var(--ease-out); position:relative;
+}
+.ob-organ .d{width:6px; height:6px; border-radius:50%; background:var(--mut-faint); opacity:.35; flex:0 0 auto}
+.ob-organ.live{color:var(--mut)}
+.ob-organ.live .d{background:var(--acc); opacity:1; box-shadow:0 0 6px var(--acc-glow)}
+.ob-organ.anchor.live{color:var(--fg-secondary)}
+.ob-organ.live:hover{color:var(--acc)}
+.ob-organ.dim{color:var(--mut-faint)}
+/* the organ we're currently viewing — lit like an active tab (inset underline, no overflow) */
+.ob-organ.current{color:var(--fg); box-shadow:inset 0 -2px 0 var(--acc)}
+.ob-organ.current .d{background:var(--acc); opacity:1; box-shadow:0 0 8px var(--acc-glow)}
+/* brand on the right — never scrolls, never clipped */
+.organ-bar .ob-right{display:inline-flex; align-items:center; gap:14px; flex:0 0 auto}
+.organ-bar .ob-count{color:var(--mut-faint)}
+.organ-bar .ob-brand{
+  display:inline-flex; align-items:center; gap:8px;
+  color:var(--fg-secondary); font-weight:600; letter-spacing:.04em;
+}
+.organ-bar .ob-brand .pulse{
+  width:8px; height:8px; border-radius:50%;
+  background:var(--acc); box-shadow:0 0 10px var(--acc-glow);
+  animation:ob-pulse 2.4s ease-in-out infinite;
+}
+@keyframes ob-pulse{0%,100%{opacity:1}50%{opacity:.45}}
+@media (max-width:720px){ .organ-bar .ob-count{display:none} }
+/* when the strip is present, drop the fixed right-edge toolbelt below it so its
+   "Tools" / "Your links" / "Your audits" labels aren't hidden under the bar */
+body.has-organ-bar{ --ob-h:40px; }
+body.has-organ-bar .toolbelt-strip{ top:var(--ob-h); height:calc(100vh - var(--ob-h)); }
+body.has-organ-bar .toolbelt-dock{ top:var(--ob-h); height:calc(100vh - var(--ob-h)); }
