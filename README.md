@@ -66,4 +66,9 @@ fixes are deployed and proven.
 
 ## License
 
-Business Source License 1.1 — see [`LICENSE`](LICENSE). Every contract also carries its `SPDX-License-Identifier: BUSL-1.1` header.
+**Dual-licensed** — see [`NOTICE`](NOTICE) for the exact map.
+
+- **The settlement core** (`AuditCell`, the cell libraries, the settlement satellites) is **BUSL-1.1** ([`LICENSE`](LICENSE)) — read it, fork it, run it non-production freely; production use needs a commercial licence (akerve@gmail.com); converts to **GPL-2.0-or-later** on **2030-06-24**.
+- **The integration surface** — the interfaces, the **re-runnable audit tools**, the EIP-712 reference, the test targets, `tools/` and `ui/` — is **MIT** ([`LICENSE-MIT`](LICENSE-MIT)).
+
+In short: **verify us, integrate with us, build organs and indexers on us — freely.** The only thing the licence asks is that you don't fork the settlement core and run it as a competing network without talking to us. Each file's SPDX header governs.

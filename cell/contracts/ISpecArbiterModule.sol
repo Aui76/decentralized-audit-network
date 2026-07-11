@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: BUSL-1.1
+// SPDX-License-Identifier: MIT
 pragma solidity 0.8.20;
 
 /// @dev Gate A spec-challenge overlay (F-44 / X1). Settlement-touching organ — not in-cell.

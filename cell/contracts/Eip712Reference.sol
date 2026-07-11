@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: BUSL-1.1
+// SPDX-License-Identifier: MIT
 pragma solidity 0.8.20;
 
 /// @dev O1 reference — cathedral `AuditNetwork` EIP-712 view helpers (F-04), extracted for puzzle oracle tests.

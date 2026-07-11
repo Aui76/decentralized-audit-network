@@ -1,0 +1,58 @@
+# NOTICE — which licence covers what
+
+This repo is **dual-licensed**. The line follows one question — the same *placement test* the
+architecture uses: **does this code change settled truth (a verdict, a payout, the state of an
+audit)?**
+
+## BUSL-1.1 — the settlement core
+
+See [`LICENSE`](LICENSE). Free to **read, fork, modify and run for non-production use**
+(research, testing, audit, education). **Production use requires a commercial licence**
+(akerve@gmail.com). On the **Change Date, 2030-06-24**, it converts automatically to
+**GPL-2.0-or-later**.
+
+    cell/contracts/   AuditCell · CellLogicLib · CellStorage · CellEscrow · CellToken
+                      CellParamIds · ClaimDisputeModule · DiscovererPayoutLib
+                      IssuanceModule · AssignmentModule · AssignmentEntropyLib
+                      BlockhashEntropy · CommitRevealEntropy · SpecArbiterModule
+                      SpecGapModule · SpecGapLib · StructuralUpgradeModule
+                      IntegrityReviewModule · WitnessClaimLib · SubmitAuditLib
+                      RunDigests · FmeaRegistry
+
+## MIT — the integration surface
+
+See [`LICENSE-MIT`](LICENSE-MIT). Take it, run it, build a business on it. **No licence needed
+from us.**
+
+    cell/contracts/          all I*.sol interfaces (IClaimDisputeModule,
+                             IClaimSettlementMutator, IAssignmentModule, ISpecGapModule,
+                             ISpecArbiterModule, IDisputeResolver, IEntropyProvider,
+                             IRunProofVerifier) · Eip712Reference
+    cell/contracts/tools/    the re-runnable audit tools + probes (AuditResultV1,
+                             AuditCaseV1, WithdrawCreditsV1, TransferCreditsV1, …)
+    cell/contracts/          test-target fixtures (Gate0*, SmokeTarget, TutorialDualVault,
+                             GenesisBootstrapTarget)
+    tools/                   demo LP tooling
+    ui/                      the browser explorer + participant flows
+
+*(`cell/test/` and `cell/script/` currently still carry BUSL headers. They are a test harness
+and deploy scripts — nothing to "productionise" — so this is cosmetic, not a restriction that
+binds anyone in practice. They can be moved to MIT in a later pass.)*
+
+## Why it's split this way
+
+**The core is BUSL** because it's what a funded competitor would clone wholesale to launch a
+rival network. A licence-violating fork is unfundable and unauditable — no serious investor or
+audit firm touches one. It's a **deterrent, not a wall**: it does not stop an anonymous
+deployer, and it isn't meant to.
+
+**The surface is MIT on purpose.** BUSL restricts *production use* — and running an organ
+service (an indexer, a tier service, an FMEA watchdog, a Bob-card integrator) **is** production
+use. Putting BUSL on the interfaces would tax the exact permissionless market this network
+exists to create. The product is an accumulating canonical toolkit; a toolkit nobody may run is
+not a toolkit.
+
+So: **verify us, integrate with us, build on us — freely. Just don't fork the settlement core
+and run it as a competing network without talking to us.**
+
+*Not legal advice.*

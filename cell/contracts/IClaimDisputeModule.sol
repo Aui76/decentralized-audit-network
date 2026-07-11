@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: BUSL-1.1
+// SPDX-License-Identifier: MIT
 pragma solidity 0.8.20;
 
 /// @dev F-83 / P1: witness + legacy claim/dispute settlement lives off-cell for EIP-170 headroom.

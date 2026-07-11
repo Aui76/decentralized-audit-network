@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: BUSL-1.1
+// SPDX-License-Identifier: MIT
 pragma solidity 0.8.20;
 
 /// @dev Cell mutators for ClaimDisputeModule — views use AuditCell public getters.

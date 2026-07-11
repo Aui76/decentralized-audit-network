@@ -2,10 +2,22 @@ Business Source License 1.1
 
 Parameters
 
-Licensor:             Aui76 (https://github.com/Aui76)
-Licensed Work:        Audit Cell — the settlement cell, satellites, libraries, and
-                      associated source in this repository.
-                      The Licensed Work is (c) 2026 Aui76.
+Licensor:             Evdokios Kerveloglou (https://github.com/Aui76)
+Licensed Work:        Audit Cell — the SETTLEMENT CORE only: the settlement cell, its
+                      satellites and settlement libraries, as listed in NOTICE under
+                      "BUSL-1.1 (settlement core)".
+                      The Licensed Work is (c) 2026 Evdokios Kerveloglou.
+
+                      NOT part of the Licensed Work: the integration surface — the
+                      I*.sol interfaces, the re-runnable audit tools
+                      (cell/contracts/tools/), the EIP-712 reference, the test-target
+                      fixtures, tools/ and ui/ — which are licensed under MIT (see
+                      LICENSE-MIT and NOTICE). Building an indexer, organ service, or
+                      any integration on top of these is NOT production use of the
+                      Licensed Work and needs no licence from the Licensor.
+
+                      Where a file's SPDX header and this file disagree, the SPDX
+                      header governs.
 Additional Use Grant: None.
 Change Date:          2030-06-24
 Change License:       GNU General Public License, version 2.0 or later (GPL-2.0-or-later)
