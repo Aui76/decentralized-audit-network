@@ -11,6 +11,12 @@ on:
   pull_request:
   workflow_dispatch:
 
+# Only the newest run per branch matters. Without this, three pushes in a row means three
+# ~60-minute compiles racing each other for a result you no longer care about.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build-and-test:
     name: forge build + forge test
@@ -24,6 +30,19 @@ jobs:
         uses: foundry-rs/foundry-toolchain@v1
         with:
           version: stable
+
+      # `via_ir = true` with `optimizer_runs = 1` is the slowest possible compile — correct for
+      # production bytecode, brutal for CI (~60 min cold). Cache the compiler output, keyed on
+      # the sources + settings, so an unchanged tree recompiles in minutes instead of an hour.
+      - name: Cache forge build
+        uses: actions/cache@v4
+        with:
+          path: |
+            cell/out
+            cell/cache
+          key: forge-${{ runner.os }}-${{ hashFiles('cell/foundry.toml', 'cell/contracts/**/*.sol', 'cell/test/**/*.sol', 'cell/script/**/*.sol') }}
+          restore-keys: |
+            forge-${{ runner.os }}-
 
       - name: Install forge-std
         working-directory: cell
