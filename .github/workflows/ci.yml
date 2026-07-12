@@ -173,10 +173,15 @@ jobs:
           set -euo pipefail
           fail=0
 
-          # A literal 64-hex string is a private key unless proven otherwise.
-          if grep -rInE '\b0x[a-fA-F0-9]{64}\b' --include='*.sol' --include='*.toml' \
-               --include='*.json' --include='*.yml' . ; then
-            echo "::error::64-hex literal found — possible private key"; fail=1
+          # NB: a blanket 64-hex scan is USELESS here — this is a smart-contract repo, so it
+          # is made of 32-byte hashes (TOOL_ARTIFACT_HASH, spec IDs, domain separators). A
+          # keccak hash and a private key are both 64 hex chars; length cannot tell them apart.
+          # So target what a LEAKED KEY actually looks like: hex assigned to a key-named thing,
+          # not a hash named TOOL_ARTIFACT_HASH.
+          if grep -rIniE '(private[_-]?key|secret[_-]?key|mnemonic)[[:space:]]*[:=][[:space:]]*.{0,4}0x[a-fA-F0-9]{40,}' \
+               --include='*.sol' --include='*.toml' --include='*.json' --include='*.yml' \
+               --include='*.env' --include='*.txt' . ; then
+            echo "::error::a hex value is assigned to a key/secret/mnemonic name — possible leaked key"; fail=1
           fi
 
           # .env must never be committed.
