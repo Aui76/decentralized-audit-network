@@ -70,11 +70,20 @@ jobs:
           done
           exit $fail
 
+      # NB: explicit list, NOT a glob. `I*.sol` also matches IntegrityReviewModule and
+      # IssuanceModule — concrete BUSL core contracts that merely start with "I". Guessing
+      # an interface by its first letter is exactly the kind of imprecise surface this repo
+      # warns against; name the files.
       - name: Integration surface (interfaces) must be MIT
         run: |
           set -euo pipefail
           fail=0
-          for path in cell/contracts/I*.sol; do
+          interfaces=(
+            IClaimDisputeModule IClaimSettlementMutator IAssignmentModule ISpecGapModule
+            ISpecArbiterModule IDisputeResolver IEntropyProvider IRunProofVerifier
+          )
+          for name in "${interfaces[@]}"; do
+            path="cell/contracts/$name.sol"
             [ -e "$path" ] || continue
             if ! head -1 "$path" | grep -q 'SPDX-License-Identifier: MIT'; then
               echo "::error::$path is not MIT — the interfaces must stay permissive."
