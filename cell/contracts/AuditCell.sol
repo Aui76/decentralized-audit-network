@@ -337,6 +337,17 @@ contract AuditCell is CellTypeDefs, IClaimSettlementMutator {
         return CellStorage.layout().artifactToAuditId[h];
     }
 
+    // auditTargetChainId view REMOVED (size shrink, 2026-07-10 — fix-auditcell-size-shrink):
+    // AuditCell hit 24607 > 24576 (EIP-170) after the 2026-07-08 docket. This view was pure
+    // integrator sugar over getAudit(id).targetChainId; read that raw field (0 = home chain)
+    // and normalize 0 -> block.chainid OFF-CHAIN. The G-30 storage reserve (the field) is UNCHANGED.
+
+    /// @notice G-19 re-key — distinct ESTABLISHED protocols that have used the tool (the canonization
+    ///         trigger counter; raw `successfulUses` in `tools()` is telemetry only).
+    function toolDistinctEstablishedUses(bytes32 toolId) external view returns (uint256) {
+        return CellStorage.layout().toolDistinctEstablishedUses[toolId];
+    }
+
     function caseRootRegistered(bytes32 h) external view returns (bool) {
         return CellStorage.layout().caseRootRegistered[h];
     }
@@ -475,6 +486,16 @@ contract AuditCell is CellTypeDefs, IClaimSettlementMutator {
 
     function discoveryFloorBps() external view returns (uint256) {
         return CellStorage.layout().discoveryFloorBps;
+    }
+
+    /// @notice G-28 (2026-07-08): name-based audit row read. Callers use `getAudit(id).<field>` instead of
+    ///         counting commas on the positional `audits()` tuple below — a struct-field reorder can no longer
+    ///         silently misroute a consumer (the compiler resolves names, not positions). The positional
+    ///         `audits()` getter is KEPT for external ABI/surface conservation; all in-contract module
+    ///         consumers migrate to this. Returns the full `Audit` struct (all 24 fields, incl. the ones the
+    ///         positional tuple omits: auditWindow, protocolRejectCount, bountyEscrowed, targetChainId).
+    function getAudit(uint256 id) external view returns (Audit memory) {
+        return CellStorage.layout().audits[id];
     }
 
     function audits(uint256 id)

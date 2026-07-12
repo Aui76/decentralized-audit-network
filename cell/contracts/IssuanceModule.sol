@@ -62,17 +62,32 @@ contract IssuanceModule {
     uint256 public escrowMinimumThresholdBps = 36000;
     uint256 public manipulationThresholdBps = 13000;
     uint256 public manipulationMintScaleBps = 8000;
+    // G-23 (M-5, 2026-07-08): the damper is a continuous TAPER, not a cliff. Full weight at parity;
+    // linear to manipulationMintScaleBps at the threshold; keeps falling at the same slope past it,
+    // floored here. Straddling just under the old 1.3x cliff now gains ~nothing.
+    uint256 public manipulationMintFloorBps = 5000;
     uint256 public emaSlowUnprovenWeightBps = 2500;
     uint256 public emaSlowMinSuccessfulForFullWeight = 5;
     // A-1 (G-17) self-audit mint gate: payout weight for unproven auditors + per-block cap on the auditor mint
     // as a fraction of THIS audit's own bounty. See body/proposals/a1-mint-weight-and-bounty-cap-proposal.txt.
     uint256 public mintUnprovenWeightBps = 2500; // < credibilityCountThreshold distinct protocols → this weight
     uint256 public mintBountyCapBps = 2500;      // auditor mint ≤ this % of the block's own bounty; 0 = off
+    // G-22 first-funding latch (2026-07-08): first nonzero lpBalance ever observed at settle. Once set, the
+    // LP mint cap NEVER disables — lp==0 computes the cap against this snapshot instead of going uncapped
+    // (and instead of 0: escrow deposits derive from the mint, so a zero-mint rule would brick issuance).
+    // Set-once, no setter — nothing for a trusted role to retune (G-27 surface not widened).
+    uint256 public lpFirstFunded;
     uint256 public maxFailedRecoveryAttempts = 25;
     uint256 public failedRecoveryAttempts;
     uint256 public recoverabilityFactorBps = 4500;
     bool public greenLightMintEnabled = true;
     uint256 public greenLightMintBps = 5000;
+    // G-20 cumulative bound (2026-07-08, DEC-22 docket): lifetime green-light mint may never exceed
+    // greenLightCumulativeCapBps of totalSupply (read at mint time — self-scaling, no epoch machinery).
+    // Per-confirm the mint was already bounded (50% x supplement, 30 bps escrow drawdown, 4 gates, §2.6
+    // wash-proof EMAs); this closes the one remaining unbounded-CUMULATIVE mint lever in the system.
+    uint256 public greenLightMintedCumulative;
+    uint256 public greenLightCumulativeCapBps = 200; // 2% of supply, lifetime; admin-tunable like its siblings
 
     mapping(address => uint256) public protocolSubmissionCount;
     mapping(address => uint256) public protocolCumulativeBounty;
@@ -106,6 +121,33 @@ contract IssuanceModule {
     modifier onlyAdmin() {
         require(msg.sender == admin, "Not admin");
         _;
+    }
+
+    // G-27 §B (2026-07-08, DEC-22 docket): one-way per-parameter lock for the anti-Sybil hardening knobs.
+    // CAPABILITY ships in bytecode (un-addable post-freeze — the reserve rationale); it is UNARMED at this
+    // deployment BY DESIGN — this cell is a calibration testnet, so the knobs stay mutable to gather tuning
+    // data. Arming is a per-deployment operational call (like the founder lock, runbook §2b); a future final
+    // deploy arms it to make today's hardening un-reversible. Bitmask; lock is set-once per id.
+    uint256 public issuanceParamLockMask;
+    uint8 public constant LOCK_CREDIBILITY = 0;      // setCredibilityCountThreshold (§2.5 gate: G-17/19/24)
+    uint8 public constant LOCK_A1_GATE = 1;          // setA1MintGate (mint weight + bounty cap: G-17)
+    uint8 public constant LOCK_GREENLIGHT_CAP = 2;   // setGreenLightCumulativeCapBps (G-20)
+    uint8 public constant LOCK_MANIP_TAPER = 3;      // setAdaptiveIssuanceParams + setManipulationMintFloorBps (G-23)
+    uint8 public constant LOCK_LP_CAP = 4;           // setMintLpCapBps (G-22 governor)
+
+    function issuanceParamLocked(uint8 id) public view returns (bool) {
+        return (issuanceParamLockMask & (uint256(1) << id)) != 0;
+    }
+
+    /// @notice G-27 §B: lock an anti-Sybil param one-way (irreversible). UNARMED at this deploy by design.
+    function lockIssuanceParam(uint8 id) external onlyAdmin {
+        require(id <= LOCK_LP_CAP, "Bad param id");
+        issuanceParamLockMask |= (uint256(1) << id);
+        emit ParameterUpdated("issuanceParamLock", id);
+    }
+
+    function _requireUnlocked(uint8 id) internal view {
+        require(!issuanceParamLocked(id), "Issuance param locked");
     }
 
     modifier onlyCell() {
@@ -145,6 +187,7 @@ contract IssuanceModule {
     }
 
     function setMintLpCapBps(uint256 v) external onlyAdmin {
+        _requireUnlocked(LOCK_LP_CAP);
         mintLpCapBps = v;
         emit ParameterUpdated("mintLpCapBps", v);
     }
@@ -162,8 +205,32 @@ contract IssuanceModule {
     }
 
     function setCredibilityCountThreshold(uint256 v) external onlyAdmin {
+        _requireUnlocked(LOCK_CREDIBILITY);
         credibilityCountThreshold = v;
         emit ParameterUpdated("credibilityCountThreshold", v);
+    }
+
+    /// @dev G-20: lifetime green-light cap knob (bps of totalSupply). Same trust model as its sibling
+    ///      green-light params (no IssuanceModule param-lock exists — the freeze-gate §B question).
+    function setGreenLightCumulativeCapBps(uint256 v) external onlyAdmin {
+        _requireUnlocked(LOCK_GREENLIGHT_CAP);
+        greenLightCumulativeCapBps = v;
+        emit ParameterUpdated("greenLightCumulativeCapBps", v);
+    }
+
+    /// @dev G-23: floor knob for the manipulation taper (bps). Kept OUT of setAdaptiveIssuanceParams so
+    ///      that selector stays stable (surface gate: 0 removed).
+    function setManipulationMintFloorBps(uint256 v) external onlyAdmin {
+        _requireUnlocked(LOCK_MANIP_TAPER);
+        require(v <= manipulationMintScaleBps, "Floor above scale");
+        manipulationMintFloorBps = v;
+        emit ParameterUpdated("manipulationMintFloorBps", v);
+    }
+
+    /// @notice G-20: remaining lifetime green-light mint headroom (supply-scaled, saturating).
+    function greenLightMintHeadroom() public view returns (uint256) {
+        uint256 capTotal = (token.totalSupply() * greenLightCumulativeCapBps) / 10_000;
+        return capTotal > greenLightMintedCumulative ? capTotal - greenLightMintedCumulative : 0;
     }
 
     /// @notice credBounty that the next settle for (auditor, protocol) would use (view; no state change).
@@ -184,7 +251,9 @@ contract IssuanceModule {
         bool greenLightEnabled,
         uint256 greenLightBps
     ) external onlyAdmin {
-        require(manipThreshBps <= 20_000 && manipMintScaleBps <= 10_000, "Invalid manipulation bps");
+        _requireUnlocked(LOCK_MANIP_TAPER);
+        // G-23: threshold must sit strictly above parity — the taper's slope is anchored on (threshold - 10_000).
+        require(manipThreshBps > 10_000 && manipThreshBps <= 20_000 && manipMintScaleBps <= 10_000, "Invalid manipulation bps");
         require(unprovenWeightBps <= 10_000 && greenLightBps <= 10_000, "Invalid weight bps");
         manipulationThresholdBps = manipThreshBps;
         manipulationMintScaleBps = manipMintScaleBps;
@@ -199,6 +268,7 @@ contract IssuanceModule {
     // A-1 (G-17): set the self-audit mint gate params (pre-lock; freeze posture bundled with the IssuanceModule
     // param-lock question). unprovenWeightBps ≤ 10000; bountyCapBps ≤ 10000 (0 disables the cap).
     function setA1MintGate(uint256 unprovenWeightBps, uint256 bountyCapBps) external onlyAdmin {
+        _requireUnlocked(LOCK_A1_GATE);
         require(unprovenWeightBps <= 10_000 && bountyCapBps <= 10_000, "Invalid A1 gate bps");
         mintUnprovenWeightBps = unprovenWeightBps;
         mintBountyCapBps = bountyCapBps;
@@ -263,6 +333,12 @@ contract IssuanceModule {
         returns (uint256 auditorMinted, uint256 treasuryMinted, uint256 reward)
     {
         id;
+        // G-22 latch: record the first nonzero LP funding (from PRIOR settles' treasury splits). At the
+        // genesis settle lp is still 0, so the latch stays unset and the bootstrap path is untouched.
+        {
+            uint256 lpNow = _lpBalance();
+            if (lpFirstFunded == 0 && lpNow > 0) lpFirstFunded = lpNow;
+        }
         uint256 slowForReward = emaSlow;
         if (emaSlow == 0 && rawBounty > 0) {
             slowForReward = _previewEmaSlowAfterBounty(auditor, protocol, rawBounty);
@@ -320,15 +396,33 @@ contract IssuanceModule {
         if (slowEma == 0) return 0;
         uint256 activityMint = _activityMint(slowEma);
         uint256 lp = _lpBalance();
-        uint256 reward = lp == 0 ? activityMint : _min(activityMint, (mintLpCapBps * lp) / 10_000);
+        // G-22 fix: after LP is first funded the cap never disables — a full LP drain (lpManager, C-3/G-27
+        // overlap) computes the cap against the first-funded snapshot instead of minting uncapped. Pre-latch
+        // (genesis bootstrap) behavior is byte-identical to before.
+        uint256 effLp = lp == 0 ? lpFirstFunded : lp;
+        uint256 reward = effLp == 0 ? activityMint : _min(activityMint, (mintLpCapBps * effLp) / 10_000);
         if (emaFast == 0) {
             return reward;
         }
         uint256 fastRatioBps = (emaFast * 10_000) / slowEma;
-        if (fastRatioBps > manipulationThresholdBps) {
-            return (reward * manipulationMintScaleBps) / 10_000;
+        // G-23 (M-5): continuous taper replaces the cliff (the straddle dodge at threshold-epsilon is dead).
+        return (reward * manipulationScaleBps(fastRatioBps)) / 10_000;
+    }
+
+    /// @notice G-23 (M-5): mint damping as a continuous function of the fast/slow ratio. 10_000 (full) at
+    ///         or below parity; linear down to `manipulationMintScaleBps` at `manipulationThresholdBps`;
+    ///         same slope past the threshold, floored at `manipulationMintFloorBps`. Strictly ≤ the old
+    ///         cliff above the threshold, gently ≤ full weight below it — never MORE permissive.
+    function manipulationScaleBps(uint256 fastRatioBps) public view returns (uint256) {
+        if (fastRatioBps <= 10_000) return 10_000;
+        uint256 span = manipulationThresholdBps > 10_000 ? manipulationThresholdBps - 10_000 : 0;
+        if (span == 0) {
+            // degenerate config (threshold at/below parity): fall back to the old cliff semantics
+            return manipulationMintScaleBps;
         }
-        return reward;
+        uint256 drop = ((10_000 - manipulationMintScaleBps) * (fastRatioBps - 10_000)) / span;
+        uint256 scale = drop >= 10_000 ? 0 : 10_000 - drop;
+        return scale < manipulationMintFloorBps ? manipulationMintFloorBps : scale;
     }
 
     function _previewEmaSlowAfterBounty(address auditor, address protocol, uint256 rawBounty)
@@ -465,9 +559,14 @@ contract IssuanceModule {
             if (escrowBal < threshold) {
                 uint256 shortfall = supplement - paid;
                 uint256 mintCap = (shortfall * greenLightMintBps) / 10_000;
+                // G-20: clamp to the lifetime cumulative headroom (supply-scaled). Partial mint at the
+                // boundary; 0 once the lifetime cap is spent.
+                uint256 headroom = greenLightMintHeadroom();
+                if (mintCap > headroom) mintCap = headroom;
                 if (mintCap > 0) {
                     uint256 minted = _mint(auditor, mintCap);
                     if (minted > 0) {
+                        greenLightMintedCumulative += minted;
                         emit GreenLightMintPaid(auditor, minted, shortfall);
                     }
                 }
@@ -475,4 +574,49 @@ contract IssuanceModule {
         }
     }
 
-    function _auditorEmaSlowWeightBps(address auditor) internal view retu
+    function _auditorEmaSlowWeightBps(address auditor) internal view returns (uint256) {
+        // A-1 (G-17) prong 3 — key the emaSlow signal weight off DISTINCT-counterparty history, not raw
+        // `successful`. Five self-audits satisfied `successful >= 5` and bought full signal weight — the
+        // gate's discount was bought back by the exact behavior it discounts. Distinct-protocol count can't be
+        // farmed by repetition (a wash stays at 1). `_previewEmaSlowAfterBounty` uses this too, so the genesis
+        // preview and the settle path stay in agreement.
+        if (auditorDistinctProtocols[auditor] >= credibilityCountThreshold) {
+            return 10_000;
+        }
+        return emaSlowUnprovenWeightBps;
+    }
+
+    function _greenLightMintAllowed(uint256 prevFast, uint256 fastRatioBps) internal view returns (bool) {
+        if (!greenLightMintEnabled) return false;
+        if (floorDecayBps() == 0) return false;
+        if (fastRatioBps < recoverabilityFactorBps) return false;
+        if (emaFast <= prevFast) return false;
+        return true;
+    }
+
+    uint256 public upgradeAdoptMintBps = 10_000;
+
+    function setUpgradeAdoptMintBps(uint256 v) external onlyAdmin {
+        upgradeAdoptMintBps = v;
+    }
+
+    function upgradeAdoptMintAmount() public view returns (uint256) {
+        uint256 canFloor = nextPositiveBlockReward();
+        return (canFloor * upgradeAdoptMintBps) / 10_000;
+    }
+
+    function mintUpgradeAdopt(address to) external onlyCellOrStructural returns (uint256) {
+        return _mint(to, upgradeAdoptMintAmount());
+    }
+
+    function mintToolCanonization(address to) external onlyCell returns (uint256) {
+        return _mint(to, nextPositiveBlockReward());
+    }
+
+    /// @dev G-19 (2026-07-08): the §2.5 established-protocol signal, exposed as the canonization
+    ///      eligibility gate (read by ToolUseLib). GATE-only reuse of the credibility metric — it pays
+    ///      nothing here (punish/pay rule, lessons #10).
+    function isEstablishedProtocol(address p) external view returns (bool) {
+        return protocolDistinctAuditors[p] >= credibilityCountThreshold;
+    }
+}

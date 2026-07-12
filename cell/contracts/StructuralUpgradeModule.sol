@@ -573,7 +573,7 @@ contract StructuralUpgradeModule {
         if (structuralAuditKind[workAuditId] != 0) revert InvalidWorkAudit();
         if (uint256(c.auditStateOf(workAuditId)) != uint256(CellTypeDefs.AuditState.InBlock)) revert WorkNotConfirmed();
         if (c.auditPositiveBlock(workAuditId) < g.probationStartBlock) revert WorkBeforeProbation();
-        (,,, uint256 workBounty,,,,,,,,,,,,,,,,) = c.audits(workAuditId);
+        uint256 workBounty = c.getAudit(workAuditId).bounty;
         if (workBounty < minJuryQualifyingBounty) revert WorkDoesNotQualify();
 
         uint256 w = _juryVoteWeight(msg.sender);

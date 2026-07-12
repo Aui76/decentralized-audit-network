@@ -175,7 +175,9 @@ contract SpecArbiterModule is ISpecArbiterModule {
 
     function _findSpecArbiter(uint256 auditId, address challenger, address exclude) internal view returns (address) {
         AuditCell ac = _ac();
-        (address protocol, address auditor, , , , , , , , , , , , , , , , , , ) = ac.audits(auditId);
+        CellTypeDefs.Audit memory a = ac.getAudit(auditId);
+        address protocol = a.protocol;
+        address auditor = a.auditor;
         bytes32 seed = _specArbiterSeed(auditId, challenger, exclude);
         address chosen = address(0);
         uint256 eligibleCount = 0;
@@ -200,7 +202,9 @@ contract SpecArbiterModule is ISpecArbiterModule {
     function _isSpecArbiterEligible(uint256 auditId, address candidate, address challenger) internal view returns (bool) {
         if (candidate == address(0)) return false;
         AuditCell ac = _ac();
-        (address protocol, address auditor, , , , , , , , , , , , , , , , , , ) = ac.audits(auditId);
+        CellTypeDefs.Audit memory a = ac.getAudit(auditId);
+        address protocol = a.protocol;
+        address auditor = a.auditor;
         if (candidate == protocol || candidate == auditor || candidate == challenger) return false;
         return ac.isEligible(candidate);
     }
@@ -211,7 +215,9 @@ contract SpecArbiterModule is ISpecArbiterModule {
     {
         AuditCell ac = _ac();
         IClaimSettlementMutator s = _settlement();
-        (address protocol, , , uint256 lockedBounty, , , , , , , , , , , , , , , , ) = ac.audits(auditId);
+        CellTypeDefs.Audit memory a = ac.getAudit(auditId);
+        address protocol = a.protocol;
+        uint256 lockedBounty = a.bounty;
 
         if (lockedBounty > 0 && ac.auditBountyEscrowed(auditId)) {
             uint256 fee = specChallengeFee;
@@ -273,8 +279,11 @@ contract SpecArbiterModule is ISpecArbiterModule {
 
         if (!ac.auditExists(auditId)) revert NoAudit();
         if (ac.activeDisputeAuditId(auditId) != 0) revert DisputeOpen();
-        (, , , , , CellTypeDefs.AuditState state, bytes32 specHash, , bytes32 specToolId, bytes32 specPassDigest, , , , , , , , , , ) =
-            ac.audits(auditId);
+        CellTypeDefs.Audit memory a = ac.getAudit(auditId);
+        CellTypeDefs.AuditState state = a.state;
+        bytes32 specHash = a.specHash;
+        bytes32 specToolId = a.specToolId;
+        bytes32 specPassDigest = a.specPassDigest;
         if (!_challengeableState(state)) revert NotChallengeable();
         if (specToolId == bytes32(0)) revert NoSpecTool();
         if (_challenges[auditId].active) revert ChallengeOpen();
@@ -330,9 +339,8 @@ contract SpecArbiterModule is ISpecArbiterModule {
         if (ch.specArbiter == address(0)) revert NoSpecArbiter();
         if (!_isSpecArbiterEligible(auditId, ch.specArbiter, ch.challenger)) revert ArbiterIneligible();
 
-        (, , , , , , bytes32 specHash, , bytes32 specToolId, bytes32 specPassDigest, , , , , , , , , , ) =
-            ac.audits(auditId);
-        bool passConfirmed = RunDigests.specRunDigest(specHash, specToolId, true, specErrorsRoot) == specPassDigest;
+        CellTypeDefs.Audit memory a = ac.getAudit(auditId);
+        bool passConfirmed = RunDigests.specRunDigest(a.specHash, a.specToolId, true, specErrorsRoot) == a.specPassDigest;
 
         address challenger = ch.challenger;
         address arbiter = ch.specArbiter;
@@ -363,10 +371,9 @@ contract SpecArbiterModule is ISpecArbiterModule {
         if (!ch.active) revert NoChallenge();
         if (ch.specArbiter != address(0)) revert SpecArbiterAssignedBlock();
 
-        (address protocol, , , , , , bytes32 specHash, , bytes32 specToolId, bytes32 specPassDigest, , , , , , , , , , ) =
-            ac.audits(auditId);
-        if (msg.sender != protocol) revert NotProtocol();
-        if (RunDigests.specRunDigest(specHash, specToolId, true, passErrorsRoot) != specPassDigest) revert SpecRunMismatch();
+        CellTypeDefs.Audit memory a = ac.getAudit(auditId);
+        if (msg.sender != a.protocol) revert NotProtocol();
+        if (RunDigests.specRunDigest(a.specHash, a.specToolId, true, passErrorsRoot) != a.specPassDigest) revert SpecRunMismatch();
 
         address challenger = ch.challenger;
         uint256 stake = ch.stakeAmount;

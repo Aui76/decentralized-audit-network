@@ -67,7 +67,14 @@ contract MintCurveInvariantsTest is Test {
     function test_manipulation_spike_damps_reward() external {
         _setEma(1000 ether, 2000 ether);
         uint256 undamped = (1000 ether * 2500) / 10_000;
-        assertEq(issuance.nextPositiveBlockReward(), (undamped * 8000) / 10_000);
+        // G-23 (M-5): the continuous taper replaced the 8000-bps cliff. Derive the expected damping
+        // from the contract's own curve (fast/slow ratio 20_000 bps -> slope past threshold, floored)
+        // so this invariant tracks the params instead of drifting when they move. The dedicated
+        // ManipulationTaper suite owns the curve-shape assertions.
+        uint256 scale = issuance.manipulationScaleBps((2000 ether * 10_000) / 1000 ether);
+        assertLt(scale, 10_000, "spike must damp");
+        assertGe(scale, issuance.manipulationMintFloorBps(), "taper floored");
+        assertEq(issuance.nextPositiveBlockReward(), (undamped * scale) / 10_000);
     }
 
     function test_settle_mints_without_supply_ceiling() external {

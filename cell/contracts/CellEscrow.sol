@@ -367,4 +367,56 @@ contract CellEscrow {
     }
 
     function claimFounder() external returns (uint256 amount) {
-        require(msg.sender == founder
+        require(msg.sender == founder, "Not founder");
+        amount = founderClaimable();
+        require(amount > 0, "Nothing claimable");
+        founderClaimed += amount;
+        require(token.transfer(founder, amount), "Transfer failed");
+        emit FounderClaimed(founder, amount);
+    }
+
+    function _lpCap() internal view returns (uint256) {
+        uint256 supply = token.totalSupply();
+        if (supply == 0) return type(uint256).max;
+        return (supply * LP_CAP_BPS) / 10_000;
+    }
+
+    function _payFromBucket(
+        uint256 amount,
+        uint256 maxIterations,
+        uint256 bucketBalance,
+        PendingDeposit[] storage queue,
+        uint256 queueHead
+    ) internal returns (uint256 paid, uint256 newBalance, uint256 newHead) {
+        newHead = queueHead;
+        if (amount == 0) return (0, bucketBalance, newHead);
+
+        uint256 toPay = amount > bucketBalance ? bucketBalance : amount;
+        if (toPay == 0) return (0, bucketBalance, newHead);
+
+        uint256 remaining = toPay;
+        uint256 iterations = 0;
+        while (remaining > 0 && newHead < queue.length) {
+            if (maxIterations != 0 && iterations >= maxIterations) break;
+            iterations++;
+
+            PendingDeposit storage dep = queue[newHead];
+            if (dep.amount == 0) {
+                newHead++;
+                continue;
+            }
+            if (dep.amount <= remaining) {
+                remaining -= dep.amount;
+                dep.amount = 0;
+                newHead++;
+            } else {
+                dep.amount -= remaining;
+                remaining = 0;
+            }
+        }
+
+        paid = toPay - remaining;
+        if (paid == 0) return (0, bucketBalance, newHead);
+        newBalance = bucketBalance - paid;
+    }
+}

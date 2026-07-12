@@ -13,13 +13,12 @@ via_ir = true
 remappings = [
   "forge-std/=lib/forge-std/src/",
   "genesis-tools/=contracts/tools/",
-  "demo-lp/=../body/tools/lp-demo-pool/contracts/",
+  "demo-lp/=../tools/lp-demo-pool/contracts/",
 ]
 
 fs_permissions = [
   { access = "read-write", path = "./deployments" },
-  { access = "read", path = "../body/tools/lp-demo-pool" },
-  { access = "read", path = "../body/deployments" },
+  { access = "read", path = "../tools/lp-demo-pool" },
 ]
 
 [rpc_endpoints]

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.20;
 
 /// @dev Canonical AUDIT_RESULT_V1 encoding (LOCKED). See Genesis/audit-result-v1.md.

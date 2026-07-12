@@ -47,6 +47,13 @@ abstract contract CellTypeDefs {
         bytes32 caseRoot;
         uint256 supersedesAuditId;
         bool bountyEscrowed;
+        /// @dev G-30 reserve (DEC-18/DEC-22, 2026-07-08): chain the audit target lives on.
+        ///      0 = home chain (this cell's chainid) — no write path sets it today, by design;
+        ///      only a future foreign-target seam writes nonzero. Storage-layout reserve:
+        ///      un-addable post-freeze, which is the whole reason it ships on this deployment.
+        ///      Read via getAudit(id).targetChainId (raw; 0 = home chain), normalized off-chain
+        ///      (the on-chain auditTargetChainId view was removed 2026-07-10 for EIP-170 headroom).
+        uint256 targetChainId;
     }
 
     struct ProtocolRecord {
@@ -168,6 +175,10 @@ library CellStorage {
         uint256 paramLocked;
         address entropyProvider;
         bool entropyProviderLocked;
+        // G-19 re-key (2026-07-08): canonization trigger = distinct ESTABLISHED protocols, not raw uses.
+        // Written only by ToolUseLib (delegatecall). canonicalThreshold is re-denominated accordingly.
+        mapping(bytes32 => mapping(address => bool)) toolProtocolCounted;
+        mapping(bytes32 => uint256) toolDistinctEstablishedUses;
     }
 
     function layout() internal pure returns (Layout storage l) {

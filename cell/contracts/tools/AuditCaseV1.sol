@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.20;
 
 /// @dev Canonical AUDIT_CASE_V1 encoding — mirrors AuditCell._caseRootFromInputs for off-chain tests/tools.

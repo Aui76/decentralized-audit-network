@@ -143,13 +143,17 @@ contract SpecGapModule is ISpecGapModule {
         AuditCell ac = _ac();
         if (originalAuditId >= ac.nextAuditId()) revert InvalidAuditId();
 
-        (, , , , , CellTypeDefs.AuditState state, bytes32 specHash, bytes32 artifactHash, bytes32 specToolId, , , , , , , , , , , ) =
-            ac.audits(originalAuditId);
+        CellTypeDefs.Audit memory a = ac.getAudit(originalAuditId);
+        CellTypeDefs.AuditState state = a.state;
+        bytes32 specHash = a.specHash;
+        bytes32 artifactHash = a.artifactHash;
+        bytes32 specToolId = a.specToolId;
         if (!_claimEligible(state)) revert AuditNotGapEligible();
         if (specGaps[originalAuditId][classId].exists) revert GapExists();
         if (!vulnerabilityClassRegistered[classId]) revert ClassNotRegistered();
 
-        (address protocol, address auditor, , , , , , , , , , , , , , , , , , ) = ac.audits(originalAuditId);
+        address protocol = a.protocol;
+        address auditor = a.auditor;
         (,,, uint256 filerPosition,,) = ac.auditors(msg.sender);
         if (filerPosition == 0) revert FilerNotRegistered();
         if (msg.sender == protocol) revert FilerCannotBeProtocol();
@@ -226,11 +230,11 @@ contract SpecGapModule is ISpecGapModule {
         if (!g.exists || g.status != SpecGapLib.Status.Filed) revert NotOpen();
         if (activeSpecGapDisputeAuditId[auditId][classId] != 0) revert ContestAlreadyOpen();
 
-        (, , , uint256 bounty, , , , , , , , , , , , , , , , ) = ac.audits(auditId);
-        uint256 minBounty = (bounty * DISPUTE_BOUNTY_MIN_BPS) / 10_000;
+        CellTypeDefs.Audit memory a = ac.getAudit(auditId);
+        uint256 minBounty = (a.bounty * DISPUTE_BOUNTY_MIN_BPS) / 10_000;
         if (disputeBounty < minBounty || disputeBounty == 0) revert BountyLow();
-        (, , address deployed, , , , , bytes32 artifactHash, , , , , , , , , , , , ) = ac.audits(auditId);
-        if (deployed != address(0) && deployed.codehash != artifactHash) revert BytecodeDrift();
+        address deployed = a.deployedAddress;
+        if (deployed != address(0) && deployed.codehash != a.artifactHash) revert BytecodeDrift();
         ac.settlementToken(0, msg.sender, address(0), disputeBounty + INTEGRITY_CONTEST_STAKE);
         g.contestStake = INTEGRITY_CONTEST_STAKE;
         emit SpecGapContested(auditId, classId, INTEGRITY_CONTEST_STAKE);
@@ -284,8 +288,10 @@ contract SpecGapModule is ISpecGapModule {
         uint256 disputeId = activeSpecGapDisputeAuditId[auditId][classId];
         if (disputeId == 0) revert NoOpenContest();
         if (ac.auditStateOf(disputeId) == CellTypeDefs.AuditState.AwaitingWindow) revert ContestVerdicted();
-        (, , , uint256 refund, uint256 windowStart, , , , , , , , , , , , address funder, , , ) =
-            ac.audits(disputeId);
+        CellTypeDefs.Audit memory ad = ac.getAudit(disputeId);
+        uint256 refund = ad.bounty;
+        uint256 windowStart = ad.windowStart;
+        address funder = ad.lastDiscoverer;
         if (block.timestamp < windowStart + ac.claimResolutionWindow()) revert ContestWindowActive();
 
         SpecGapLib.Record storage g = specGaps[auditId][classId];
@@ -307,8 +313,9 @@ contract SpecGapModule is ISpecGapModule {
         if (!g.exists || g.status != SpecGapLib.Status.Filed) revert GapNotOpen();
         if (activeSpecGapDisputeAuditId[originalAuditId][classId] != disputeId) revert ContestMismatch();
 
-        (, , , , , , bytes32 specHash, bytes32 artifactHash, , , , , , , , , , , , ) =
-            ac.audits(originalAuditId);
+        CellTypeDefs.Audit memory a = ac.getAudit(originalAuditId);
+        bytes32 specHash = a.specHash;
+        bytes32 artifactHash = a.artifactHash;
         bytes32 rDisp = ac.auditProofHash(disputeId);
         bool passVerdict = ac.auditVerdictPass(disputeId);
         bool passReplay = SpecGapLib.disputePassReplay(rDisp, passVerdict, g, artifactHash, specHash);
@@ -349,8 +356,10 @@ contract SpecGapModule is ISpecGapModule {
         SpecGapLib.Status finalStatus
     ) internal {
         AuditCell ac = _ac();
-        (, , , , , , bytes32 specHash, bytes32 artifactHash, bytes32 specToolId, , , , , , , , , , , ) =
-            ac.audits(auditId);
+        CellTypeDefs.Audit memory a = ac.getAudit(auditId);
+        bytes32 specHash = a.specHash;
+        bytes32 artifactHash = a.artifactHash;
+        bytes32 specToolId = a.specToolId;
         if (!SpecGapLib.witnessFailAtOpen(g.proofHash, g, artifactHash, specHash)) revert WitnessResultRootMismatch();
         if (g.filingStake > 0) {
             uint256 refund = g.filingStake;

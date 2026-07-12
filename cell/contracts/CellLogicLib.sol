@@ -4,6 +4,7 @@ pragma solidity 0.8.20;
 import "./CellStorage.sol";
 import "./IAssignmentModule.sol";
 import "./AssignmentEntropyLib.sol";
+import "./ToolUseLib.sol";
 
 interface IIntegrityReviewGateLib {
     function confirmBlocked(uint256 auditId) external view returns (bool);
@@ -599,40 +600,18 @@ library CellLogicLib {
         _recordOneToolUse(L, toolId, auditId, successful);
     }
 
+    /// @dev G-19 (2026-07-08): body EXTRACTED to `ToolUseLib.recordOneToolUseExt` (linked lib, delegatecall,
+    ///      same storage) — the canonization trigger is re-keyed there to DISTINCT ESTABLISHED protocols.
+    ///      Extraction keeps CellLogicLib under its byte margin; events re-declared topic-identical in
+    ///      ToolUseLib. `L` stays in the signature so call sites are untouched.
     function _recordOneToolUse(
         CellStorage.Layout storage L,
         bytes32 toolId,
         uint256 auditId,
         bool successful
     ) internal {
-        CellTypeDefs.Tool storage t = L.tools[toolId];
-        if (!t.exists) return;
-        if (successful) {
-            t.successfulUses += 1;
-            if (!t.canonical && t.successfulUses >= L.canonicalThreshold) {
-                t.canonical = true;
-                uint256 blockSize = L.currentBlockSize > 0 ? L.currentBlockSize : 1;
-                uint256 canonReward = L.issuanceModule != address(0)
-                    ? IIssuanceModuleLib(L.issuanceModule).nextPositiveBlockReward() / blockSize
-                    : 0;
-                if (canonReward > 0 && t.proposer != address(0) && L.issuanceModule != address(0)) {
-                    uint256 mintedCanon =
-                        IIssuanceModuleLib(L.issuanceModule).mintToolCanonization(t.proposer);
-                    if (mintedCanon > 0) {
-                        L.latestBlockHash = keccak256(
-                            abi.encode(
-                                L.latestBlockHash, "CAN", toolId, t.proposer, mintedCanon, block.timestamp
-                            )
-                        );
-                        emit ToolCanonizationRewarded(toolId, t.proposer, mintedCanon, L.latestBlockHash);
-                    }
-                }
-                emit ToolCanonized(toolId);
-            }
-        } else {
-            t.failedUses += 1;
-        }
-        emit ToolUseRecorded(toolId, auditId, successful);
+        L; // storage context is shared via delegatecall; parameter kept for call-site stability
+        ToolUseLib.recordOneToolUseExt(toolId, auditId, successful);
     }
 
     function maxProtocolRejectsForAuditExt(address protocol) external view returns (uint256) {

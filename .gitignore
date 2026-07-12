@@ -19,3 +19,5 @@ cell/.build-stamp/
 .claude/
 .DS_Store
 Thumbs.db
+
+cell/foundry.lock

@@ -1,0 +1,183 @@
+name: cell
+
+# The public repo's README tells a stranger to run `forge build` and `forge test`.
+# This workflow is that stranger: a clean clone, on someone else's machine, every push.
+# It exists because the repo once shipped truncated, non-compiling contracts for weeks
+# and nobody noticed — see PUBLISHING.md in the private tree.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    name: forge build + forge test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: stable
+
+      - name: Install forge-std
+        working-directory: cell
+        run: forge install foundry-rs/forge-std --no-git
+
+      - name: Build
+        working-directory: cell
+        run: forge build --sizes
+
+      - name: Test
+        working-directory: cell
+        run: forge test --summary
+
+  licence-headers:
+    name: licence split intact
+    runs-on: ubuntu-latest
+
+    # The settlement core must stay BUSL-1.1; the integration surface must stay MIT.
+    # Rule + reasoning: PUBLISHING.md (private tree) and NOTICE (this repo).
+    # A core file silently relicensed to MIT cannot be undone — that snapshot is MIT forever.
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Core files must be BUSL-1.1
+        run: |
+          set -euo pipefail
+          core=(
+            AuditCell CellLogicLib CellStorage CellEscrow CellToken CellParamIds
+            ClaimDisputeModule DiscovererPayoutLib IssuanceModule AssignmentModule
+            AssignmentEntropyLib BlockhashEntropy CommitRevealEntropy SpecArbiterModule
+            SpecGapModule SpecGapLib StructuralUpgradeModule IntegrityReviewModule
+            WitnessClaimLib SubmitAuditLib RunDigests FmeaRegistry ToolUseLib
+          )
+          fail=0
+          for f in "${core[@]}"; do
+            path="cell/contracts/$f.sol"
+            if [ ! -f "$path" ]; then
+              echo "::error::MISSING core contract: $path"; fail=1; continue
+            fi
+            if ! head -1 "$path" | grep -q 'SPDX-License-Identifier: BUSL-1.1'; then
+              echo "::error::$path is not BUSL-1.1 (settlement core must be BUSL)"; fail=1
+            fi
+          done
+          exit $fail
+
+      - name: Integration surface (interfaces) must be MIT
+        run: |
+          set -euo pipefail
+          fail=0
+          for path in cell/contracts/I*.sol; do
+            [ -e "$path" ] || continue
+            if ! head -1 "$path" | grep -q 'SPDX-License-Identifier: MIT'; then
+              echo "::error::$path is not MIT — the interfaces must stay permissive."
+              echo "::error::Running an organ service (indexer, tier service, watchdog) IS production"
+              echo "::error::use, which BUSL restricts. A BUSL interface taxes the organ market."
+              fail=1
+            fi
+          done
+          exit $fail
+
+      # The tools and audit targets are content-bound: TOOL_ARTIFACT_HASH = keccak256(runtime
+      # bytecode), and Solidity embeds a hash of the SOURCE TEXT in that bytecode. Change one
+      # comment — an SPDX line counts — and the artifact hash no longer reproduces the value
+      # pinned on-chain. "Clone it and re-derive the hash" is the whole promise of this project.
+      # These files are frozen until an artifact re-baseline. See NOTICE.
+      - name: Pinned artifacts must not drift
+        run: |
+          set -euo pipefail
+          fail=0
+          pinned=(
+            cell/contracts/tools/WithdrawCreditsV1.sol
+            cell/contracts/tools/WithdrawCreditsV1ArtifactProbe.sol
+            cell/contracts/tools/TransferCreditsV1.sol
+            cell/contracts/tools/TransferCreditsV1ArtifactProbe.sol
+            cell/contracts/tools/AuditResultV1.sol
+            cell/contracts/tools/AuditCaseV1.sol
+            cell/contracts/GenesisBootstrapTarget.sol
+            cell/contracts/TutorialDualVault.sol
+            cell/contracts/SmokeTarget.sol
+            cell/contracts/Gate0Target.sol
+            cell/contracts/Gate0R2Target.sol
+            cell/contracts/Gate0R2TargetFix.sol
+            cell/contracts/Gate0R3Target.sol
+            cell/contracts/Gate0G10Target.sol
+            cell/contracts/Gate0G10ThrowawayFix.sol
+            cell/contracts/Eip712Reference.sol
+          )
+          for path in "${pinned[@]}"; do
+            [ -e "$path" ] || continue
+            if ! head -1 "$path" | grep -q 'SPDX-License-Identifier: BUSL-1.1'; then
+              echo "::error::$path changed licence header — this file's BYTECODE IS PINNED ON-CHAIN."
+              echo "::error::Any source edit (comments included) changes its metadata hash, changes its"
+              echo "::error::artifact hash, and breaks 'clone and re-derive'. Relicense only at a re-baseline."
+              fail=1
+            fi
+          done
+          exit $fail
+
+      - name: Licence files present
+        run: |
+          set -euo pipefail
+          for f in LICENSE LICENSE-MIT NOTICE; do
+            [ -f "$f" ] || { echo "::error::missing $f"; exit 1; }
+          done
+
+      # SURFACE for the PLACEMENT TEST (architecture.md § The placement decision).
+      # Every contract must be consciously classified — settled truth (BUSL) or organ surface
+      # (MIT) — and NOTICE is where that classification is recorded. A new .sol that nobody
+      # classified fails HERE, at the commit, instead of surfacing in a licence audit months
+      # later. The rule is not "update NOTICE"; the rule is "answer the placement question."
+      - name: Every contract is classified in NOTICE
+        run: |
+          set -euo pipefail
+          fail=0
+          for path in $(git ls-files 'cell/contracts/**/*.sol'); do
+            name=$(basename "$path" .sol)
+            if ! grep -qE "(^|[^A-Za-z0-9_])$name([^A-Za-z0-9_]|$)" NOTICE; then
+              echo "::error::$name is not classified in NOTICE."
+              echo "::error::Answer the placement test: does it change SETTLED TRUTH — a verdict,"
+              echo "::error::a payout, the state of an audit? Yes -> settlement core, BUSL-1.1."
+              echo "::error::No  -> integration surface / organ market, MIT. Then list it in NOTICE."
+              fail=1
+            fi
+          done
+          exit $fail
+
+  no-secrets:
+    name: no secrets
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Scan for keys, envs and ops machinery
+        run: |
+          set -euo pipefail
+          fail=0
+
+          # A literal 64-hex string is a private key unless proven otherwise.
+          if grep -rInE '\b0x[a-fA-F0-9]{64}\b' --include='*.sol' --include='*.toml' \
+               --include='*.json' --include='*.yml' . ; then
+            echo "::error::64-hex literal found — possible private key"; fail=1
+          fi
+
+          # .env must never be committed.
+          if git ls-files | grep -E '(^|/)\.env($|\.)' ; then
+            echo "::error::.env is tracked"; fail=1
+          fi
+
+          # Deploy/ops machinery is where addresses and RPC keys leak. Only .s.sol ships.
+          if git ls-files 'cell/script/**' | grep -viE '\.s\.sol$' ; then
+            echo "::error::non-Foundry script in cell/script — ops machinery must not ship"; fail=1
+          fi
+
+          exit $fail

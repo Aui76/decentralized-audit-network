@@ -136,14 +136,16 @@ contract ClaimDisputeModule is IClaimDisputeModule {
         IClaimSettlementMutator m = _mutator();
         AuditCell ac = _ac();
 
-        (, , , , , CellTypeDefs.AuditState state, bytes32 specHash, bytes32 artifactHash, , , , , , , , , , , , ) =
-            ac.audits(originalAuditId);
-        if (!_claimEligible(state)) revert OriginalNotEligibleForClaim();
+        CellTypeDefs.Audit memory a = ac.getAudit(originalAuditId);
+        if (!_claimEligible(a.state)) revert OriginalNotEligibleForClaim();
+        bytes32 specHash = a.specHash;
+        bytes32 artifactHash = a.artifactHash;
 
         (, , , , , bool resolved, bool exists, , , , , , ) = ac.vulnerabilityClaims(originalAuditId);
         if (exists) revert ClaimAlreadyFiled();
 
-        (address protocol, address auditor, , , , , , , , , , , , , , , , , , ) = ac.audits(originalAuditId);
+        address protocol = a.protocol;
+        address auditor = a.auditor;
         (,,, uint256 claimantPosition,,) = ac.auditors(claimant);
         if (claimantPosition == 0) revert ClaimantNotRegistered();
         if (claimant == protocol) revert ClaimantCannotBeProtocol();
@@ -188,7 +190,7 @@ contract ClaimDisputeModule is IClaimDisputeModule {
             }
         }
 
-        (, , , uint256 bounty, , , , , , , , , , , , , , , , ) = ac.audits(originalAuditId);
+        uint256 bounty = ac.getAudit(originalAuditId).bounty;
         uint256 stakeDue = ac.requiredClaimStake(originalAuditId);
         if (stakeDue > 0) {
             m.settlementToken(0, claimant, address(0), stakeDue);
@@ -217,28 +219,11 @@ contract ClaimDisputeModule is IClaimDisputeModule {
         IClaimSettlementMutator m = _mutator();
         AuditCell ac = _ac();
 
-        (
-            address origProtocol,
-            ,
-            ,
-            ,
-            ,
-            CellTypeDefs.AuditState state,
-            bytes32 specHash,
-            bytes32 artifactHash,
-            ,
-            ,
-            ,
-            ,
-            ,
-            ,
-            ,
-            ,
-            ,
-            ,
-            ,
-            
-        ) = ac.audits(originalId);
+        CellTypeDefs.Audit memory ao = ac.getAudit(originalId);
+        address origProtocol = ao.protocol;
+        CellTypeDefs.AuditState state = ao.state;
+        bytes32 specHash = ao.specHash;
+        bytes32 artifactHash = ao.artifactHash;
         (
             address claimant,
             ,
@@ -341,7 +326,7 @@ contract ClaimDisputeModule is IClaimDisputeModule {
     /// @inheritdoc IClaimDisputeModule
     function openDisputeReaudit(uint256 originalId, uint256 disputeBounty) external returns (uint256 disputeId) {
         AuditCell ac = _ac();
-        (address protocol, , , , , , , , , , , , , , , , , , , ) = ac.audits(originalId);
+        address protocol = ac.getAudit(originalId).protocol;
         if (msg.sender != protocol) revert OnlyProtocol();
         return _openDisputeReaudit(originalId, disputeBounty, msg.sender, false);
     }
@@ -350,8 +335,9 @@ contract ClaimDisputeModule is IClaimDisputeModule {
     function protocolDeclineDisputeFunding(uint256 originalId) external {
         AuditCell ac = _ac();
         if (originalId >= ac.nextAuditId()) revert InvalidOriginalId();
-        (address protocol, , , , , CellTypeDefs.AuditState state, , , , , , , , , , , , , , ) =
-            ac.audits(originalId);
+        CellTypeDefs.Audit memory a = ac.getAudit(originalId);
+        address protocol = a.protocol;
+        CellTypeDefs.AuditState state = a.state;
         (,,,,, bool resolved, bool exists,,,,,,) = ac.vulnerabilityClaims(originalId);
         if (msg.sender != protocol) revert OnlyProtocol();
         if (uint8(state) != STATE_CLAIMED) revert OriginalNotClaimed();
@@ -390,9 +376,11 @@ contract ClaimDisputeModule is IClaimDisputeModule {
         AuditCell ac = _ac();
         IClaimSettlementMutator m = _mutator();
         if (originalId >= ac.nextAuditId()) revert InvalidOriginalId();
-        (, , address deployed, uint256 origBounty, , CellTypeDefs.AuditState state, , bytes32 artifactHash, , , , , , , , , , , , ) =
-            ac.audits(originalId);
-        if (uint8(state) != STATE_CLAIMED) revert OriginalNotClaimed();
+        CellTypeDefs.Audit memory a = ac.getAudit(originalId);
+        address deployed = a.deployedAddress;
+        uint256 origBounty = a.bounty;
+        bytes32 artifactHash = a.artifactHash;
+        if (uint8(a.state) != STATE_CLAIMED) revert OriginalNotClaimed();
         (,,,,, bool resolved, bool exists,,,,,,) = ac.vulnerabilityClaims(originalId);
         if (!exists || resolved) revert NoOpenClaim();
         if (ac.activeDisputeAuditId(originalId) != 0) revert DisputeOpen();
@@ -429,9 +417,11 @@ contract ClaimDisputeModule is IClaimDisputeModule {
         uint256 originalAuditId,
         address claimant
     ) internal returns (uint256 paid) {
-        (, address auditor, , uint256 bounty, , CellTypeDefs.AuditState state, , , , , , , , , , CellTypeDefs.AuditState stateBeforeClaim, address lastDiscoverer, , , ) = ac.audits(originalAuditId);
-        state;
-        lastDiscoverer;
+        CellTypeDefs.Audit memory a = ac.getAudit(originalAuditId);
+        address auditor = a.auditor;
+        uint256 bounty = a.bounty;
+        CellTypeDefs.AuditState stateBeforeClaim = a.stateBeforeClaim;
+        address lastDiscoverer = a.lastDiscoverer;
         uint256 boostBps = stateBeforeClaim == CellTypeDefs.AuditState.InAudit
             ? 10_000
             : ac.auditorReputationBoostBps(
@@ -526,7 +516,7 @@ contract ClaimDisputeModule is IClaimDisputeModule {
 
     function _recordFmeaGap(AuditCell ac, uint256 originalId) internal {
         if (fmeaRegistry == address(0)) return;
-        (, , , , , , , , bytes32 specToolId, , , , , , , , , , , ) = ac.audits(originalId);
+        bytes32 specToolId = ac.getAudit(originalId).specToolId;
         FmeaRegistry(fmeaRegistry).recordClaimGap(originalId, specToolId);
     }
 }

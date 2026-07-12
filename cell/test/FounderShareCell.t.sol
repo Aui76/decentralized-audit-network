@@ -124,4 +124,11 @@ contract FounderShareCellTest is Test {
 
     function _setIssuanceEma(IssuanceModule mod, uint256 slow, uint256 fast) internal {
         stdstore.target(address(mod)).sig("emaSlow()").checked_write(slow);
-      
+        stdstore.target(address(mod)).sig("emaFast()").checked_write(fast);
+        stdstore.target(address(mod)).sig("lastEmaFast()").checked_write(fast);
+    }
+
+    function _fundEscrow(uint256 amount) internal {
+        token.transfer(address(escrow), amount);
+    }
+}

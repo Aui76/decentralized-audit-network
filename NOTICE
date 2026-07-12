@@ -17,27 +17,49 @@ See [`LICENSE`](LICENSE). Free to **read, fork, modify and run for non-productio
                       BlockhashEntropy · CommitRevealEntropy · SpecArbiterModule
                       SpecGapModule · SpecGapLib · StructuralUpgradeModule
                       IntegrityReviewModule · WitnessClaimLib · SubmitAuditLib
-                      RunDigests · FmeaRegistry
+                      RunDigests · FmeaRegistry · ToolUseLib
 
 ## MIT — the integration surface
 
 See [`LICENSE-MIT`](LICENSE-MIT). Take it, run it, build a business on it. **No licence needed
 from us.**
 
-    cell/contracts/          all I*.sol interfaces (IClaimDisputeModule,
-                             IClaimSettlementMutator, IAssignmentModule, ISpecGapModule,
-                             ISpecArbiterModule, IDisputeResolver, IEntropyProvider,
-                             IRunProofVerifier) · Eip712Reference
-    cell/contracts/tools/    the re-runnable audit tools + probes (AuditResultV1,
-                             AuditCaseV1, WithdrawCreditsV1, TransferCreditsV1, …)
-    cell/contracts/          test-target fixtures (Gate0*, SmokeTarget, TutorialDualVault,
-                             GenesisBootstrapTarget)
-    tools/                   demo LP tooling
-    ui/                      the browser explorer + participant flows
+    cell/contracts/   all I*.sol interfaces — IClaimDisputeModule · IClaimSettlementMutator
+                      IAssignmentModule · ISpecGapModule · ISpecArbiterModule
+                      IDisputeResolver · IEntropyProvider · IRunProofVerifier
+    tools/            demo LP tooling
+    ui/               the browser explorer + participant flows
 
-*(`cell/test/` and `cell/script/` currently still carry BUSL headers. They are a test harness
-and deploy scripts — nothing to "productionise" — so this is cosmetic, not a restriction that
-binds anyone in practice. They can be moved to MIT in a later pass.)*
+**These are the files you need to build an organ** — an indexer, a tier service, an FMEA
+watchdog, a Bob-card integrator. They are permissive on purpose: running an organ service is
+*production use*, and BUSL restricts production use, so a source-available interface would tax
+the exact permissionless market this network exists to create.
+
+## FROZEN SOURCE — pinned artifacts (BUSL header, but not for the usual reason)
+
+These keep the **BUSL-1.1** header — **not** because we want to restrict them, but because
+**their compiled bytecode is pinned on-chain and their source is therefore frozen.**
+
+    cell/contracts/tools/   WithdrawCreditsV1 · WithdrawCreditsV1ArtifactProbe
+                            TransferCreditsV1 · TransferCreditsV1ArtifactProbe
+                            AuditResultV1 · AuditCaseV1
+    cell/contracts/         GenesisBootstrapTarget · TutorialDualVault · SmokeTarget
+                            Gate0Target · Gate0R2Target · Gate0R2TargetFix · Gate0R3Target
+                            Gate0G10Target · Gate0G10ThrowawayFix · Eip712Reference
+
+A tool's identity is content-bound: `WithdrawCreditsV1.TOOL_ARTIFACT_HASH` is
+`keccak256(runtime bytecode)`, and `toolId` derives from it. Solidity embeds a metadata hash of
+the **source text** in the runtime code — so changing even a comment (an SPDX line included)
+changes the bytecode, changes the artifact hash, and **breaks reproduction**: you would clone
+this repo, re-derive the hash, and get a value that does not match the one the chain pinned.
+
+That reproduction is the entire promise of this project. It outranks a licensing preference.
+These files are relicensed to MIT at the next artifact **re-baseline**, when source, deployed
+bytecode and published repo move as one generation. Until then the header stands, and you are
+free to read, run and verify them — which is all anyone needs them for.
+
+*(`cell/test/` and `cell/script/` also still carry BUSL headers — a test harness and deploy
+scripts, nothing to "productionise". Cosmetic, binds nobody.)*
 
 ## Why it's split this way
 

@@ -23,9 +23,10 @@ import "../contracts/BlockhashEntropy.sol";
  *
  * The deploy + wiring sequence is the authoritative production order from
  * test/helpers/CellTestDeploy.sol (CUTOVER-RUNBOOK.md Appendix A). 11 contracts; dispute modules 0-4.
- * Linked external libraries (CellLogicLib, DiscovererPayoutLib, SubmitAuditLib, AssignmentEntropyLib)
- * are auto-deployed + linked by forge script in the broadcast. Pin their addresses from the broadcast
- * log into deployments/{chainId}.json before verify.sh (see REDEPLOY-OPERATOR-RUNBOOK.md).
+ * Linked external libraries (CellLogicLib, DiscovererPayoutLib, SubmitAuditLib, AssignmentEntropyLib,
+ * ToolUseLib — G-19 re-key, 2026-07-08) are auto-deployed + linked by forge script in the broadcast.
+ * Pin their addresses from the broadcast log into deployments/{chainId}.json before verify.sh
+ * (see REDEPLOY-OPERATOR-RUNBOOK.md).
  *
  *   G-01 mutual bind order: escrow.setNetwork(cell); cell.setTreasuryEscrow(escrow).
  *   G-02 (NO-PREMINE, G7): genesisMint SKIPPED by default; only setMinter runs. The first tokens are earned
@@ -271,4 +272,17 @@ contract DeployCell is Script {
         console2.log("AuditCell", address(d.cell));
         console2.log("CellEscrow", address(d.escrow));
         console2.log("IssuanceModule", address(d.issuance));
-        console2.log("ClaimDisputeModule", address(d.claimMod
+        console2.log("ClaimDisputeModule", address(d.claimModule));
+        console2.log("SpecGapModule", address(d.specGapModule));
+        console2.log("SpecArbiterModule", address(d.specArbiterModule));
+        console2.log("IntegrityReviewModule", address(d.integrityReviewModule));
+        console2.log("StructuralUpgradeModule", address(d.structuralUpgradeModule));
+        console2.log("FmeaRegistry", address(d.fmeaRegistry));
+        console2.log("AssignmentModule", address(d.assignmentModule));
+        console2.log("BlockhashEntropy", address(d.blockhashEntropy));
+        console2.log("entropyProvider", d.cell.entropyProvider());
+        console2.log("written", path);
+        console2.log("Pin CellLogicLib/DiscovererPayoutLib/SubmitAuditLib/AssignmentEntropyLib/ToolUseLib from broadcast log before verify.sh");
+        console2.log("Post-deploy: verify pointer read-backs (Appendix B), run one smoke confirm, THEN token.lockMinter()");
+    }
+}
