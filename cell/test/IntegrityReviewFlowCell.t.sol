@@ -209,20 +209,21 @@ contract IntegrityReviewFlowCellTest is SpecValidationCellSetup {
         );
     }
 
-    function test_treasury_match_paid_on_finalize_pass() external {
+    /// @notice REPLACES `test_treasury_match_paid_on_finalize_pass` (section B-2, VD-89(4)). The
+    ///         `integrityMatchBps` limb it exercised is REMOVED, so the behaviour it pinned no longer
+    ///         exists to pin. What survives is the fact the removal must not disturb: the integrity escrow
+    ///         bucket is no longer touched by an opening at all, whatever it holds.
+    function test_open_no_longer_draws_on_the_integrity_escrow_bucket() external {
         uint256 escrowFund = 50_000 ether;
         vm.prank(protocol);
         token.transfer(address(escrow), escrowFund);
         escrow.seedIntegrityBucket(escrowFund);
 
-        integrity.setIntegrityMatchBps(5_000);
-
         uint256 auditId = _awaitingWindowAudit();
-        uint256 matchExpected = (reviewBounty * 5_000) / 10_000;
         uint256 integrityBefore = escrow.integrityEscrowBalance();
 
         _openReview(auditId);
-        assertEq(escrow.integrityEscrowBalance(), integrityBefore - matchExpected);
+        assertEq(escrow.integrityEscrowBalance(), integrityBefore, "opening must not draw a treasury match");
 
         _submitVerdictAndWaitContest(auditId, true, keccak256("integrity-cleared-match"));
 
@@ -233,7 +234,14 @@ contract IntegrityReviewFlowCellTest is SpecValidationCellSetup {
         assertEq(escrow.integrityEscrowBalance(), integrityBefore);
     }
 
-    function test_protocol_contest_overturns_fail_to_cleared() external {
+    /// @notice REPLACES `test_protocol_contest_overturns_fail_to_cleared`, and the replacement is a DELIBERATE
+    ///         BEHAVIOUR CHANGE, not an update for a removed parameter - it is the only one in this file, and
+    ///         it is reported as such. That test pinned the two things VD-89 struck out together: the protocol
+    ///         as the sole holder of the contest right, and `finalPass = contested ? contestPass : pass`, a
+    ///         contest that OVERWRITES a verdict with no adjudication. A SUSTAINED verdict pays the protocol,
+    ///         so under VD-89(2) the protocol has no standing against it; the auditor does, and its contest
+    ///         escalates to a drawn adjudicator (driven in IntegrityLaneAdjudication.t.sol).
+    function test_protocol_may_not_contest_a_sustained_verdict() external {
         uint256 auditId = _awaitingWindowAudit();
         _openReview(auditId);
 
@@ -243,16 +251,16 @@ contract IntegrityReviewFlowCellTest is SpecValidationCellSetup {
         uint256 contestStake = integrity.integrityContestStake();
         vm.startPrank(protocol);
         token.approve(address(cell), contestStake);
+        vm.expectRevert(IntegrityReviewModule.NoStanding.selector);
         integrity.contestIntegrityVerdict(auditId, true, keccak256("protocol-contest-pass"));
         vm.stopPrank();
 
+        // The verdict stands unamended and settles as an UNCONTESTED sustain.
         vm.warp(block.timestamp + integrity.integrityContestWindow() + 1);
         integrity.finalizeIntegrityReview(auditId);
-
         assertEq(
             uint256(integrity.integrityReviewStatusOf(auditId)),
-            uint256(IntegrityReviewModule.IntegrityReviewStatus.Cleared)
+            uint256(IntegrityReviewModule.IntegrityReviewStatus.Sustained)
         );
-        assertEq(uint256(_auditState(cell, auditId)), uint256(CellTypeDefs.AuditState.AwaitingWindow));
     }
 }

@@ -2,11 +2,17 @@
 pragma solidity 0.8.20;
 
 import "forge-std/Script.sol";
+import "./EnvCell.sol";
+import "./InstanceAware.s.sol";
 import "../contracts/AuditCell.sol";
+import "./GenesisAuditorKey.sol";
 
 /// @dev Genesis step 3 (auditor B): acceptAudit + provePass.
-/// Env: AUDITOR_PRIVATE_KEY. Optional: AUDIT_CELL, AUDIT_ID (else deployments/genesis-{chainId}.json).
-contract GenesisBootstrapAuditor is Script {
+/// Env: AUDITOR_PRIVATE_KEY (REQUIRED - no fallback to PRIVATE_KEY, and never the same address, PC-86). Optional: AUDIT_CELL, AUDIT_ID, DEPLOY_INSTANCE_LABEL
+/// (else deployments/genesis-{chainId}[-{label}].json).
+/// REFUSES (2026-09-15, VD-181): no open genesis audit, an AUDIT_ID that is not `genesisAuditId()`, and an auditor that
+/// is not the one assigned.
+contract GenesisBootstrapAuditor is InstanceAware {
     bytes32 internal constant RESULT_ROOT = keccak256("genesis.bootstrap.pass.v1");
 
     function run() external {
@@ -16,7 +22,7 @@ contract GenesisBootstrapAuditor is Script {
         uint256 id = _auditId();
         bytes32 verdictToolId = _verdictToolId();
 
-        require(cell.auditAuditorOf(id) == auditor, "not assigned auditor");
+        _checkGenesisBinding(cell, id, auditor);
 
         vm.startBroadcast(pk);
         cell.acceptAudit(id, _specErrorsRoot());
@@ -29,24 +35,32 @@ contract GenesisBootstrapAuditor is Script {
         console2.log("Wait minAuditWindow (~10m testnet), then GenesisBootstrapConfirm.s.sol");
     }
 
+    /// @dev The gate, split out so a test can drive it with no key.
+    ///      2026-09-15 (VD-181's record): the assigned-auditor check alone accepted-and-passed ANY audit this auditor
+    ///      was drawn for as though it were genesis. The id must be the cell's OPEN genesis audit.
+    function _checkGenesisBinding(AuditCell cell, uint256 id, address auditor) internal view {
+        require(cell.genesisAuditOpen(), "no genesis audit is open on this cell");
+        require(id == cell.genesisAuditId(), "AUDIT_ID is not the cell's open genesis audit");
+        require(cell.auditAuditorOf(id) == auditor, "not assigned auditor");
+    }
+
+    /// @dev PC-86: required, and never the deployer's key - see `GenesisAuditorKey`.
     function _auditorKey() internal view returns (uint256) {
-        if (vm.envExists("AUDITOR_PRIVATE_KEY")) return vm.envUint("AUDITOR_PRIVATE_KEY");
-        return vm.envUint("PRIVATE_KEY");
+        return GenesisAuditorKey.fromEnv();
     }
 
     function _cellAddress() internal view returns (address) {
         if (vm.envExists("AUDIT_CELL")) {
-            return vm.envAddress("AUDIT_CELL");
+            return EnvCell.agreeing(vm.envAddress("AUDIT_CELL"), _deploymentRecordPath()); // PC-107
         }
-        string memory path = string.concat("deployments/", vm.toString(block.chainid), ".json");
-        return vm.parseJsonAddress(vm.readFile(path), ".AuditCell");
+        return vm.parseJsonAddress(vm.readFile(_deploymentRecordPath()), ".AuditCell");
     }
 
     function _genesisJsonPath() internal view returns (string memory) {
         if (vm.envExists("GENESIS_ARTIFACT")) {
             return vm.envString("GENESIS_ARTIFACT");
         }
-        return string.concat("deployments/genesis-", vm.toString(block.chainid), ".json");
+        return _genesisRecordPath();
     }
 
     function _auditId() internal view returns (uint256) {

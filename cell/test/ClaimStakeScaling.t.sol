@@ -5,6 +5,7 @@ import "forge-std/Test.sol";
 import "../contracts/AuditCell.sol";
 import "../contracts/CellToken.sol";
 import "../contracts/ClaimDisputeModule.sol";
+import "../contracts/CellParamIds.sol";
 import "./helpers/CellTestDeploy.sol";
 
 contract ClaimStakeTarget {
@@ -159,5 +160,66 @@ contract ClaimStakeScalingTest is Test {
         cell.provePass(id, verdictToolId, resultRoot);
         vm.warp(block.timestamp + cell.minAuditWindow() + 1);
         cell.confirmAudit(id);
+    }
+
+    // ---------------------------------------------------------------- INV-4.2
+    // Reporting a real flaw stays +EV at EVERY scale - the payout floor must out-scale the
+    // filing stake. INV-4.1's converse, and the reason that deterrent is not a muzzle.
+    //
+    // Submitting pass=false on a normal audit is NOT free: submitVerdictAfterProof's else-branch
+    // transfers max(bounty * claimStakeBps, claimFilingStake) FROM the auditor and opens a
+    // VulnerabilityClaim. Clearing (pass=true) costs nothing. That asymmetry is deliberate - an
+    // accusation is bonded, a clearance is appealable through the exploit window - but it is only
+    // safe while the upside out-scales the bond. Both terms are bounty-proportional, so the ratio
+    // is scale-invariant: 20% at risk against a 50% floor = 2.5:1 for the honest reporter.
+    //
+    // SCOPE, stated honestly: these assert the payout CEILING exceeds the stake. The realized
+    // payout is min(escrowDraw, effectiveCap, bounty), so a thin escrowDraw can still pay less.
+    // What is proved is that the PARAMETERISATION permits +EV, not that every upheld claim clears
+    // its stake.
+
+    function test_payout_floor_outscales_claim_stake() public view {
+        assertGt(cell.discoveryFloorBps(), cell.claimStakeBps());
+    }
+
+    function test_reporting_is_positive_ev_on_cheap_audit() public {
+        ClaimStakeTarget t = new ClaimStakeTarget(11);
+        vm.startPrank(protocol);
+        token.approve(address(cell), 500 ether);
+        bytes32[] memory declared = new bytes32[](1);
+        declared[0] = verdictToolId;
+        uint256 id = cell.submitAudit(
+            address(t), address(t).codehash, specHash, specToolId, specErrors, 500 ether, declared, 0, 0
+        );
+        vm.stopPrank();
+
+        uint256 stake = cell.requiredClaimStake(id); // floor binds: 100 ether
+        uint256 floorCap = (500 ether * cell.discoveryFloorBps()) / 10_000; // 250 ether
+        assertGt(floorCap, stake);
+    }
+
+    function test_reporting_is_positive_ev_on_high_value_audit() public {
+        ClaimStakeTarget t = new ClaimStakeTarget(12);
+        vm.startPrank(protocol);
+        token.approve(address(cell), 15_000 ether);
+        bytes32[] memory declared = new bytes32[](1);
+        declared[0] = verdictToolId;
+        uint256 id = cell.submitAudit(
+            address(t), address(t).codehash, specHash, specToolId, specErrors, 15_000 ether, declared, 0, 0
+        );
+        vm.stopPrank();
+
+        uint256 stake = cell.requiredClaimStake(id); // scale binds: 3000 ether
+        uint256 floorCap = (15_000 ether * cell.discoveryFloorBps()) / 10_000; // 7500 ether
+        assertGt(floorCap, stake);
+    }
+
+    /// @dev The RED direction, mechanized: the two bps knobs are INDEPENDENT admin levers with
+    ///      nothing coupling them, so a calibration that raises the stake past the floor silently
+    ///      inverts honest reporting to -EV. Admin is address(this) (CellTestDeploy.deploy), so no
+    ///      prank is needed. If this ever stops reverting, the guard above has lost its teeth.
+    function test_raising_claim_stake_past_floor_inverts_the_incentive() public {
+        cell.setParam(CellParamIds.CLAIM_STAKE_BPS, 6000); // > discoveryFloorBps (5000)
+        assertLt(cell.discoveryFloorBps(), cell.claimStakeBps());
     }
 }

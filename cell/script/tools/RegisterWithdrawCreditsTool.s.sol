@@ -2,6 +2,7 @@
 pragma solidity 0.8.20;
 
 import "forge-std/Script.sol";
+import "../EnvCell.sol";
 import "../../contracts/AuditCell.sol";
 import "../../contracts/tools/WithdrawCreditsV1.sol";
 
@@ -15,7 +16,8 @@ contract RegisterWithdrawCreditsTool is Script {
         console2.logBytes32(toolId);
 
         uint256 pk = vm.envUint("PRIVATE_KEY");
-        address cellAddr = vm.envAddress("AUDIT_CELL");
+        // PC-107 (G6): required, and now compared against the deployment record rather than trusted.
+        address cellAddr = EnvCell.agreeing(vm.envAddress("AUDIT_CELL"), string.concat("deployments/", vm.toString(block.chainid), ".json"));
 
         vm.startBroadcast(pk);
         AuditCell(cellAddr).registerTool(toolId, false);

@@ -4,8 +4,10 @@
  *
  * Implements surface-conservation-gate-proposal.txt:
  *   ABI(candidate) ⊇ ABI(baseline) − RemovalsAllowlist,  keyed on SELECTORS (functions + errors) and
- *   EVENT topic0s — across the union of the cell + its satellites. A selector encodes name AND parameter
- *   types, so this catches wholesale removals AND silent signature changes that a name-diff misses.
+ *   EVENT topic0s — across the ELEVEN NAMED CELL CONTRACTS in CONTRACTS below, which is NOT the union of
+ *   the cell and its satellites (PC-45; corrected under VD-78 — the union wording was the proposal's
+ *   intent, never this file's behaviour). A selector encodes name AND parameter types, so this catches
+ *   wholesale removals AND silent signature changes a name-diff misses — but only within those eleven.
  *
  * Commands:
  *   node surface-gate.mjs snapshot [chainId]   → write the baseline surface from the current build
@@ -23,8 +25,17 @@ const here = dirname(fileURLToPath(import.meta.url));
 const CELL = join(here, "..", "..", "cell");
 const OUT = join(CELL, "out");
 
-// The integrator/settlement-visible surface = the union of these deployed contracts' external ABIs.
-// A function that MOVED to a satellite is still in the union (not a drop); one absent from the whole union IS.
+// The integrator/settlement-visible surface AS THIS FILE MEASURES IT = these eleven contracts' external ABIs.
+// ⚠ READ THIS BEFORE DERIVING THE SET (PC-45, ruled by VD-78). candidateSurface() iterates ONLY this array,
+// so the gate is wrong in BOTH directions, and the second one stops work:
+//   (a) false green - a selector that LEAVES a satellite is invisible here and the board still prints CONSERVED;
+//   (b) false red   - a selector legitimately MOVED INTO a satellite (FC-17 moves withdrawForLP into
+//       cell/contracts/satellites/AuditEthMembrane.sol) leaves the candidate set, lands in `missing`, and
+//       exits 1 with SURFACE DROP on correct work - stopping every launch and every preview.
+// Until VD-78's correction this comment read "A function that MOVED to a satellite is still in the union
+// (not a drop)" - the exact reverse of what the code does. The fix is to DERIVE the contract set, and its
+// acceptance needs BOTH directions proven: a red fixture AND a green one. The green direction is the
+// scheduled operation, so a derived set proven only red is unproven on the thing it will actually do.
 const CONTRACTS = [
   "AuditCell", "CellToken", "CellEscrow", "IssuanceModule", "ClaimDisputeModule",
   "SpecGapModule", "SpecArbiterModule", "IntegrityReviewModule", "StructuralUpgradeModule",
@@ -126,6 +137,11 @@ function check(chainId, selftest) {
   console.log(`\n❌ SURFACE DROP — ${missing.length} selector(s) present in the baseline are GONE and not allowlisted:`);
   for (const [key, meta] of missing) console.log(`   - [${meta.kind}] ${meta.sig}   ${key}   (was in: ${(meta.from || []).join(", ")})`);
   console.log(`\nEither restore them, or add each to cell/surface-removals.txt with a signed reason (a reshape names its replacement).`);
+  console.log(`\n⚠ FIRST: did the selector MOVE to a satellite rather than leave the codebase? Then this is NOT a removal -`);
+  console.log(`  it is this gate's known blindness (PC-45): candidateSurface() reads only the ${CONTRACTS.length} names hardcoded above,`);
+  console.log(`  so a function moved into cell/contracts/satellites/ reads as GONE. Do NOT write a removal reason:`);
+  console.log(`  cell/surface-removals.txt is the one file where a removal carries a signed justification, and a`);
+  console.log(`  moved-not-removed entry poisons that record. Fix the contract set instead.`);
   process.exit(1);
 }
 

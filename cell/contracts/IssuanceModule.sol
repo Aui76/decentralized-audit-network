@@ -72,6 +72,21 @@ contract IssuanceModule {
     // as a fraction of THIS audit's own bounty. See body/proposals/a1-mint-weight-and-bounty-cap-proposal.txt.
     uint256 public mintUnprovenWeightBps = 2500; // < credibilityCountThreshold distinct protocols → this weight
     uint256 public mintBountyCapBps = 2500;      // auditor mint ≤ this % of the block's own bounty; 0 = off
+    // PC-3 bound (DEC-31): fixed lifetime cap on the AUDITOR positive-block mint. GLOBAL counter (not per-
+    // auditor) → sock-puppet auditors share ONE budget: the anti-Sybil property. Converts the capitalized-
+    // ring residual from UNBOUNDED to a bounded, operator-sized budget. Precise per-ring kill = the
+    // convergence-engine instance (volume-gated), not this bound.
+    // Measured against a LATCHED supply basis, NOT live totalSupply: the positive-block mint is the DOMINANT
+    // driver of supply growth (auditor + 100% treasury + 3.05% founder ≈ 2.03x per settle), while this counter
+    // tracks only the auditor share — so a live-supply ceiling (totalSupply x bps) outruns the counter and
+    // NEVER binds for bps ≳ 4460 (found in review 2026-07-18). Unlike G-20 greenLightCumulative — whose counter
+    // is NOT the dominant supply driver, so its self-scaling is safe — here it is. Latching the basis makes
+    // the ceiling fixed, so the monotonic counter always reaches it and it binds for ANY bps in (0, 10000].
+    uint256 public positiveBlockMintedCumulative;   // lifetime sum of auditor positive-block mint
+    // Ships UNARMED (0 = off) — capability in bytecode, sized+armed by the operator during calibration
+    // (G-27 philosophy: knobs mutable on the calibration testnet, armed as a deploy step).
+    uint256 public positiveBlockMintCapBps;         // bps of the LATCHED basis; admin-tunable + one-way lockable; 0 = off
+    uint256 public positiveBlockCapBasis;           // totalSupply snapshot latched at the first armed settle (set-once)
     // G-22 first-funding latch (2026-07-08): first nonzero lpBalance ever observed at settle. Once set, the
     // LP mint cap NEVER disables — lp==0 computes the cap against this snapshot instead of going uncapped
     // (and instead of 0: escrow deposits derive from the mint, so a zero-mint rule would brick issuance).
@@ -85,8 +100,23 @@ contract IssuanceModule {
     // G-20 cumulative bound (2026-07-08, DEC-22 docket): lifetime green-light mint may never exceed
     // greenLightCumulativeCapBps of totalSupply (read at mint time — self-scaling, no epoch machinery).
     // Per-confirm the mint was already bounded (50% x supplement, 30 bps escrow drawdown, 4 gates, §2.6
-    // wash-proof EMAs); this closes the one remaining unbounded-CUMULATIVE mint lever in the system.
+    // wash-proof EMAs).
+    // ⚠ CORRECTED 2026-09-05 (VD-92). This line read "this closes the ONE REMAINING
+    // unbounded-CUMULATIVE mint lever in the system" and that was FALSE when written:
+    // `mintUpgradeAdopt` and `mintToolCanonization` below both called the raw `_mint` with no
+    // counter and no cap, and kept minting after every other budget clamped to zero. They are
+    // clamped now, by `structuralMintHeadroom()`; the claim is true as of that fix and not before.
     uint256 public greenLightMintedCumulative;
+    // VD-92 (bug_102): the STRUCTURAL mint budget. `mintUpgradeAdopt` and `mintToolCanonization`
+    // are the two levers that carried a per-EVENT bound and no lifetime one - each event is gated
+    // and sized ~one positive-block reward, but the EVENT COUNT was unbounded and uncounted, so
+    // both kept minting after PC-3's lifetime cap clamped positive blocks to zero. One shared
+    // budget rather than two: they are one class (structural issuance outside every other cap),
+    // and the file's invariant is that a class of mint has a lifetime bound, not that each
+    // function has its own. Same shape as G-20 - counter, supply-scaled cap-bps behind a lock id,
+    // clamp-partial-at-the-boundary then zero.
+    uint256 public structuralMintedCumulative;
+    uint256 public structuralCumulativeCapBps = 200; // 2% of supply, lifetime; admin-tunable
     uint256 public greenLightCumulativeCapBps = 200; // 2% of supply, lifetime; admin-tunable like its siblings
 
     mapping(address => uint256) public protocolSubmissionCount;
@@ -134,6 +164,13 @@ contract IssuanceModule {
     uint8 public constant LOCK_GREENLIGHT_CAP = 2;   // setGreenLightCumulativeCapBps (G-20)
     uint8 public constant LOCK_MANIP_TAPER = 3;      // setAdaptiveIssuanceParams + setManipulationMintFloorBps (G-23)
     uint8 public constant LOCK_LP_CAP = 4;           // setMintLpCapBps (G-22 governor)
+    uint8 public constant LOCK_POSBLOCK_CAP = 5;     // setPositiveBlockMintCap (PC-3 lifetime cap, DEC-31)
+    // Phase B1 (admin-door-residue-verdicts, VD-26): doors 1-3 of the 15-door lock+bound pass. Same
+    // capability-not-freeze shape (A1) — ships UNARMED (mask=0), armed later per parameter.
+    uint8 public constant LOCK_TREASURY_SHARE = 6;   // door 1: setTreasuryShareBps (F1 — escapes both mint caps, HIGHEST PRIORITY)
+    uint8 public constant LOCK_EMA_TO_MINT = 7;      // door 2: setEmaToMintBps
+    uint8 public constant LOCK_STRUCTURAL_CAP = 9;   // VD-92: setStructuralCumulativeCapBps (bug_102's lifetime bound)
+    uint8 public constant LOCK_UPGRADE_ADOPT_MINT = 8; // door 3: setUpgradeAdoptMintBps (G-19's uncovered sibling)
 
     function issuanceParamLocked(uint8 id) public view returns (bool) {
         return (issuanceParamLockMask & (uint256(1) << id)) != 0;
@@ -141,7 +178,11 @@ contract IssuanceModule {
 
     /// @notice G-27 §B: lock an anti-Sybil param one-way (irreversible). UNARMED at this deploy by design.
     function lockIssuanceParam(uint8 id) external onlyAdmin {
-        require(id <= LOCK_LP_CAP, "Bad param id");
+        // VD-92: bound raised to LOCK_STRUCTURAL_CAP when the structural budget gained its lock id.
+        // An id the bound does not cover makes `lockIssuanceParam` revert, so a lock that exists in
+        // the constants but not in the bound is a lock that cannot be armed - CellParamIds door 16
+        // is the recorded precedent for exactly that shape.
+        require(id <= LOCK_STRUCTURAL_CAP, "Bad param id");
         issuanceParamLockMask |= (uint256(1) << id);
         emit ParameterUpdated("issuanceParamLock", id);
     }
@@ -164,6 +205,20 @@ contract IssuanceModule {
         admin = _admin;
     }
 
+    // ---- DR-6a (mainnet-deploy.md): admin rotatability ------------------------------------------
+    // Matches AuditCell.transferAdmin (zero-address reject + AdminTransferred event). Without this
+    // the deploy sequence cannot hand the module to the Timelock (Section 3 step 8 / DR-3): the
+    // constructor bound admin and nothing could change it. Found 2026-08-01 by rehearsing the
+    // sequence on paper -- on an immutable mainnet cell it would have been permanent.
+    event AdminTransferred(address indexed oldAdmin, address indexed newAdmin);
+    error ZeroAdmin();
+
+    function transferAdmin(address newAdmin) external onlyAdmin {
+        if (!(newAdmin != address(0))) revert ZeroAdmin();
+        emit AdminTransferred(admin, newAdmin);
+        admin = newAdmin;
+    }
+
     function wire(address _cell, address _token, address _escrow) external onlyAdmin {
         require(!wiringLocked, "Wiring locked");
         cell = _cell;
@@ -176,12 +231,28 @@ contract IssuanceModule {
         structuralModule = m;
     }
 
+    // bug_003 (DEC-44 paid review; ruled by VD-143(2)). This asserted a SUBSET of what it freezes: `cell`
+    // and `token`, while `wire()` also sets `treasuryEscrow` and `setStructuralModule()` sets
+    // `structuralModule` — and `lockWiring` is G-h, one-shot and one-way, so a slot left at zero here is
+    // frozen at zero for the life of the cell.
+    //
+    // `structuralModule` is the one that costs a LANE rather than a payout, and it is REQUIRED at lock
+    // time: `mintUpgradeAdopt` below carries `onlyCellOrStructural`, and `StructuralUpgradeModule`:676 is
+    // its caller, so a `structuralModule` frozen empty bricks every structural adoption AT ITS MINT. That
+    // fails at first use, months later, on a cell nobody can rewire — which is why the lock asks now.
+    // `setStructuralModule` being a separate call from `wire()` is exactly how a deploy sequence loses it.
     function lockWiring() external onlyAdmin {
-        require(cell != address(0) && address(token) != address(0), "Unset");
+        require(
+            cell != address(0) && address(token) != address(0) && treasuryEscrow != address(0)
+                && structuralModule != address(0),
+            "Unset"
+        );
         wiringLocked = true;
     }
 
     function setEmaToMintBps(uint256 v) external onlyAdmin {
+        _requireUnlocked(LOCK_EMA_TO_MINT);
+        require(v <= 10_000, "Invalid emaToMintBps");
         emaToMintBps = v;
         emit ParameterUpdated("emaToMintBps", v);
     }
@@ -193,7 +264,10 @@ contract IssuanceModule {
     }
 
     function setTreasuryShareBps(uint256 v) external onlyAdmin {
+        _requireUnlocked(LOCK_TREASURY_SHARE);
+        require(v <= 10_000, "Invalid treasuryShareBps");
         treasuryShareBps = v;
+        emit ParameterUpdated("treasuryShareBps", v);
     }
 
     function setFounderShareBps(uint256 v) external onlyAdmin {
@@ -218,6 +292,14 @@ contract IssuanceModule {
         emit ParameterUpdated("greenLightCumulativeCapBps", v);
     }
 
+    /// @dev VD-92: the structural levers' lifetime cap. Tunable and lockable exactly like its G-20
+    ///      sibling above - the VALUE legislates, the clamp's existence does not.
+    function setStructuralCumulativeCapBps(uint256 v) external onlyAdmin {
+        _requireUnlocked(LOCK_STRUCTURAL_CAP);
+        structuralCumulativeCapBps = v;
+        emit ParameterUpdated("structuralCumulativeCapBps", v);
+    }
+
     /// @dev G-23: floor knob for the manipulation taper (bps). Kept OUT of setAdaptiveIssuanceParams so
     ///      that selector stays stable (surface gate: 0 removed).
     function setManipulationMintFloorBps(uint256 v) external onlyAdmin {
@@ -231,6 +313,12 @@ contract IssuanceModule {
     function greenLightMintHeadroom() public view returns (uint256) {
         uint256 capTotal = (token.totalSupply() * greenLightCumulativeCapBps) / 10_000;
         return capTotal > greenLightMintedCumulative ? capTotal - greenLightMintedCumulative : 0;
+    }
+
+    /// @notice VD-92: lifetime headroom left for the two structural mint levers, supply-scaled.
+    function structuralMintHeadroom() public view returns (uint256) {
+        uint256 capTotal = (token.totalSupply() * structuralCumulativeCapBps) / 10_000;
+        return capTotal > structuralMintedCumulative ? capTotal - structuralMintedCumulative : 0;
     }
 
     /// @notice credBounty that the next settle for (auditor, protocol) would use (view; no state change).
@@ -274,6 +362,16 @@ contract IssuanceModule {
         mintBountyCapBps = bountyCapBps;
         emit ParameterUpdated("mintUnprovenWeightBps", unprovenWeightBps);
         emit ParameterUpdated("mintBountyCapBps", bountyCapBps);
+    }
+
+    // PC-3 bound (DEC-31): set the lifetime cap on the auditor positive-block mint (bps of the LATCHED supply
+    // basis, snapshotted at the first armed settle — NOT live totalSupply; see the storage decl for why).
+    // 0 disables the cap. One-way lockable via LOCK_POSBLOCK_CAP (unarmed on this calibration testnet by design).
+    function setPositiveBlockMintCap(uint256 bps) external onlyAdmin {
+        _requireUnlocked(LOCK_POSBLOCK_CAP);
+        require(bps <= 10_000, "Invalid posblock cap bps");
+        positiveBlockMintCapBps = bps;
+        emit ParameterUpdated("positiveBlockMintCapBps", bps);
     }
 
     function nextPositiveBlockReward() public view returns (uint256) {
@@ -358,6 +456,30 @@ contract IssuanceModule {
         if (mintBountyCapBps > 0) {
             uint256 mintCap = (rawBounty * mintBountyCapBps) / 10_000;
             if (reward > mintCap) reward = mintCap;
+        }
+        // PC-3 bound (DEC-31): clamp the auditor mint to a FIXED lifetime budget. `reward` here is the FINAL
+        // gated auditor reward (unproven-weight × bounty-cap already applied above); treasury + founder shares
+        // below derive from it, so they shrink automatically. Cap = basis x bps, where basis is LATCHED once
+        // (first armed settle with supply>0) and never moves after — so the monotonic counter always reaches it.
+        // This FIXES the live-supply divergence found in review: the positive-block mint drives totalSupply
+        // ~2.03x faster than this counter grows (auditor + 100% treasury + 3.05% founder), so a live-supply
+        // ceiling would outrun the counter and never bind for bps ≳ 4460. NOTE: caps the AUDITOR share; total
+        // new supply from this path is ~2.03x the cap.
+        if (positiveBlockMintCapBps > 0) {
+            uint256 supplyForCap = token.totalSupply();
+            // ZERO-SUPPLY GUARD (G-22 rule): a supply-relative latch must NEVER brick the genesis seed mint.
+            // At totalSupply==0 the cap would be 0 and would zero the bootstrap mint — and because that keeps
+            // supply at 0, it would deadlock issuance forever. Latch/clamp only once there is supply.
+            if (supplyForCap > 0) {
+                if (positiveBlockCapBasis == 0) positiveBlockCapBasis = supplyForCap; // set-once latch
+                uint256 lifetimeCap = (positiveBlockCapBasis * positiveBlockMintCapBps) / 10_000;
+                if (positiveBlockMintedCumulative >= lifetimeCap) {
+                    reward = 0;
+                } else if (positiveBlockMintedCumulative + reward > lifetimeCap) {
+                    reward = lifetimeCap - positiveBlockMintedCumulative;
+                }
+                positiveBlockMintedCumulative += reward;
+            }
         }
         if (reward > 0) {
             auditorMinted = _mint(auditor, reward);
@@ -597,7 +719,10 @@ contract IssuanceModule {
     uint256 public upgradeAdoptMintBps = 10_000;
 
     function setUpgradeAdoptMintBps(uint256 v) external onlyAdmin {
+        _requireUnlocked(LOCK_UPGRADE_ADOPT_MINT);
+        require(v <= 10_000, "Invalid upgradeAdoptMintBps");
         upgradeAdoptMintBps = v;
+        emit ParameterUpdated("upgradeAdoptMintBps", v);
     }
 
     function upgradeAdoptMintAmount() public view returns (uint256) {
@@ -606,11 +731,23 @@ contract IssuanceModule {
     }
 
     function mintUpgradeAdopt(address to) external onlyCellOrStructural returns (uint256) {
-        return _mint(to, upgradeAdoptMintAmount());
+        return _structuralMint(to, upgradeAdoptMintAmount());
     }
 
     function mintToolCanonization(address to) external onlyCell returns (uint256) {
-        return _mint(to, nextPositiveBlockReward());
+        return _structuralMint(to, nextPositiveBlockReward());
+    }
+
+    /// @dev VD-92: the two structural levers share one lifetime budget. Clamp partial at the boundary,
+    ///      zero after - the G-20 shape, applied to the exceptions the G-20 comment claimed did not exist.
+    ///      The cap VALUE is a parameter like its siblings; the clamp's EXISTENCE is the invariant.
+    function _structuralMint(address to, uint256 amount) internal returns (uint256) {
+        uint256 headroom = structuralMintHeadroom();
+        if (amount > headroom) amount = headroom;
+        if (amount == 0) return 0;
+        uint256 minted = _mint(to, amount);
+        structuralMintedCumulative += minted;
+        return minted;
     }
 
     /// @dev G-19 (2026-07-08): the §2.5 established-protocol signal, exposed as the canonization

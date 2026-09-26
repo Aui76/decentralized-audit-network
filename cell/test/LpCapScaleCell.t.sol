@@ -62,58 +62,19 @@ contract LpCapScaleCellTest is Test {
         assertEq(newCap, (token.totalSupply() * escrow.LP_CAP_BPS()) / 10_000);
     }
 
-    function test_migrate_never_exceeds_lp_cap_after_many_deposits() external {
-        uint256 depositEach = 25_000 ether;
-        uint256 rounds = 40;
-
-        for (uint256 i = 0; i < rounds; i++) {
-            _recordDeposit(depositEach);
-            assertLe(escrow.lpBalance(), escrow.lpCapView(), "cap tracks supply");
-        }
-
-        vm.warp(block.timestamp + escrow.TIMELOCK() + 1);
-
-        uint256 migrated;
-        while (escrow.pendingDepositCount() > 0 && escrow.lpBalance() < escrow.lpCapView()) {
-            migrated += escrow.migrate(50);
-            assertLe(escrow.lpBalance(), escrow.lpCapView(), "migrate respects cap");
-            if (migrated == 0) break;
-        }
-
-        assertLe(escrow.lpBalance(), escrow.lpCapView(), "final LP <= cap");
-        assertGt(escrow.escrowBalance(), 0, "escrow retains overflow when LP capped");
-    }
-
-    function test_migrate_partial_when_headroom_small() external {
-        uint256 deposit = (lpCap * 10_000) / 8000 - 10_000 ether;
-        _recordDeposit(deposit);
-
-        uint256 lpImmediate = escrow.lpBalance();
-        assertLt(lpImmediate, lpCap, "room before migrate");
-        assertGt(escrow.escrowBalance(), 0, "escrow queued");
-
-        vm.warp(block.timestamp + escrow.TIMELOCK() + 1);
-        uint256 migrated = escrow.migrate(100);
-
-        assertGt(migrated, 0, "partial migrate");
-        assertEq(escrow.lpBalance(), lpCap, "LP fills remaining headroom");
-        assertGt(escrow.escrowBalance(), 0, "residual escrow when cap binds");
-    }
-
-    function test_migrate_never_increases_lp_past_cap() external {
-        uint256 perBlockTreasury = 3_000 ether;
-        for (uint256 b = 0; b < 120; b++) {
-            _recordDeposit(perBlockTreasury);
-        }
-
-        vm.warp(block.timestamp + escrow.TIMELOCK() + 1);
-        for (uint256 i = 0; i < 20; i++) {
-            uint256 lpBefore = escrow.lpBalance();
-            escrow.migrate(100);
-            assertLe(escrow.lpBalance(), escrow.lpCapView(), "never above cap after migrate");
-            if (escrow.lpBalance() == lpBefore) break;
-        }
-    }
+    // ---- Three migrate tests RETIRED 2026-08-09 (migrate-removal-proposal), subject deleted ----
+    //
+    // `test_migrate_never_exceeds_lp_cap_after_many_deposits`, `test_migrate_partial_when_headroom_small`
+    // and `test_migrate_never_increases_lp_past_cap` all exercised `escrow.migrate(...)`, which DEC-38's
+    // follow-on removed. Retired rather than deleted silently (same discipline as the LpUncapLatch and
+    // EscrowSolvency edits): the two tests above — the immediate 75.1% deposit split against the 15% cap,
+    // and the cap scaling with supply — are UNTOUCHED and remain the live coverage of `recordDeposit` and
+    // `lpCapView`. What is no longer covered is the aged escrow→LP catch-up, because it no longer exists;
+    // `lpBalance` is now monotonic (only `recordDeposit` credits it, capped at 15%).
+    //
+    // REOPEN TRIGGER: if any future change reintroduces a path that moves escrow into LP after the fact,
+    // these three come back — the cap-respect-under-migration property becomes reachable again the moment
+    // such a path exists.
 
     function _recordDeposit(uint256 amount) internal {
         token.transfer(address(escrow), amount);

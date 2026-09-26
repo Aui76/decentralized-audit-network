@@ -37,6 +37,12 @@ contract FounderVestingEnforceTest is Test {
         issuance = new IssuanceModule(address(this));
         cellStub = new IssuanceCellStub(issuance);
         issuance.wire(address(cellStub), address(token), address(escrow));
+        // bug_003 (VD-143(2)): `lockWiring()` now asserts everything it freezes, and t4 below locks. Without
+        // a structural module set, the lock correctly REFUSES - a module locked with that slot empty bricks
+        // every structural adoption at its mint. This test is about founderShareBps, so a stub address is
+        // enough; what matters is that the completed wiring is now the precondition rather than an
+        // assumption. The refusal here is the fix working, not collateral damage.
+        issuance.setStructuralModule(address(0x57C7));
         escrow.setIssuanceModule(address(issuance));
         escrow.setFounder(founder);
         escrow.setFounderReleaseTarget(10); // network never set here -> free calibration

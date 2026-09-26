@@ -76,6 +76,7 @@ jobs:
             AssignmentEntropyLib BlockhashEntropy CommitRevealEntropy SpecArbiterModule
             SpecGapModule SpecGapLib StructuralUpgradeModule IntegrityReviewModule
             WitnessClaimLib SubmitAuditLib RunDigests FmeaRegistry ToolUseLib
+            satellites/AuditEthMembrane
           )
           fail=0
           for f in "${core[@]}"; do
@@ -208,8 +209,9 @@ jobs:
             echo "::error::.env is tracked"; fail=1
           fi
 
-          # Deploy/ops machinery is where addresses and RPC keys leak. Only .s.sol ships.
-          if git ls-files 'cell/script/**' | grep -viE '\.s\.sol$' ; then
+          # Deploy/ops machinery is where addresses and RPC keys leak. Only Solidity ships: the .s.sol
+          # scripts and the .sol libraries they import (EnvCell, GenesisAuditorKey, RehearsalTimelock).
+          if git ls-files 'cell/script/**' | grep -viE '\.sol$' ; then
             echo "::error::non-Foundry script in cell/script — ops machinery must not ship"; fail=1
           fi
 

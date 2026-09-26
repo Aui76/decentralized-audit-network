@@ -1,4 +1,5 @@
 {
+  "_note": "PREDECESSOR ARTIFACT (2026-09-13): this LP demo pool lives on the token of the superseded cell 0xB8BFC2dd2CDFF79e018479C8a97B6AeC1979ff6d; the canonical cell 0xb034F198869726c36965B95879eCB65Bdb1076c9 has no LP pool yet. Addresses stay as deployed.",
   "chainId": 84532,
   "network": "Base Sepolia",
   "verifiedAt": "2026-07-04",

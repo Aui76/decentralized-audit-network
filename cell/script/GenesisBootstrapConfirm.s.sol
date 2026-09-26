@@ -1,14 +1,17 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.20;
 
+import "./EnvCell.sol";
 import "forge-std/Script.sol";
+import "./InstanceAware.s.sol";
 import "../contracts/AuditCell.sol";
 import "../contracts/CellStorage.sol";
 import "../contracts/CellToken.sol";
 
 /// @dev Genesis step 4: confirmAudit after minAuditWindow (mints first tokens).
-/// Env: PRIVATE_KEY (any funded wallet). Optional: AUDIT_CELL, CELL_TOKEN, AUDIT_ID.
-contract GenesisBootstrapConfirm is Script {
+/// Env: PRIVATE_KEY (any funded wallet). Optional: AUDIT_CELL, CELL_TOKEN, AUDIT_ID,
+/// DEPLOY_INSTANCE_LABEL (else the labeled instance record + genesis record).
+contract GenesisBootstrapConfirm is InstanceAware {
     function run() external {
         uint256 pk = vm.envUint("PRIVATE_KEY");
         AuditCell cell = AuditCell(_cellAddress());
@@ -46,25 +49,23 @@ contract GenesisBootstrapConfirm is Script {
 
     function _cellAddress() internal view returns (address) {
         if (vm.envExists("AUDIT_CELL")) {
-            return vm.envAddress("AUDIT_CELL");
+            return EnvCell.agreeing(vm.envAddress("AUDIT_CELL"), _deploymentRecordPath());
         }
-        string memory path = string.concat("deployments/", vm.toString(block.chainid), ".json");
-        return vm.parseJsonAddress(vm.readFile(path), ".AuditCell");
+        return vm.parseJsonAddress(vm.readFile(_deploymentRecordPath()), ".AuditCell");
     }
 
     function _tokenAddress() internal view returns (address) {
         if (vm.envExists("CELL_TOKEN")) {
-            return vm.envAddress("CELL_TOKEN");
+            return EnvCell.agreeingAt(vm.envAddress("CELL_TOKEN"), _deploymentRecordPath(), ".CellToken", "CELL_TOKEN");
         }
-        string memory path = string.concat("deployments/", vm.toString(block.chainid), ".json");
-        return vm.parseJsonAddress(vm.readFile(path), ".CellToken");
+        return vm.parseJsonAddress(vm.readFile(_deploymentRecordPath()), ".CellToken");
     }
 
     function _genesisJsonPath() internal view returns (string memory) {
         if (vm.envExists("GENESIS_ARTIFACT")) {
             return vm.envString("GENESIS_ARTIFACT");
         }
-        return string.concat("deployments/genesis-", vm.toString(block.chainid), ".json");
+        return _genesisRecordPath();
     }
 
     function _auditId() internal view returns (uint256) {

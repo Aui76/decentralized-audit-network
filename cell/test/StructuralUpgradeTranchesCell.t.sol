@@ -21,6 +21,12 @@ contract StructuralUpgradeTranchesCellTest is StructuralUpgradeFlowCellTest {
         issuance = d.issuance;
         structural = d.structuralUpgradeModule;
         escrow = d.escrow;
+        // This suite overrides setUp WHOLESALE rather than extending it, so every field the parent gained
+        // has to be repeated here or the inherited tests run against address(0). bug_001's witness helper
+        // drives a claim to adjudication through the dispute module, and without this line the five
+        // inherited rollback tests failed with a bare EvmError while passing in the parent - the same
+        // number of assertions, half of them measuring nothing.
+        claimModule = d.claimModule;
         CellTestDeploy.registerDefaultTools(d, specToolId, harnessToolId);
         cell.registerTool(opsToolId, false);
 

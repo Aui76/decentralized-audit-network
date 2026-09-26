@@ -38,7 +38,10 @@ contract StructuralUpgradeModule {
         Probation,
         Adopted,
         RolledBack,
-        Expired
+        Expired,
+        // PC-92 bug_011 (G4(d)): the gap's audit was voided before it confirmed the gap. Terminal; the filer's stake is
+        // refunded. APPENDED, so every earlier value keeps its number.
+        GapVoided
     }
 
     struct NetworkGap {
@@ -116,11 +119,16 @@ contract StructuralUpgradeModule {
     mapping(address => uint256) public canonicalContractAuditId;
     mapping(address => CanonicalTier) public canonicalTier;
     mapping(address => uint256) public canonicalGapIdForDeploy;
+    /// bug_001's STORE half (VD-143(1) said "store and emit"; the event alone was emit-only). The witness
+    /// audit that justified a rollback, readable on chain forever rather than only reconstructable from
+    /// logs - which is what "never stored" meant in the paid review's own words.
+    mapping(uint256 => uint256) public rollbackWitnessAuditId;
 
     event NetworkGapFiled(uint256 indexed gapId, address indexed filer, bytes32 harnessToolId, bytes32 gapSpecHash, uint256 stake);
     event NetworkGapConfirmed(uint256 indexed gapId, uint256 indexed gapAuditId, bytes32 harnessProofHash);
     event NetworkGapExpired(uint256 indexed gapId, uint8 reasonCode);
     event StructuralFixSubmitted(uint256 indexed gapId, uint256 indexed fixAuditId);
+    event StructuralGapRecovered(uint256 indexed gapId, uint256 indexed auditId, GapState state);
     event StructuralFixProposalReady(uint256 indexed gapId, uint256 indexed fixAuditId);
     event ProbationStarted(uint256 indexed gapId, uint256 indexed fixAuditId, uint256 startBlock);
     event UpgradeJuryVote(
@@ -137,8 +145,11 @@ contract StructuralUpgradeModule {
     event JuryDutyDeclined(uint256 indexed gapId, address indexed auditor);
     event StructuralUpgradeAdopted(uint256 indexed gapId, uint256 indexed fixAuditId, address deployed, uint8 tier);
     event CanonicalPromoted(uint256 indexed gapId, address indexed deployed, uint256 adoptedAt, uint256 fixAuditId);
+    // bug_001 (c), the store-and-emit half of VD-143(1)'s remedy: the witness now RIDES the log. Before
+    // this the event carried msg.sender - so the ACT was attributable and the JUSTIFICATION was not, and
+    // no reader of the chain could show that a rollback's claimed proof was fabricated.
     event StructuralUpgradeRolledBack(
-        uint256 indexed gapId, uint256 indexed fixAuditId, uint256 priorCanonicalAuditId, address indexed rollbackAuditor, bytes32 blockHash
+        uint256 indexed gapId, uint256 indexed fixAuditId, uint256 priorCanonicalAuditId, address indexed rollbackAuditor, bytes32 blockHash, uint256 opsAuditId, bytes32 opsSpecHash, bytes32 toolId, bytes32 resultRoot
     );
     event UpgradeBlockMinted(
         uint256 indexed gapId, uint256 indexed fixAuditId, address proposer, address deployed, bytes32 harnessToolId, uint256 minted, bytes32 blockHash
@@ -155,6 +166,17 @@ contract StructuralUpgradeModule {
     error InsufficientHold();
     error ZeroTarget();
     error NoCode();
+    // bug_001's witness checks. Named individually rather than one WitnessInvalid, because the caller is
+    // usually honest and each failure has its own cure - wrong contract, the regression was never
+    // adjudicated, or the tool/root/spec does not match what the chain recorded. `WitnessNotUpheld` is
+    // ONE error where the first writing had two (not-settled and not-failing): VD-153 collapsed them,
+    // because on the discoverer path the audit's verdict fields describe the PASS that was overturned,
+    // so "did it fail" is not a separate question from "did the claim stand".
+    error WitnessTargetMismatch();
+    error WitnessNotUpheld();
+    error WitnessToolMismatch();
+    error WitnessResultMismatch();
+    error WitnessSpecMismatch();
     error ZeroGapSpec();
     error ZeroHarness();
     error HarnessNotRegistered();
@@ -204,10 +226,42 @@ contract StructuralUpgradeModule {
     error RollbackWindowNotElapsed();
     error DidNotVoteOk();
     error CreditAlreadyClaimed();
+    error BadParamId();
+    error ParamLocked();
+    error NothingToRecover();
+    error InAuditWindowPassed();
+    error SpecToolNotRegistered();
+    error NotSpecValidationTool();
 
     uint256 private constant _NOT_ENTERED = 1;
     uint256 private constant _ENTERED = 2;
     uint256 private _reentrancyStatus = _NOT_ENTERED;
+
+    // Phase B1 (admin-door-residue-verdicts, VD-26): doors 12-15 lock+bound pass. Ported from
+    // IssuanceModule's issuanceParamLockMask shape (A1: capability now, armed later per parameter —
+    // ships UNARMED, mask = 0). F2 (upgradeClaimCapBps had TWO write paths, :314 and :331) is closed
+    // by deleting the claimCapBps arm from setStructuralUpgradeEscrowParams below, so the variable has
+    // exactly ONE door (setUpgradeClaimCapBps) for LOCK_CLAIM_CAP to guard.
+    uint256 public structuralParamLockMask;
+    uint8 public constant LOCK_GAP_FILING_STAKE = 0; // door 12: setGapFilingStake
+    uint8 public constant LOCK_PASS_PAYOUT = 1;      // door 13: setPassPayoutBps (already bounded; lock only)
+    uint8 public constant LOCK_CLAIM_CAP = 2;        // door 14: setUpgradeClaimCapBps (F2: sole remaining writer)
+    uint8 public constant LOCK_ESCROW_PARAMS = 3;    // door 15: setStructuralUpgradeEscrowParams
+
+    function structuralParamLocked(uint8 id) public view returns (bool) {
+        return (structuralParamLockMask & (uint256(1) << id)) != 0;
+    }
+
+    /// @notice Lock a structural-upgrade economic param one-way (irreversible). UNARMED at this deploy by design.
+    function lockStructuralParam(uint8 id) external onlyAdmin {
+        if (id > LOCK_ESCROW_PARAMS) revert BadParamId();
+        structuralParamLockMask |= (uint256(1) << id);
+        emit ParameterUpdated("structuralParamLock", id);
+    }
+
+    function _requireUnlocked(uint8 id) internal view {
+        if (structuralParamLocked(id)) revert ParamLocked();
+    }
 
     modifier onlyAdmin() {
         if (msg.sender != admin) revert NotAdmin();
@@ -230,18 +284,37 @@ contract StructuralUpgradeModule {
         admin = _admin;
     }
 
+    // ---- DR-6a (mainnet-deploy.md): admin rotatability ------------------------------------------
+    // Matches AuditCell.transferAdmin (zero-address reject + AdminTransferred event). Without this
+    // the deploy sequence cannot hand the module to the Timelock (Section 3 step 8 / DR-3): the
+    // constructor bound admin and nothing could change it. Found 2026-08-01 by rehearsing the
+    // sequence on paper -- on an immutable mainnet cell it would have been permanent.
+    event AdminTransferred(address indexed oldAdmin, address indexed newAdmin);
+    error ZeroAdmin();
+
+    function transferAdmin(address newAdmin) external onlyAdmin {
+        if (!(newAdmin != address(0))) revert ZeroAdmin();
+        emit AdminTransferred(admin, newAdmin);
+        admin = newAdmin;
+    }
+
     function wire(address _cell, address _issuance) external onlyAdmin {
         if (wiringLocked) revert WiringLocked();
         cell = _cell;
         issuanceModule = _issuance;
     }
 
+    // bug_003 (DEC-44 paid review; ruled by VD-143(2)). Same shape as `IssuanceModule.lockWiring`: this
+    // asserted `cell` alone while `wire()` also sets `issuanceModule`, and the lock is one-shot and
+    // one-way — so an `issuanceModule` left at zero was frozen at zero permanently. Both fields, both
+    // directions covered in `LockWiringPrecondition.t.sol`.
     function lockWiring() external onlyAdmin {
-        if (cell == address(0)) revert HostUnset();
+        if (cell == address(0) || issuanceModule == address(0)) revert HostUnset();
         wiringLocked = true;
     }
 
     function setGapFilingStake(uint256 v) external onlyAdmin {
+        _requireUnlocked(LOCK_GAP_FILING_STAKE);
         gapFilingStake = v;
         emit ParameterUpdated("gapFilingStake", v);
     }
@@ -291,32 +364,37 @@ contract StructuralUpgradeModule {
     }
 
     function setPassPayoutBps(uint256 v) external onlyAdmin {
+        _requireUnlocked(LOCK_PASS_PAYOUT);
         if (v > 10_000) revert WrongState();
         passPayoutBps = v;
         emit ParameterUpdated("passPayoutBps", v);
     }
 
     function setUpgradeClaimCapBps(uint256 v) external onlyAdmin {
+        _requireUnlocked(LOCK_CLAIM_CAP);
+        if (v > 10_000) revert WrongState();
         upgradeClaimCapBps = v;
         emit ParameterUpdated("upgradeClaimCapBps", v);
     }
 
+    // F2 fix (admin-door-residue-verdicts, door 15): the claimCapBps arm is DELETED from this bundle.
+    // Pre-fix, this function wrote upgradeClaimCapBps unconditionally at this line, giving the variable
+    // a second writer that bypassed any lock placed on setUpgradeClaimCapBps alone. upgradeClaimCapBps
+    // now has exactly ONE door (setUpgradeClaimCapBps, LOCK_CLAIM_CAP above).
     function setStructuralUpgradeEscrowParams(
         uint256 base,
         uint256 maturityMax,
         uint256 maturityUnit,
         uint256 proposerMax,
-        uint256 proposerUnit,
-        uint256 claimCapBps
+        uint256 proposerUnit
     ) external onlyAdmin {
+        _requireUnlocked(LOCK_ESCROW_PARAMS);
         upgradeProposalBase = base;
         upgradeMaturityMax = maturityMax;
         upgradeMaturityUnit = maturityUnit;
         upgradeProposerMax = proposerMax;
         upgradeProposerUnit = proposerUnit;
-        upgradeClaimCapBps = claimCapBps;
         emit ParameterUpdated("upgradeProposalBase", base);
-        emit ParameterUpdated("upgradeClaimCapBps", claimCapBps);
     }
 
     function upgradeProposalPayoutTarget(address proposer) public view returns (uint256) {
@@ -371,6 +449,13 @@ contract StructuralUpgradeModule {
         AuditCell c = AuditCell(cell);
         if (c.auditAuditorOf(gapAuditId) != msg.sender) revert NotAuditor();
         if (uint256(c.auditStateOf(gapAuditId)) != uint256(CellTypeDefs.AuditState.InAudit)) revert WrongState();
+        // VD-218(4) F3 (bug_004's shape, I2): the gap verdict closes where the permissionless timeout opens
+        // (`advanceInAuditExt`, `block.timestamp > pickupTime + inAuditWindow`), read from the cell's own row.
+        if (block.timestamp > c.getAudit(gapAuditId).pickupTime + c.inAuditWindow()) revert InAuditWindowPassed();
+        // PC-92 bug_009 (G5, I5): the ordinary verdict path rechecks the hold AT THE VERDICT
+        // (`CellLogicLib.submitVerdictAfterProof`), because eligibility can lapse between accepting and deciding. The gap
+        // verdict checked identity and state only, so an auditor the cell would no longer draw could still confirm a gap.
+        if (!c.isEligible(msg.sender)) revert InsufficientHold();
         uint256 gapId = c.auditLinkedOf(gapAuditId);
         if (_gaps[gapId].harnessToolId != toolId) revert WrongHarnessTool();
         c.structuralGapFailRecorded(gapAuditId, toolId, resultRoot);
@@ -458,6 +543,13 @@ contract StructuralUpgradeModule {
         (, bool isSpecTool, , , bool toolExists, , ) = AuditCell(cell).tools(harnessToolId);
         if (!toolExists) revert HarnessNotRegistered();
         if (isSpecTool) revert HarnessIsSpecTool();
+        // PC-92 bug_012 (G5): the SPEC tool gets the validation ordinary submission runs
+        // (`SubmitAuditLib._requireValidSpecAtSubmit`). This path computed the spec digest straight from its arguments, so
+        // a gap could be filed against a spec tool that is unregistered, or registered as something other than a spec tool -
+        // and the digest it pinned would be meaningless either way.
+        (, bool specIsSpecTool, , , bool specExists, , ) = AuditCell(cell).tools(specToolId);
+        if (!specExists) revert SpecToolNotRegistered();
+        if (!specIsSpecTool) revert NotSpecValidationTool();
         if (gapAuditBounty == 0) revert BountyRequired();
 
         AuditCell c = AuditCell(cell);
@@ -534,6 +626,40 @@ contract StructuralUpgradeModule {
             exists: true
         });
         emit StructuralFixSubmitted(gapId, fixAuditId);
+    }
+
+    /// @notice PC-92 bug_010 / bug_011 (G4(d), I4): the exit for a gap whose audit ended WITHOUT the outcome the gap was
+    ///         waiting for. `_onGapVerdict` and `_onFixConfirmed` are the only handlers of the two audits' outcomes, so a
+    ///         void or an exploit of either left the gap with no exit and the filer's stake locked.
+    ///         - FixInAudit, and the fix audit ended Invalidated or Exploited: the fix failed, the gap did not - it returns to
+    ///           GapConfirmed with its fix slot cleared (I1), and the next fix may be submitted.
+    ///         - GapFiled, and the gap audit ended Invalidated: nobody adjudicated the gap - it ends GapVoided with the
+    ///           filer's stake refunded (VD-117: no adjudicated outcome, no adjudicated loser).
+    ///         PULLED, not pushed, and permissionless: it reads the cell's row, so no cell callback (no cell bytes) and no
+    ///         counterparty whose call must succeed. Refuses anything else.
+    function recoverStructuralGap(uint256 gapId) external nonReentrant {
+        NetworkGap storage g = _gaps[gapId];
+        AuditCell c = AuditCell(cell);
+        if (g.exists && g.state == GapState.FixInAudit) {
+            CellTypeDefs.AuditState fs = c.auditStateOf(g.fixAuditId);
+            if (fs == CellTypeDefs.AuditState.Invalidated || fs == CellTypeDefs.AuditState.Exploited) {
+                activeStructuralFixAuditId[gapId] = 0;
+                g.state = GapState.GapConfirmed;
+                emit StructuralGapRecovered(gapId, g.fixAuditId, GapState.GapConfirmed);
+                return;
+            }
+        } else if (
+            g.exists && g.state == GapState.GapFiled && c.auditStateOf(g.gapAuditId) == CellTypeDefs.AuditState.Invalidated
+        ) {
+            g.state = GapState.GapVoided;
+            if (g.stake > 0 && !g.stakeRefunded) {
+                g.stakeRefunded = true;
+                if (!c.token().transfer(g.filer, g.stake)) revert StakeTransferFailed();
+            }
+            emit StructuralGapRecovered(gapId, g.gapAuditId, GapState.GapVoided);
+            return;
+        }
+        revert NothingToRecover();
     }
 
     function _onGapVerdict(uint256 gapId, uint256 gapAuditId, bytes32 proofHash) internal {
@@ -700,11 +826,33 @@ contract StructuralUpgradeModule {
         emit CanonicalPromoted(gapId, deployed, g.adoptedAt, g.fixAuditId);
     }
 
+    // bug_001 (DEC-44 paid review; remedy ruled by VD-143(1) as "verify the witness, with store-and-emit").
+    //
+    // WHAT WAS WRONG, and it is worse than an absent check. The three witness parameters were validated for
+    // SHAPE only - non-zero, a registered non-spec tool - which reads at the call site and in the ABI as
+    // though a regression proof were required. Nothing compared them to state, nothing stored them, nothing
+    // emitted them. So for the whole `opsRegressionWindow` ANY registered eligible non-proposer could
+    // un-adopt a legitimate upgrade and call `structuralSlashProposer` on its author, for free, with
+    // `(gapId, 0x1, <any registered tool>, 0x1)`. Measured before the fix, not argued: the attack ran green
+    // in `StructuralUpgradeFlowCell.t.sol` and the proposer's failed count rose by one.
+    //
+    // `opsAuditId` IS THE FIX. The witness is no longer three loose hashes; it is a settled audit on this
+    // cell, and the four things the signature always implied are now asked of it: it targets THIS deployed
+    // contract, it is InBlock, its verdict FAILED, and its recorded tool and proof root are the ones named
+    // here. A rollback therefore costs what it always claimed to cost - an actual regression, proven by
+    // someone who ran one - and `opsAuditId` rides the event, so the justification is recoverable instead
+    // of merely the roller being identifiable (the correction VD-143 made to this finding's first draft).
+    //
+    // The added parameter is an ABI change on a hull contract, deliberate and signed at G-b. It is the only
+    // shape that verifies: nothing indexes (deployed, toolId, resultRoot) back to an audit, and building
+    // that index would cost AuditCell storage against 87 bytes of margin. Module-side against 6,152 is
+    // VD-107's shape and VD-143's ruling both.
     function rollbackStructuralUpgrade(
         uint256 gapId,
         bytes32 opsSpecHash,
         bytes32 toolId,
-        bytes32 resultRoot
+        bytes32 resultRoot,
+        uint256 opsAuditId
     ) external nonReentrant {
         NetworkGap storage g = _gaps[gapId];
         if (!g.exists || g.state != GapState.Adopted) revert NotAdopted();
@@ -728,6 +876,44 @@ contract StructuralUpgradeModule {
         (, bool isSpecTool, , , bool toolExists, , ) = c.tools(toolId);
         if (!toolExists || isSpecTool) revert HarnessNotRegistered();
 
+        // THE WITNESS, VERIFIED (bug_001). Four questions the old shape checks only looked like they asked.
+        // Order matters for the message a griefer gets: target first, because pointing at the wrong contract
+        // is the cheapest forgery once the result root has to exist on chain at all.
+        if (c.auditDeployedOf(opsAuditId) != deployed) revert WitnessTargetMismatch();
+
+        // THE STATE PREDICATE IS `Exploited`, ALONE - ruled by VD-153 from the cell's state machine, after
+        // this fix's first writing used `InBlock` and the CONTROL TEST caught it. A failing verdict never
+        // reaches `InBlock`: `CellLogicLib`:536 opens a VULNERABILITY CLAIM instead, so that predicate
+        // would have made this function permanently uncallable - bug_003's failure class, one contract
+        // over, introduced by bug_001's fix.
+        //
+        // The cell has NO state for "a settled failing verdict". It has one for an ADJUDICATED failure:
+        // a claim lapses on expiry, returns when a dispute re-audit reproduces the pass, and stands only
+        // when a dispute re-audit reproduces the FAILURE - the single write of `Exploited`
+        // (`AuditCell`:1268), and terminal. So a rollback now costs a regression a SECOND auditor
+        // reproduced under stake, which is a stronger bar than the signature ever advertised.
+        if (uint256(c.auditStateOf(opsAuditId)) != uint256(CellTypeDefs.AuditState.Exploited)) {
+            revert WitnessNotUpheld();
+        }
+
+        // THE PROOF COMES FROM THE CLAIM RECORD, NOT THE AUDIT'S VERDICT FIELDS (VD-153). On the
+        // discoverer path - the realistic route for a regression on an already-adopted contract - the
+        // audit's `verdictPass`/`verdictToolId`/`proofHash` still describe the PASS THAT WAS OVERTURNED,
+        // so checking them would refuse a genuinely exploited contract. The claim record carries the
+        // FAILING proof on both paths.
+        (, bytes32 claimToolId, bytes32 claimProofHash,,,,,,,,,,) = c.vulnerabilityClaims(opsAuditId);
+        if (claimToolId != toolId) revert WitnessToolMismatch();
+        if (claimProofHash != resultRoot) revert WitnessResultMismatch();
+
+        // `opsSpecHash` IS VERIFIED, not merely non-zero. Leaving it shape-checked would have reproduced
+        // this very defect one field narrower - a parameter that reads as required and is compared to
+        // nothing. The vault read this as unfixable without new cell bytes against AuditCell's 87; that
+        // premise is false - `AuditCell.audits(id)` already returns `specHash` (position 7), so the check
+        // is module-side and costs the cell nothing. Verified beats dropped: the signature keeps its
+        // promise instead of retreating from it.
+        (,,,,,, bytes32 witnessSpecHash,,,,,,,,,,,,,) = c.audits(opsAuditId);
+        if (witnessSpecHash != opsSpecHash) revert WitnessSpecMismatch();
+
         uint256 priorId = g.priorCanonicalAuditId;
         if (priorId == 0) {
             delete canonicalContractAuditId[deployed];
@@ -740,7 +926,10 @@ contract StructuralUpgradeModule {
         c.structuralSlashProposer(rec.proposer);
 
         g.state = GapState.RolledBack;
-        emit StructuralUpgradeRolledBack(gapId, fixId, priorId, msg.sender, c.latestBlockHash());
+        rollbackWitnessAuditId[gapId] = opsAuditId;
+        emit StructuralUpgradeRolledBack(
+            gapId, fixId, priorId, msg.sender, c.latestBlockHash(), opsAuditId, opsSpecHash, toolId, resultRoot
+        );
     }
 
     function expireStructuralUpgrade(uint256 gapId) external {

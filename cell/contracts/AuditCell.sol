@@ -8,6 +8,7 @@ import "./IClaimDisputeModule.sol";
 import "./IDisputeResolver.sol";
 import "./DiscovererPayoutLib.sol";
 import "./SubmitAuditLib.sol";
+import "./ToolUseLib.sol";
 
 interface IIntegrityReviewGate {
     function confirmBlocked(uint256 auditId) external view returns (bool);
@@ -150,6 +151,11 @@ contract AuditCell is CellTypeDefs, IClaimSettlementMutator {
     error DisputeBountyEscrowFailed();
     error NotAwaiting();
     error AuditWindowOpen();
+    error AuditWindowTooLong();
+    error NotGenesisProtocol();
+    error NotGenesisAuditor();
+    error GenesisBootstrapClosed();
+    error DisputeReleasable();
     error AlreadyAccepted();
     error AlreadyInQueue();
     error AlreadyLocked();
@@ -213,6 +219,8 @@ contract AuditCell is CellTypeDefs, IClaimSettlementMutator {
     error StakeTransferFailed();
     error ToolAlreadyRegistered();
     error ToolNotRegistered();
+    // thrown from ToolUseLib via delegatecall, so it surfaces at THIS address - kept in this ABI on purpose
+    error ToolAlreadyCanonical();
     error TreasuryAlreadySet();
     error VerifierUnset();
     error WrongState();
@@ -641,6 +649,29 @@ contract AuditCell is CellTypeDefs, IClaimSettlementMutator {
         L.admin = newAdmin;
     }
 
+    event GenesisBootstrapNamed(address indexed genesisProtocol, address indexed genesisAuditor);
+
+    function genesisProtocol() external view returns (address) {
+        return CellStorage.layout().genesisProtocol;
+    }
+
+    function genesisAuditor() external view returns (address) {
+        return CellStorage.layout().genesisAuditor;
+    }
+
+    /// @notice G6 (I6): name who may bootstrap this cell. `protocol_` may submit the genesis audit besides the admin (PC-89);
+    ///         `auditor_`, when non-zero, is the only address that may take auditor position 1 while genesis is pending
+    ///         (PC-85). Only before the genesis audit opens, and an auditor only before ANYONE has registered - naming one
+    ///         afterwards could not protect a seat already taken, and must not look as if it did.
+    function setGenesisBootstrap(address protocol_, address auditor_) external onlyAdmin {
+        CellStorage.Layout storage L = CellStorage.layout();
+        if (!L.genesisPending || L.genesisAuditOpen) revert GenesisBootstrapClosed();
+        if (auditor_ != address(0) && L.auditorCount != 0) revert GenesisBootstrapClosed();
+        L.genesisProtocol = protocol_;
+        L.genesisAuditor = auditor_;
+        emit GenesisBootstrapNamed(protocol_, auditor_);
+    }
+
     function setTreasuryEscrow(address _escrow) external onlyAdmin {
         CellStorage.Layout storage L = CellStorage.layout();
         if ((L.paramLocked & (uint256(1) << 7)) != 0) revert ParamLockedErr();
@@ -750,13 +781,15 @@ contract AuditCell is CellTypeDefs, IClaimSettlementMutator {
         emit MaxBountyPerSubmitLocked();
     }
 
+    // G-31 / door 16. The BODY lives in ToolUseLib.setToolWitnessFlagsExt — see there for the three rules
+    // and why they are three. It moved 2026-08-23 (VD-36, from the operator's question "can this be fixed
+    // on the side where the canonization logic is written?"). The move is what made the door closable:
+    // AuditCell had EIGHT bytes of headroom and door 16's lock needed 23 more, while ToolUseLib is a linked
+    // external library with 22,812 B free, so the guard, the lock and the bound all fit there and this
+    // forwarder REPAYS margin instead of spending it. Selector unchanged -> surface conserved by
+    // construction. `onlyAdmin` stays HERE, on the entry point, because that is where the caller arrives.
     function setToolWitnessFlags(bytes32 toolId, bool isEvaluator, bool canonical) external onlyAdmin {
-        CellStorage.Layout storage L = CellStorage.layout();
-        Tool storage t = L.tools[toolId];
-        if (!(t.exists)) revert ToolNotRegistered();
-        if (t.isSpecValidationTool) revert SpecToolNotForVerdict();
-        t.isInvariantEvaluator = isEvaluator;
-        t.canonical = canonical;
+        ToolUseLib.setToolWitnessFlagsExt(toolId, isEvaluator, canonical);
     }
 
     // ------------------------------------------------------------ eligibility / named audit views
@@ -930,19 +963,6 @@ contract AuditCell is CellTypeDefs, IClaimSettlementMutator {
     /// @notice Full declared-verdict-tool set for an audit (re-landed enumerator).
     function declaredVerdictToolsOf(uint256 id) external view returns (bytes32[4] memory toolSlots, uint8 n) {
         return SubmitAuditLib.declaredVerdictToolsOfExt(id);
-    }
-
-    function _settleClaimStake(VulnerabilityClaim storage claim, bool slash) internal {
-        CellStorage.Layout storage L = CellStorage.layout();
-        uint256 s = claim.stake;
-        if (s == 0) return;
-        if (slash) {
-            address dest = L.treasuryEscrow != address(0) ? L.treasuryEscrow : L.admin;
-            if (!L.token.transfer(dest, s)) revert TransferFailed();
-            if (L.treasuryEscrow != address(0)) ITreasuryEscrow(L.treasuryEscrow).recordSlash(s);
-        } else if (!L.token.transfer(claim.claimant, s)) {
-            revert TransferFailed();
-        }
     }
 
     // -------------------------------------------------------- tools / Gate A
@@ -1157,45 +1177,33 @@ contract AuditCell is CellTypeDefs, IClaimSettlementMutator {
         );
     }
 
-    function settlementExpireClaimDispute(uint256 originalId) external {
+    /// @dev PC-99 (G5): the spawning module names a SECOND party to exclude from the draw, immediately before its spawn,
+    ///      and its own `spawnDisputeReaudit` consumes it. Keyed on the caller (VD-223(1)), so a value one lane leaves
+    ///      behind is invisible to every other lane's spawn. Written here rather than in CellLogicLib because the library
+    ///      had the less headroom when this was placed (G5, 2026-09-17: VD-143's STOP applied one level down).
+    function settlementSetDisputeExclude2(uint256 originalId, address who) external {
         CellStorage.Layout storage L = CellStorage.layout();
-        if (msg.sender != L.claimDisputeModule) revert NotAdmin();
-        uint256 disputeId = L.activeDisputeAuditId[originalId];
-        if (disputeId == 0) revert NoOpenDispute();
-        Audit storage d = L.audits[disputeId];
-        if (d.state == AuditState.AwaitingWindow) revert DisputeVerdicted();
-        if (block.timestamp < d.windowStart + L.claimResolutionWindow) revert DisputeWindowActive();
-        L.activeDisputeAuditId[originalId] = 0;
-        if (d.bounty > 0 && !L.token.transfer(d.protocol, d.bounty)) revert TransferFailed(        );
+        if (
+            msg.sender != L.claimDisputeModule && msg.sender != L.specGapModule
+                && msg.sender != L.integrityReviewModule
+        ) revert NotAdmin();
+        L.pendingDisputeExclude2[originalId][msg.sender] = who;
+    }
+
+    function settlementExpireClaimDispute(uint256 originalId) external {
+        SubmitAuditLib.expireClaimDisputeExt(originalId);
     }
 
     function expireClaim(uint256 originalAuditId) external nonReentrant {
-        CellStorage.Layout storage L = CellStorage.layout();
-        Audit storage a = L.audits[originalAuditId];
-        VulnerabilityClaim storage claim = L.vulnerabilityClaims[originalAuditId];
-        if (a.state != AuditState.Claimed) revert NotClaimed();
-        if (!claim.exists) revert NoClaimRecord();
-        if (claim.resolved) revert ClaimAlreadyResolved();
-        if (L.activeDisputeAuditId[originalAuditId] != 0) revert DisputeOpen();
-        if (L.claimDisputeModule != address(0)) {
-            if (!IClaimDisputeModule(L.claimDisputeModule).claimantDisputeLaneOpen(originalAuditId)) {
-                revert ProtocolDisputeDecisionPending();
-            }
-        }
-        if (block.timestamp < claim.claimTimestamp + L.claimResolutionWindow) revert ResolutionWindowActive();
-        _resolveClaim(originalAuditId);
+        SubmitAuditLib.expireClaimExt(originalAuditId);
     }
 
-    function _resolveClaim(uint256 originalAuditId) internal {
-        CellStorage.Layout storage L = CellStorage.layout();
-        Audit storage a = L.audits[originalAuditId];
-        VulnerabilityClaim storage claim = L.vulnerabilityClaims[originalAuditId];
+    function settlementResolveUnadjudicated(uint256 originalId) external {
+        SubmitAuditLib.resolveUnadjudicatedExt(originalId);
+    }
 
-        claim.resolved = true;
-        _settleClaimStake(claim, a.stateBeforeClaim != AuditState.InAudit);
-        L.activeFixAuditId[originalAuditId] = 0;
-        CellLogicLib.setAuditStateExt(originalAuditId, a.stateBeforeClaim);
-        emit ClaimExpired(originalAuditId, claim.claimant, 0);
+    function settlementResumeClock(uint256 auditId, uint256 frozenAt) external {
+        SubmitAuditLib.resumeClockExt(auditId, frozenAt);
     }
 
     // ---------------------------------------- ClaimDisputeModule mutators
@@ -1205,26 +1213,7 @@ contract AuditCell is CellTypeDefs, IClaimSettlementMutator {
     }
 
     function settlementApplyClaimFiled(uint256 originalAuditId, ClaimInput calldata c) external {
-        CellStorage.Layout storage L = CellStorage.layout();
-        if (msg.sender != L.claimDisputeModule) revert NotAdmin();
-        Audit storage a = L.audits[originalAuditId];
-        a.stateBeforeClaim = a.state;
-        CellLogicLib.setAuditStateExt(originalAuditId, AuditState.Claimed);
-        VulnerabilityClaim storage claim = L.vulnerabilityClaims[originalAuditId];
-        claim.claimant = c.claimant;
-        claim.toolId = c.toolId;
-        claim.proofHash = c.proofHash;
-        claim.claimTimestamp = block.timestamp;
-        claim.stake = c.stake;
-        claim.resolved = false;
-        claim.exists = true;
-        claim.witnessPath = c.witnessPath;
-        claim.evaluatorToolId = c.evaluatorToolId;
-        claim.invariantId = c.invariantId;
-        claim.locationCommitment = c.locationCommitment;
-        claim.witnessCommitment = c.witnessCommitment;
-        claim.contextRoot = c.contextRoot;
-        emit VulnerabilityClaimed(originalAuditId, c.claimant, c.toolId, c.proofHash, c.stake);
+        SubmitAuditLib.applyClaimFiledExt(originalAuditId, c);
     }
 
     function settlementResolveClaim(
@@ -1234,28 +1223,7 @@ contract AuditCell is CellTypeDefs, IClaimSettlementMutator {
         bool vindicated,
         bool slashAuditorFailed
     ) external {
-        CellStorage.Layout storage L = CellStorage.layout();
-        if (msg.sender != L.claimDisputeModule) revert NotAdmin();
-        Audit storage a = L.audits[originalId];
-        VulnerabilityClaim storage claim = L.vulnerabilityClaims[originalId];
-        claim.resolved = true;
-        if (vindicated) {
-            _settleClaimStake(claim, true);
-            CellLogicLib.setAuditStateExt(originalId, a.stateBeforeClaim);
-            emit ClaimVindicated(originalId, claimant, amount);
-            return;
-        }
-        _settleClaimStake(claim, false);
-        if (slashAuditorFailed && a.stateBeforeClaim != AuditState.InAudit && a.auditor != address(0)) {
-            L.auditors[a.auditor].failed += 1;
-        }
-        if (claimant != address(0)) {
-            L.auditors[claimant].found += 1;
-            a.lastDiscoverer = claimant;
-        }
-        CellLogicLib.setAuditStateExt(originalId, AuditState.Exploited);
-        L.protocols[a.protocol].exploited += 1;
-        emit OriginalAuditExploited(originalId, claimant, amount, address(0));
+        SubmitAuditLib.resolveClaimExt(originalId, claimant, amount, vindicated, slashAuditorFailed);
     }
 
     function settlementClearDispute(uint256 originalId) external {
@@ -1264,23 +1232,7 @@ contract AuditCell is CellTypeDefs, IClaimSettlementMutator {
     }
 
     function settlementToken(uint8 op, address from, address to, uint256 amount) external {
-        CellStorage.Layout storage L = CellStorage.layout();
-        if (
-            msg.sender != L.claimDisputeModule && msg.sender != L.specGapModule && msg.sender != L.specArbiterModule
-                && msg.sender != L.integrityReviewModule
-        ) {
-            revert NotAdmin();
-        }
-        if (op == 0) {
-            if (amount > 0 && !L.token.transferFrom(from, address(this), amount)) revert StakeTransferFailed();
-        } else if (op == 1) {
-            if (amount > 0 && !L.token.transfer(to, amount)) revert TransferFailed();
-        } else if (op == 2 && (msg.sender == L.specGapModule || msg.sender == L.specArbiterModule || msg.sender == L.integrityReviewModule)) {
-            if (amount > 0 && L.treasuryEscrow != address(0)) {
-                if (!L.token.transfer(L.treasuryEscrow, amount)) revert TransferFailed();
-                ITreasuryEscrow(L.treasuryEscrow).recordSlash(amount);
-            }
-        }
+        SubmitAuditLib.settlementTokenExt(op, from, to, amount);
     }
 
     function settlementPayDiscoverer(
@@ -1316,6 +1268,8 @@ contract AuditCell is CellTypeDefs, IClaimSettlementMutator {
         external
         onlyStructuralModule
     {
+        // PC-92 bug_008 (G4(b), I3): the gap verdict honours the settlement freeze every ordinary verdict path honours.
+        CellLogicLib.requireNoSettlementBlockExt(gapAuditId);
         CellStorage.Layout storage L = CellStorage.layout();
         L.auditProofHash[gapAuditId] = proofHash;
         L.auditVerdictPass[gapAuditId] = false;
@@ -1375,46 +1329,7 @@ contract AuditCell is CellTypeDefs, IClaimSettlementMutator {
         if (proposer != address(0)) CellStorage.layout().auditors[proposer].failed += 1;
     }
 
-    function _voidAuditRow(CellStorage.Layout storage L, uint256 auditId, bool slashAuditorFailed) internal {
-        Audit storage a = L.audits[auditId];
-        if (a.bounty > 0 && a.bountyEscrowed && a.state != AuditState.InBlock) {
-            if (!L.token.transfer(a.protocol, a.bounty)) revert TransferFailed();
-            a.bounty = 0;
-        }
-        if (slashAuditorFailed && a.auditor != address(0)) L.auditors[a.auditor].failed += 1;
-        if (a.artifactHash != bytes32(0)) {
-            L.artifactRegistered[a.artifactHash] = false;
-            delete L.artifactToAuditId[a.artifactHash];
-        }
-        CellLogicLib.setAuditStateExt(auditId, AuditState.Invalidated);
-    }
-
     function settlementOverlay(uint8 kind, uint8 op, uint256 auditId, address aux) external {
-        CellStorage.Layout storage L = CellStorage.layout();
-        if (op != 2) revert NotAdmin();
-        if (kind == 0) {
-            if (msg.sender != L.specArbiterModule) revert NotAdmin();
-            VulnerabilityClaim storage claim = L.vulnerabilityClaims[auditId];
-            if (claim.exists && !claim.resolved) {
-                if (claim.stake > 0 && !L.token.transfer(claim.claimant, claim.stake)) revert TransferFailed();
-                claim.resolved = true;
-                L.activeFixAuditId[auditId] = 0;
-            }
-            bytes32 toolId = L.audits[auditId].specToolId;
-            L.audits[auditId].bounty = 0;
-            if (L.audits[auditId].artifactHash != bytes32(0)) {
-                L.artifactRegistered[L.audits[auditId].artifactHash] = false;
-                delete L.artifactToAuditId[L.audits[auditId].artifactHash];
-            }
-            CellLogicLib.setAuditStateExt(auditId, AuditState.Invalidated);
-            emit SpecInvalidated(auditId, aux, toolId);
-            return;
-        }
-        if (kind == 1) {
-            if (msg.sender != L.integrityReviewModule) revert NotAdmin();
-            _voidAuditRow(L, auditId, true);
-            return;
-        }
-        revert NotAdmin();
+        SubmitAuditLib.settlementOverlayExt(kind, op, auditId, aux);
     }
 }

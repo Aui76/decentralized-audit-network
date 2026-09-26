@@ -16,5 +16,10 @@ library CellParamIds {
     uint8 internal constant PROTOCOL_DECISION = 10;
     uint8 internal constant IN_AUDIT = 11;
     uint8 internal constant CLAIM_STAKE_BPS = 12;
-    uint8 internal constant ID_MAX = 12;
+    // door 16 (G-31). Reinstated 2026-08-23 WITH a reader this time: ToolUseLib.setToolWitnessFlagsExt
+    // gates the `canonical` transition on this bit. It was added and reverted the same day when the lock
+    // did not fit AuditCell - an id nothing reads makes `lockParam(13)` succeed and arm nothing, a lock
+    // that lies. It only belongs here while something checks it.
+    uint8 internal constant TOOL_WITNESS_FLAGS = 13;
+    uint8 internal constant ID_MAX = 13;
 }

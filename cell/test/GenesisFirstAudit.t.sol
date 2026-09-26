@@ -30,6 +30,12 @@ contract GenesisFirstAuditTest is SpecValidationCellSetup {
 
     function setUp() public {
         d = CellTestDeploy.deploy(address(this));
+        // G6 (PC-89): the genesis slot belongs to the admin or a genesis protocol the admin names; this fixture's
+        // protocol is a separate address, so the admin names it. Encoded, so the file also compiles on pre-G6 bytes.
+        (bool named,) = address(d.cell).call(
+            abi.encodeWithSignature("setGenesisBootstrap(address,address)", genesisProtocol, address(0))
+        );
+        named;
         cell = d.cell;
         token = d.token;
         escrow = d.escrow;

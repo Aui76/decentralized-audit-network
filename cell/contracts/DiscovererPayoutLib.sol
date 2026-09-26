@@ -8,12 +8,23 @@ interface IPayoutToken {
 interface IPayoutEscrow {
     function escrowBalance() external view returns (uint256);
     function payDiscoverer(address recipient, uint256 amount, uint256 maxIterations) external returns (uint256);
+    function recordDiscovererDebt(address claimant, uint256 amount) external;
 }
 
 /// @dev Discoverer payout math extracted from AuditCell for EIP-170 headroom (P1 gate 4).
 library DiscovererPayoutLib {
     error BountyTopupTransferFailed();
     error BountyRefundFailed();
+
+    /// @notice A discoverer was paid LESS than their computed target, and this is the only place that
+    ///         says so. Three routes converge here (2026-08-09 loudness fix): the escrow short with the
+    ///         bounty pot already disbursed (no topup source — `bountyPotLocked` false), the escrow
+    ///         drained ahead of the claim (PC-26), and `_payFromBucket`'s iteration budget cutting the
+    ///         walk short (underpays even a FULL escrow). Deliberately an event and NOT a revert:
+    ///         reverting would let anyone who can depress the escrow BLOCK settlement outright — a
+    ///         strictly worse lever than the silence being fixed. The claim settles; the shortfall
+    ///         becomes arguable.
+    event DiscovererShortfall(address indexed claimant, uint256 target, uint256 paid, bool bountyPotLocked);
 
     function pay(
         IPayoutToken token,
@@ -52,6 +63,18 @@ library DiscovererPayoutLib {
                     bountyTopupPaid = topup;
                     paid += topup;
                 }
+            }
+            // Loudness + debt (2026-08-09): `paid` is now final for the escrow leg — every source has
+            // had its chance. If it is still short of the target: say so where an indexer will see it,
+            // and RECORD the gap as owed (discoverer-debt-ledger-proposal) so a drained pot delays a
+            // payment instead of denying it. The record call is guarded on a wired escrow — the floor
+            // prong prices the target off the bounty alone, so this branch is reachable with
+            // escrow == address(0), and an unguarded call there would brick settlement.
+            if (paid < payoutTarget) {
+                if (address(escrow) != address(0)) {
+                    escrow.recordDiscovererDebt(claimant, payoutTarget - paid);
+                }
+                emit DiscovererShortfall(claimant, payoutTarget, paid, bountyPotLocked);
             }
         }
 

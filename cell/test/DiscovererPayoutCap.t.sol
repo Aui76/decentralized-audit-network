@@ -14,10 +14,22 @@ contract MockToken {
 
 contract MockEscrow {
     uint256 public bal;
+    // Debt-ledger capture (2026-08-09): the lib now records shortfalls; the mock implements the
+    // interface member and remembers the call so tests can assert the exact gap. Extending the mock
+    // is legitimate isolation, not a weakened claim — no existing assertion changed.
+    address public lastDebtClaimant;
+    uint256 public lastDebtAmount;
+    uint256 public debtCalls;
+
     constructor(uint256 b) { bal = b; }
     function escrowBalance() external view returns (uint256) { return bal; }
     function payDiscoverer(address, uint256 amount, uint256) external view returns (uint256) {
         return amount <= bal ? amount : bal; // pays what's asked, up to its balance
+    }
+    function recordDiscovererDebt(address claimant, uint256 amount) external {
+        lastDebtClaimant = claimant;
+        lastDebtAmount = amount;
+        debtCalls += 1;
     }
 }
 
@@ -51,5 +63,68 @@ contract DiscovererPayoutCap is Test {
         uint256 paid = _pay(40 ether, 15 ether, 5 ether); // 5% of 40 = 2; floor 50% of 5 = 2.5 → 2.5
         assertLe(paid, 5 ether);
         assertEq(paid, 2.5 ether, "unchanged when already below the bounty");
+    }
+
+    // ---- Loudness (2026-08-09): a shortfall must EMIT; a full payment must not ----
+    // NOTE 0.8.20: qualified access to a library's events (emit Lib.Event / Lib.Event.selector) needs
+    // 0.8.21+, so the event is re-declared locally (expectEmit matches topics+data, not the definer)
+    // and topic0 is derived from the signature string.
+
+    event DiscovererShortfall(address indexed claimant, uint256 target, uint256 paid, bool bountyPotLocked);
+    bytes32 constant SHORTFALL_TOPIC0 = keccak256("DiscovererShortfall(address,uint256,uint256,bool)");
+
+    // Escrow nearly empty, pot UNLOCKED (post-settlement claim): target = floor 50% of 5 = 2.5,
+    // escrow can only pay 1, no topup source -> event with the exact gap AND the gap recorded as debt.
+    function test_shortfall_emits_when_escrow_short() public {
+        MockEscrow escrow = new MockEscrow(1 ether);
+        vm.expectEmit(true, false, false, true);
+        emit DiscovererShortfall(C, 2.5 ether, 1 ether, false);
+        uint256 paid = DiscovererPayoutLib.pay(
+            IPayoutToken(address(token)), IPayoutEscrow(address(escrow)),
+            CAP_BPS, FLOOR_BPS, 8, P, C, B, 15 ether, false, 5 ether
+        );
+        assertEq(paid, 1 ether, "paid only what the escrow held");
+        assertEq(escrow.debtCalls(), 1, "shortfall recorded exactly once");
+        assertEq(escrow.lastDebtClaimant(), C, "debt recorded for the claimant");
+        assertEq(escrow.lastDebtAmount(), 1.5 ether, "debt == target - paid, the event's exact gap");
+    }
+
+    // Same short escrow but the pot is LOCKED: the topup covers the gap from the bounty, paid == target,
+    // NO event. This is also the first direct test the topup path has ever had.
+    function test_topup_prevents_shortfall_event_when_locked() public {
+        MockEscrow escrow = new MockEscrow(1 ether);
+        vm.recordLogs();
+        uint256 paid = DiscovererPayoutLib.pay(
+            IPayoutToken(address(token)), IPayoutEscrow(address(escrow)),
+            CAP_BPS, FLOOR_BPS, 8, P, C, B, 15 ether, true, 5 ether
+        );
+        assertEq(paid, 2.5 ether, "escrow 1 + bounty topup 1.5 = the 2.5 target");
+        assertEq(escrow.debtCalls(), 0, "no debt when the topup made the claimant whole");
+        Vm.Log[] memory logs = vm.getRecordedLogs();
+        for (uint256 i = 0; i < logs.length; i++) {
+            assertTrue(
+                logs[i].topics[0] != SHORTFALL_TOPIC0,
+                "no shortfall event when the topup made the claimant whole"
+            );
+        }
+    }
+
+    // A payment made in full emits nothing - the event must never cry wolf.
+    function test_no_event_when_paid_in_full() public {
+        MockEscrow escrow = new MockEscrow(200 ether);
+        vm.recordLogs();
+        uint256 paid = DiscovererPayoutLib.pay(
+            IPayoutToken(address(token)), IPayoutEscrow(address(escrow)),
+            CAP_BPS, FLOOR_BPS, 8, P, C, B, 15 ether, false, 5 ether
+        );
+        assertEq(paid, 5 ether, "the existing large-pool case, paid in full");
+        assertEq(escrow.debtCalls(), 0, "a full payment records no debt");
+        Vm.Log[] memory logs = vm.getRecordedLogs();
+        for (uint256 i = 0; i < logs.length; i++) {
+            assertTrue(
+                logs[i].topics[0] != SHORTFALL_TOPIC0,
+                "no shortfall event on a full payment"
+            );
+        }
     }
 }

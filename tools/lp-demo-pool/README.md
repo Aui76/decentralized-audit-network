@@ -12,6 +12,8 @@ Loaded from [`addresses-84532.json`](./addresses-84532.json) at script runtime â
 |----------|---------|
 | CellEscrow | `0x7d2B523f78968d78eE2071E9F25BB928aDa81B54` |
 | CellToken (AUDIT) | `0x756bD73C62C33eb4E4fD7028b9fe14314a94851F` |
+
+> **Predecessor artifact (2026-09-13).** This pool was seeded on the token of the superseded cell `0xB8BFC2dd2CDFF79e018479C8a97B6AeC1979ff6d`. The canonical cell `0xb034F198869726c36965B95879eCB65Bdb1076c9` has its own token `0xdBa4a998200f3b4e0256b1bFcB4d7176BF0D65D3` and **no LP pool yet**; the addresses above are correct for the pool that exists and must not be repointed.
 | Uniswap V3 Factory | `0x4752ba5DBc23f44D87826276BF6Fd6b1C372aD24` |
 | NonfungiblePositionManager | `0x27F971cb582BF9E50F397e4d29a5C7A34f11faA2` |
 | SwapRouter02 | `0x94cC0AaC535CCDB3C01d6787D6413C739ae12bc4` |

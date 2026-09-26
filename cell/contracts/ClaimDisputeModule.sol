@@ -60,12 +60,21 @@ contract ClaimDisputeModule is IClaimDisputeModule {
     error OnlyClaimant();
     error ClaimantLaneNotOpen();
     error AlreadyDeclined();
+    error DisputeAlreadySpent();
 
     uint256 internal constant DISPUTE_BOUNTY_MIN_BPS = 5000;
 
     /// @dev F-80: protocol decline + claimant-funded dispute lane.
     mapping(uint256 => bool) public disputeFundingDeclined;
     mapping(uint256 => uint256) public claimProtocolDecisionDue;
+    /// @dev PC-116 (G4, VD-216(3) Edge 2): ONE FUNDED DISPUTE PER FUNDER PER ORIGINAL. Set for the funder whenever a dispute
+    ///      on this original ends through `expireDispute` - unverdicted, or verdicted and released unconfirmed - and read
+    ///      where a dispute is funded. Since G2 a resolved claim no longer blocks a new filing, and since G3/PC-115 such an
+    ///      end refunds everyone, so without this a funder (or a protocol with a colluding claimant) re-filed and re-funded
+    ///      for the cost of time alone. Per FUNDER, not per claim: a party who has not spent a dispute here still may. A
+    ///      CLAIMANT who has spent one is refused at FILING (VD-218(1)), the protocol at funding. NOT
+    ///      set by a verdict that reproduces neither side (PC-98): the funder does not choose the drawn re-auditor.
+    mapping(uint256 => mapping(address => bool)) public disputeSpent;
     uint256 public protocolClaimDecisionWindow;
 
     /// @dev F-79: claimant↔auditor + triangle dispute assignment exclusions (R8/R9).
@@ -94,6 +103,20 @@ contract ClaimDisputeModule is IClaimDisputeModule {
 
     constructor(address _admin) {
         admin = _admin;
+    }
+
+    // ---- DR-6a (mainnet-deploy.md): admin rotatability ------------------------------------------
+    // Matches AuditCell.transferAdmin (zero-address reject + AdminTransferred event). Without this
+    // the deploy sequence cannot hand the module to the Timelock (Section 3 step 8 / DR-3): the
+    // constructor bound admin and nothing could change it. Found 2026-08-01 by rehearsing the
+    // sequence on paper -- on an immutable mainnet cell it would have been permanent.
+    event AdminTransferred(address indexed oldAdmin, address indexed newAdmin);
+    error ZeroAdmin();
+
+    function transferAdmin(address newAdmin) external onlyAdmin {
+        if (!(newAdmin != address(0))) revert ZeroAdmin();
+        emit AdminTransferred(admin, newAdmin);
+        admin = newAdmin;
     }
 
     function wire(address _cell) external onlyAdmin {
@@ -142,7 +165,19 @@ contract ClaimDisputeModule is IClaimDisputeModule {
         bytes32 artifactHash = a.artifactHash;
 
         (, , , , , bool resolved, bool exists, , , , , , ) = ac.vulnerabilityClaims(originalAuditId);
-        if (exists) revert ClaimAlreadyFiled();
+        // PC-81 (G2, I1): REFUSE ONLY WHILE A CLAIM IS OPEN. This refused on `exists`, which no exit ever cleared - every
+        // terminal exit writes only `resolved` - so ONE lapsed or settled claim immunised the audit for good, and a
+        // protocol shielding an exploitable contract paid one stake for it. The record is not deleted: the resolved claim
+        // stays readable until the next filing overwrites it (`settlementApplyClaimFiled` writes every field).
+        if (exists && !resolved) revert ClaimAlreadyFiled();
+        // PC-116 as ruled by VD-218(1): a claimant whose dispute on this original ended without adjudication may not FILE
+        // on it again - refused here, before any stake moves. Refused only at the funding site (G4 as first built), the
+        // re-filed claim's one exit was the lapse, which slashes: an honest second claim stranded. One voice per original
+        // per claimant; any other registrant can still report the finding.
+        if (disputeSpent[originalAuditId][claimant]) revert DisputeAlreadySpent();
+        // A decision about the LAST claim is not a decision about this one: `claimProtocolDecisionDue` is re-armed below,
+        // and a funding refusal left set would open the claimant's dispute lane on the new claim at once.
+        disputeFundingDeclined[originalAuditId] = false;
 
         address protocol = a.protocol;
         address auditor = a.auditor;
@@ -270,7 +305,14 @@ contract ClaimDisputeModule is IClaimDisputeModule {
         bytes32 rDisp = ac.auditProofHash(disputeId);
         bool passReproduces = ac.auditVerdictPass(disputeId) && rDisp == rOrig;
         bool failReproduces = !ac.auditVerdictPass(disputeId) && rDisp == proofHash;
-        if (!passReproduces && !failReproduces) revert DisputeNoReproduce();
+        // PC-98 (G4(c), I4): a verdict that reproduces NEITHER side is an OUTCOME, not a revert. The revert froze the claim
+        // lane for good - confirm is the only exit of a verdicted row - and the drawn re-auditor chose it by choosing the
+        // root. The claim resolves unadjudicated. The verdict itself stands and its auditor was paid at confirm, exactly as
+        // any unreviewed verdict is: an integrity review of the dispute row during its audit window is the check on it.
+        if (!passReproduces && !failReproduces) {
+            m.settlementResolveUnadjudicated(originalId);
+            return;
+        }
 
         if (passReproduces) {
             m.settlementResolveClaim(originalId, claimant, stake, true, false);
@@ -310,7 +352,10 @@ contract ClaimDisputeModule is IClaimDisputeModule {
             && WitnessClaimLib.matchesResultRoot(
                 rDispWitness, binding, artifactHash, specHash, AuditResultV1.VERDICT_FAIL
             );
-        if (!passReplay && !failReplay) revert DisputeWitnessMismatch();
+        if (!passReplay && !failReplay) {
+            m.settlementResolveUnadjudicated(originalId); // PC-98 (G4(c)), the witness path's same outcome
+            return;
+        }
 
         (address claimant, , , , uint256 stake, , , , , , , , ) = ac.vulnerabilityClaims(originalId);
 
@@ -384,6 +429,7 @@ contract ClaimDisputeModule is IClaimDisputeModule {
         (,,,,, bool resolved, bool exists,,,,,,) = ac.vulnerabilityClaims(originalId);
         if (!exists || resolved) revert NoOpenClaim();
         if (ac.activeDisputeAuditId(originalId) != 0) revert DisputeOpen();
+        if (disputeSpent[originalId][funder]) revert DisputeAlreadySpent(); // PC-116
         if (deployed != address(0) && deployed.codehash != artifactHash) revert BytecodeDrift();
         uint256 minBounty = (origBounty * DISPUTE_BOUNTY_MIN_BPS) / 10_000;
         if (disputeBounty < minBounty || disputeBounty == 0) revert BountyLow();
@@ -408,7 +454,11 @@ contract ClaimDisputeModule is IClaimDisputeModule {
 
     /// @inheritdoc IClaimDisputeModule
     function expireDispute(uint256 originalId) external {
-        _mutator().settlementExpireClaimDispute(originalId);
+        IClaimSettlementMutator m = _mutator();
+        AuditCell ac = _ac();
+        address funder = ac.getAudit(ac.activeDisputeAuditId(originalId)).lastDiscoverer;
+        m.settlementExpireClaimDispute(originalId); // reverts on no open dispute, so the mark below always has a funder
+        disputeSpent[originalId][funder] = true; // PC-116
     }
 
     function _payoutDiscoverer(

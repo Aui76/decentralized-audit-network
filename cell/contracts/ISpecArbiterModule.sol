@@ -10,6 +10,9 @@ interface ISpecArbiterModule {
         uint256 openedAt;
         bool active;
         address specArbiter;
+        /// @dev PC-91 bug_003 (G4(a)): when the challenge OPENED - never reset, unlike `openedAt`, which arbiter
+        ///      reassignment and silent expiry move. The cell gives a surviving row's clock back the time since it.
+        uint256 frozenAt;
     }
 
     function challengeActive(uint256 auditId) external view returns (bool);

@@ -50,8 +50,22 @@ interface IClaimSettlementMutator {
         address resolverModule
     ) external returns (uint256 disputeId);
 
+    /// @dev PC-99 (G5): name a SECOND party to exclude from the next spawn's draw, for a lane whose interested parties
+    ///      number more than one beyond the original's protocol, auditor and claimant (the integrity lane: the reviewer
+    ///      AND the opener). Call it immediately before `spawnDisputeReaudit`, which consumes it.
+    function settlementSetDisputeExclude2(uint256 originalId, address who) external;
+
     function settlementExpireClaimDispute(uint256 originalId) external;
 
-    /// @dev kind 0 = spec challenge, 1 = integrity review; op 0 = lock, 1 = unlock, 2 = void.
+    /// @dev PC-98 (G4(c)): the claim resolver's outcome for a verdict that reproduces neither side - the claim resolves
+    ///      unadjudicated (stake back, row back). ClaimDisputeModule only.
+    function settlementResolveUnadjudicated(uint256 originalId) external;
+
+    /// @dev PC-91 bug_003 (G4(a)): a spec challenge opened at `frozenAt` ended without voiding `auditId`; give its clock the
+    ///      frozen time back. SpecArbiterModule only.
+    function settlementResumeClock(uint256 auditId, uint256 frozenAt) external;
+
+    /// @dev kind 0 = spec challenge, 1 = integrity review, 2 = end an unverdicted dispute row (the spawning resolver
+    ///      only, G1); op 0 = lock, 1 = unlock, 2 = void.
     function settlementOverlay(uint8 kind, uint8 op, uint256 auditId, address aux) external;
 }

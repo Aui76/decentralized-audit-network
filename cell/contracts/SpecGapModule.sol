@@ -22,6 +22,11 @@ contract SpecGapModule is ISpecGapModule {
     mapping(uint256 => mapping(bytes32 => SpecGapLib.Record)) public specGaps;
     mapping(uint256 => mapping(bytes32 => uint256)) public activeSpecGapDisputeAuditId;
     mapping(uint256 => bytes32) public disputeSpecGapClassId;
+    /// G3 (VD-186(a), I2): the protocol CONTESTED this gap. A latch, never cleared: a contest that expired unaudited is
+    /// still a protocol that spoke, so silence-confirm stays refused, a second contest is refused (one per gap), and the
+    /// gap's one exit is `expireSpecGap` with the filer refunded. Its own mapping rather than a field on `Record`, so the
+    /// public `specGaps` getter's return shape does not change.
+    mapping(uint256 => mapping(bytes32 => bool)) public specGapContested;
 
     event SpecGapOpened(
         uint256 indexed auditId, bytes32 indexed classId, address indexed filer, bytes32 evaluatorToolId, uint256 stake
@@ -70,6 +75,8 @@ contract SpecGapModule is ISpecGapModule {
     error GapNotOpen();
     error ContestMismatch();
     error ContestWitnessMismatch();
+    error SilenceHasConfirmed();
+    error GapContested();
 
     modifier onlyAdmin() {
         if (msg.sender != admin) revert NotAdmin();
@@ -83,6 +90,20 @@ contract SpecGapModule is ISpecGapModule {
 
     constructor(address _admin) {
         admin = _admin;
+    }
+
+    // ---- DR-6a (mainnet-deploy.md): admin rotatability ------------------------------------------
+    // Matches AuditCell.transferAdmin (zero-address reject + AdminTransferred event). Without this
+    // the deploy sequence cannot hand the module to the Timelock (Section 3 step 8 / DR-3): the
+    // constructor bound admin and nothing could change it. Found 2026-08-01 by rehearsing the
+    // sequence on paper -- on an immutable mainnet cell it would have been permanent.
+    event AdminTransferred(address indexed oldAdmin, address indexed newAdmin);
+    error ZeroAdmin();
+
+    function transferAdmin(address newAdmin) external onlyAdmin {
+        if (!(newAdmin != address(0))) revert ZeroAdmin();
+        emit AdminTransferred(admin, newAdmin);
+        admin = newAdmin;
     }
 
     function wire(address _cell) external onlyAdmin {
@@ -229,6 +250,9 @@ contract SpecGapModule is ISpecGapModule {
         SpecGapLib.Record storage g = specGaps[auditId][classId];
         if (!g.exists || g.status != SpecGapLib.Status.Filed) revert NotOpen();
         if (activeSpecGapDisputeAuditId[auditId][classId] != 0) revert ContestAlreadyOpen();
+        // G3: one contest per gap. Re-contesting after an unaudited expiry would restart the stall at no cost.
+        if (specGapContested[auditId][classId]) revert ContestAlreadyOpen();
+        specGapContested[auditId][classId] = true;
 
         CellTypeDefs.Audit memory a = ac.getAudit(auditId);
         uint256 minBounty = (a.bounty * DISPUTE_BOUNTY_MIN_BPS) / 10_000;
@@ -252,6 +276,8 @@ contract SpecGapModule is ISpecGapModule {
         SpecGapLib.Record storage g = specGaps[auditId][classId];
         if (!g.exists || g.status != SpecGapLib.Status.Filed) revert NotOpen();
         if (activeSpecGapDisputeAuditId[auditId][classId] != 0) revert ContestOpen();
+        // VD-186(a): a protocol that contested has spoken - its expired contest is not silence.
+        if (specGapContested[auditId][classId]) revert GapContested();
         if (block.timestamp < g.filedAt + ac.protocolDecisionWindow()) revert ProtocolWindowOpen();
         _confirmSpecGapFact(auditId, classId, g, SpecGapLib.Status.Confirmed);
     }
@@ -275,9 +301,21 @@ contract SpecGapModule is ISpecGapModule {
         if (!g.exists || g.status != SpecGapLib.Status.Filed) revert NotOpen();
         if (activeSpecGapDisputeAuditId[auditId][classId] != 0) revert ContestOpen();
         if (block.timestamp < g.filedAt + ac.claimResolutionWindow()) revert ResolutionWindowOpen();
+        // G3 (PC-49's note, VD-172(4)(a), I2): `confirmSpecGapSilence` and this were two permissionless exits from one
+        // Filed state with opposite economics. Precedence, written in code: on an UNCONTESTED gap, once the protocol's
+        // window has passed silence has won and Confirmed is the only exit; on a CONTESTED gap whose contest expired
+        // unaudited, this is the only exit (silence-confirm is refused) and, with no adjudicated outcome, the filer is
+        // REFUNDED rather than slashed (VD-117).
+        bool contested = specGapContested[auditId][classId];
+        if (!contested && block.timestamp >= g.filedAt + ac.protocolDecisionWindow()) revert SilenceHasConfirmed();
         if (g.filingStake > 0) {
-            ac.settlementToken(2, address(0), address(0), g.filingStake);
+            uint256 stake = g.filingStake;
             g.filingStake = 0;
+            if (contested) {
+                ac.settlementToken(1, address(0), g.filer, stake);
+            } else {
+                ac.settlementToken(2, address(0), address(0), stake);
+            }
         }
         g.status = SpecGapLib.Status.Expired;
         emit SpecGapExpired(auditId, classId, g.filer);
@@ -287,18 +325,20 @@ contract SpecGapModule is ISpecGapModule {
         AuditCell ac = _ac();
         uint256 disputeId = activeSpecGapDisputeAuditId[auditId][classId];
         if (disputeId == 0) revert NoOpenContest();
-        if (ac.auditStateOf(disputeId) == CellTypeDefs.AuditState.AwaitingWindow) revert ContestVerdicted();
         CellTypeDefs.Audit memory ad = ac.getAudit(disputeId);
-        uint256 refund = ad.bounty;
-        uint256 windowStart = ad.windowStart;
         address funder = ad.lastDiscoverer;
-        if (block.timestamp < windowStart + ac.claimResolutionWindow()) revert ContestWindowActive();
+        // VD-218(4) F1 (PC-98's shape on this lane): a VERDICTED contest row is no longer refused outright. Nobody confirming
+        // it for one resolution window past its audit window releases it here; confirm closes at that same instant (I2).
+        uint256 due = ad.windowStart + ac.claimResolutionWindow();
+        if (ad.state == CellTypeDefs.AuditState.AwaitingWindow) due += ad.auditWindow;
+        if (block.timestamp < due) revert ContestWindowActive();
 
         SpecGapLib.Record storage g = specGaps[auditId][classId];
         activeSpecGapDisputeAuditId[auditId][classId] = 0;
-        if (refund > 0) {
-            ac.settlementToken(1, address(0), funder, refund);
-        }
+        // G1 (PC-87's expiry half, PC-95(2)): the CELL ends the dispute row - refunds its bounty to the funder, zeroes
+        // the field, clears the escrow flag and makes the row terminal. This module used to refund the bounty itself
+        // and leave the row live with the field set, which G1's escrow would have made payable a second time.
+        ac.settlementOverlay(2, 2, disputeId, address(0));
         if (g.contestStake > 0) {
             ac.settlementToken(1, address(0), funder, g.contestStake);
             g.contestStake = 0;
@@ -320,9 +360,20 @@ contract SpecGapModule is ISpecGapModule {
         bool passVerdict = ac.auditVerdictPass(disputeId);
         bool passReplay = SpecGapLib.disputePassReplay(rDisp, passVerdict, g, artifactHash, specHash);
         bool failReplay = SpecGapLib.disputeFailReplay(rDisp, passVerdict, g, artifactHash, specHash);
-        if (!passReplay && !failReplay) revert ContestWitnessMismatch();
-
         activeSpecGapDisputeAuditId[originalAuditId][classId] = 0;
+        // VD-218(4) F1: a contest verdict that replays NEITHER side is an OUTCOME, not a revert - the revert froze the gap and
+        // both stakes, and the drawn re-auditor chose it by choosing the root. The contest ends UNADJUDICATED: its stake
+        // back to its funder (VD-117), the gap left Filed with its latch set, so its one exit stays `expireSpecGap` with the
+        // filer refunded (G3). The verdict stands and was paid at confirm, as on the claim lane (PC-98).
+        if (!passReplay && !failReplay) {
+            if (g.contestStake > 0) {
+                uint256 back = g.contestStake;
+                g.contestStake = 0;
+                ac.settlementToken(1, address(0), ac.getAudit(disputeId).lastDiscoverer, back);
+            }
+            emit SpecGapDisputeExpired(originalAuditId, classId, disputeId);
+            return;
+        }
         address reRunner = ac.auditAuditorOf(disputeId);
 
         if (failReplay) {

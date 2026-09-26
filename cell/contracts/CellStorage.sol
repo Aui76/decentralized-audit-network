@@ -179,6 +179,22 @@ library CellStorage {
         // Written only by ToolUseLib (delegatecall). canonicalThreshold is re-denominated accordingly.
         mapping(bytes32 => mapping(address => bool)) toolProtocolCounted;
         mapping(bytes32 => uint256) toolDistinctEstablishedUses;
+        // PC-99 (G5, I5): a dispute row's SECOND excluded party. `disputeExtraExclude` holds one address and every lane
+        // has at least one interested party beyond the original's protocol, auditor and claimant; the integrity lane has
+        // two (the contested reviewer AND the opener, who profits from the review). Appended, so every earlier slot is
+        // unmoved.
+        mapping(uint256 => address) disputeExtraExclude2;
+        // Set by the spawning module just before its spawn, consumed and cleared by that spawn. KEYED ON THE SPAWNING
+        // MODULE (VD-223(1)): keyed on the original alone, an orphaned value would be consumed by the next spawn on that
+        // original from ANY lane and exclude a non-party from its draw. With the key, a module can only mis-exclude on its
+        // own lane. [originalId][spawning module] => second excluded party.
+        mapping(uint256 => mapping(address => address)) pendingDisputeExclude2;
+        // G6 (I6: bootstrap slots belong to the bootstrapper). `genesisProtocol`: besides the admin, the one address that
+        // may submit the genesis audit (PC-89); unset, the slot is the admin's alone. `genesisAuditor`: when set, the ONLY
+        // address that may take auditor position 1 while genesis is pending (PC-85); unset, position 1 is open as before.
+        // Both named by the admin through `AuditCell.setGenesisBootstrap`. Appended.
+        address genesisProtocol;
+        address genesisAuditor;
     }
 
     function layout() internal pure returns (Layout storage l) {

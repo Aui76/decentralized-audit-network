@@ -56,6 +56,9 @@ library CellLogicLib {
     error SelfAuditDisallowed();
     error InsufficientHold();
     error WrongState();
+    error InAuditWindowPassed();
+    error NotGenesisAuditor();
+    error DisputeReleasable();
     error ZeroThreshold();
     error SpecNotAttested();
     error SpecChallengeActive();
@@ -211,7 +214,13 @@ library CellLogicLib {
         if (L.assignmentModule != address(0)) {
             chosen = IAssignmentModule(L.assignmentModule).pickOrdinary(auditId, protocol);
         }
-        if (chosen != address(0)) {
+        // PC-95(1) (G5, I5): VALIDATE THE MODULE'S PICK, exactly as the fallback scan below validates its own candidate.
+        // The module is admin-set and lockable, so this is defence in depth - but a pick the cell does not check is a pick
+        // the cell has delegated its own eligibility rules to, and an unregistered, ineligible or self-dealing address
+        // took the row on the module's word alone. A bad pick now falls through to the scan rather than standing.
+        if (
+            chosen != address(0) && chosen != protocol && L.auditors[chosen].inQueue && isEligible(L, chosen)
+        ) {
             return chosen;
         }
         uint256 scanned = 0;
@@ -265,7 +274,8 @@ library CellLogicLib {
         CellStorage.Layout storage L,
         address candidate,
         uint256 originalId,
-        address extraExclude
+        address extraExclude,
+        address extraExclude2
     ) internal view returns (bool) {
         if (candidate == address(0) || !L.auditors[candidate].inQueue || !isEligible(L, candidate)) {
             return false;
@@ -274,7 +284,7 @@ library CellLogicLib {
         CellTypeDefs.VulnerabilityClaim storage claim = L.vulnerabilityClaims[originalId];
         if (
             candidate == orig.protocol || candidate == orig.auditor || candidate == claim.claimant
-                || candidate == extraExclude
+                || candidate == extraExclude || (extraExclude2 != address(0) && candidate == extraExclude2)
         ) {
             return false;
         }
@@ -293,7 +303,8 @@ library CellLogicLib {
         CellStorage.Layout storage L,
         uint256 disputeId,
         uint256 originalId,
-        address extraExclude
+        address extraExclude,
+        address extraExclude2
     ) internal view returns (address) {
         bytes32 seed = _disputeAssignmentSeed(L, disputeId);
         address chosen = address(0);
@@ -303,7 +314,7 @@ library CellLogicLib {
         uint256 maxScan = L.queueLength;
         if (maxScan > MAX_DISPUTE_SCAN) maxScan = MAX_DISPUTE_SCAN;
         while (cursor != address(0) && scanned < maxScan) {
-            if (isDisputeCandidate(L, cursor, originalId, extraExclude)) {
+            if (isDisputeCandidate(L, cursor, originalId, extraExclude, extraExclude2)) {
                 eligibleCount += 1;
                 if (uint256(keccak256(abi.encode(seed, eligibleCount))) % eligibleCount == eligibleCount - 1) {
                     chosen = cursor;
@@ -322,6 +333,39 @@ library CellLogicLib {
             revert SpecChallengeActive();
         }
         if (L.integrityReviewModule != address(0) && IIntegrityReviewGateLib(L.integrityReviewModule).confirmBlocked(id)) {
+            revert IntegrityReviewActive();
+        }
+    }
+
+    /// @dev SIBLING of `_requireNoSettlementBlock`, for the ESCALATION site (`spawnDisputeReaudit`) ONLY (VD-90).
+    ///      The composite guard above asks "is ANY settlement overlay active on this row"; at the spawn site its
+    ///      purpose is to SERIALIZE OVERLAYS AGAINST EACH OTHER. An overlay escalating its OWN review is not a
+    ///      second proceeding - it is the same proceeding continuing, and after the spawn there is still exactly
+    ///      one. So this skips the block OWNED BY `caller` and enforces every FOREIGN one. Symmetric by
+    ///      construction: any overlay may escalate through its own block; NONE through another's.
+    ///
+    ///      WHY NOT A `msg.sender` CARVE-OUT INSIDE THE HELPER ABOVE: that helper also serves `confirmAudit`,
+    ///      `acceptAuditExt`, `submitVerdictAfterProof` and `settlementApplyClaimFiled`. A caller exemption
+    ///      placed inside it would exempt the module EVERYWHERE - far wider than the need. WHY NOT A SECOND
+    ///      `spawnBlocked` STATE PREDICATE: it would agree with `confirmBlocked` in every state at every moment
+    ///      except the transient instant the owning module escalates, so the distinguishing fact is WHO IS
+    ///      CALLING, not what state the row is in. `caller` is authenticated by the call site's own gate.
+    function _requireNoForeignSettlementBlock(CellStorage.Layout storage L, uint256 id, address caller)
+        internal
+        view
+    {
+        address specArbiter = L.specArbiterModule;
+        if (
+            specArbiter != address(0) && caller != specArbiter
+                && ISpecChallengeGateLib(specArbiter).challengeActive(id)
+        ) {
+            revert SpecChallengeActive();
+        }
+        address integrityReview = L.integrityReviewModule;
+        if (
+            integrityReview != address(0) && caller != integrityReview
+                && IIntegrityReviewGateLib(integrityReview).confirmBlocked(id)
+        ) {
             revert IntegrityReviewActive();
         }
     }
@@ -355,7 +399,7 @@ library CellLogicLib {
         CellTypeDefs.Audit storage a = L.audits[id];
         address chosen;
         if (a.isClaimDispute) {
-            chosen = findDisputeAuditor(L, id, a.linkedAuditId, L.disputeExtraExclude[id]);
+            chosen = findDisputeAuditor(L, id, a.linkedAuditId, L.disputeExtraExclude[id], L.disputeExtraExclude2[id]);
         } else {
             chosen = findEligibleAuditor(L, id);
         }
@@ -405,7 +449,8 @@ library CellLogicLib {
 
     // ------------------------------------------------------------------ dispute spawn intake
 
-    /// @dev Shared field-wise intake for dispute rows (no bounty transfer — funded via module).
+    /// @dev Shared field-wise intake for dispute rows. No bounty transfer here: the spawning module pulled the funds into
+    ///      the cell BEFORE the spawn, so the row is escrowed from birth (G1, VD-199 D1 option A).
     function initDisputeRow(
         CellStorage.Layout storage L,
         CellTypeDefs.Audit storage orig,
@@ -419,6 +464,12 @@ library CellLogicLib {
         a.auditor = address(0);
         a.deployedAddress = orig.deployedAddress;
         a.bounty = disputeBounty;
+        // PC-87 (G1, VD-199 D1 option A): THE CELL PAYS A DISPUTE ROW'S BOUNTY AT CONFIRM. Unset, `confirmAudit`'s
+        // `if (a.bountyEscrowed)` skipped it, neither resolver touched it, and every verdicted dispute left the bounty in
+        // the cell owed to no one while the drawn auditor worked unpaid (DisputeBountyStranded.t.sol, 2026-09-15). Every
+        // other exit of the row - expiry on all three lanes, void - now refunds the FUNDER and clears this flag where
+        // custody ends (VD-101), so the flag can never outlive the tokens it describes.
+        a.bountyEscrowed = true;
         a.windowStart = block.timestamp;
         a.auditWindow = orig.auditWindow;
         a.state = CellTypeDefs.AuditState.None;
@@ -471,6 +522,9 @@ library CellLogicLib {
         if (!(a.protocol != msg.sender)) revert SelfAuditDisallowed();
         if (!(isEligible(L, msg.sender))) revert InsufficientHold();
         if (!(a.state == CellTypeDefs.AuditState.InAudit)) revert WrongState();
+        // PC-91 bug_004 (G3, I2): the verdict closes where the permissionless timeout opens (`advanceInAuditExt`,
+        // `block.timestamp > pickupTime + inAuditWindow`), so the two intervals partition time and ordering decides nothing.
+        if (block.timestamp > a.pickupTime + L.inAuditWindow) revert InAuditWindowPassed();
         if (!(a.specAuditorAttested)) revert SpecNotAttested();
         _requireNoSettlementBlock(L, id);
         if (!(toolsUsed.length == 1)) revert SingleToolPerVerdict();
@@ -500,7 +554,11 @@ library CellLogicLib {
             _setAuditState(L, id, CellTypeDefs.AuditState.AwaitingWindow);
             a.windowStart = block.timestamp;
         } else {
-            if (!(!L.vulnerabilityClaims[id].exists)) revert ClaimAlreadyExists();
+            // VD-218(3) (VD-216(4) widened): ONE SELF-CLAIM PER AUDITOR PER ROW. Refused while a claim is OPEN, or when the
+            // resolved claim was THIS auditor's; another auditor's resolved claim does not bind. On `exists` alone - which
+            // no exit clears - a redrawn auditor could never report a failure on a row an earlier auditor had self-claimed.
+            CellTypeDefs.VulnerabilityClaim storage prior = L.vulnerabilityClaims[id];
+            if (prior.exists && (!prior.resolved || prior.claimant == msg.sender)) revert ClaimAlreadyExists();
             uint256 stake = computeClaimStake(L, a.bounty);
             CellTypeDefs.VulnerabilityClaim storage c = L.vulnerabilityClaims[id];
             c.claimant = msg.sender;
@@ -535,12 +593,46 @@ library CellLogicLib {
         if (a.state != CellTypeDefs.AuditState.AwaitingWindow) revert NotAwaiting();
         _requireNoSettlementBlock(L, id);
         if (block.timestamp < a.windowStart + a.auditWindow) revert AuditWindowOpen();
+        // PC-98 (G4(c), I2) and its spec-gap sibling (VD-218(4) F1): a verdicted dispute row of the CLAIM lane (the row its
+        // original's dispute slot names) or the SPEC-GAP lane (resolver = the spec-gap module) left unconfirmed for one
+        // resolution window past its audit window is released by its lane's expiry, and confirm closes at that same
+        // instant, so the two exits partition time. The integrity lane keeps its own rule (its expiry refuses a verdict).
+        if (
+            a.isClaimDispute
+                && (L.activeDisputeAuditId[a.linkedAuditId] == id || L.disputeResolver[id] == L.specGapModule)
+                && block.timestamp >= a.windowStart + a.auditWindow + L.claimResolutionWindow
+        ) revert DisputeReleasable();
 
         _setAuditState(L, id, CellTypeDefs.AuditState.InBlock);
 
-        bool isGenesisConfirm = L.genesisAuditOpen && L.genesisAuditId == id;
-        if (!isGenesisConfirm) {
+        // PAY ONLY WHAT WAS ESCROWED (bug_101 / bug_301, fixed 2026-09-04; proposal section A).
+        // This asked the LATCH - `isGenesisConfirm = L.genesisAuditOpen && L.genesisAuditId == id` - a
+        // per-SLOT fact, and never the row's own `a.bountyEscrowed`, which every OTHER consumer of
+        // `a.bounty` already checks (AuditCell._voidAuditRow, SpecArbiterModule._payoutAndVoid).
+        // The latch is released on a NON-TERMINAL exit - proveFail sets the row to Claimed and calls
+        // _releaseGenesisIfOpen - while the row lives on and walks back out of Claimed when the claim
+        // resolves. A later confirm then saw isGenesisConfirm == false and paid a bounty THE CELL NEVER
+        // RECEIVED, out of other protocols' escrowed funds, repeatably: genesisPending is cleared only
+        // in the branch below, so the slot reopens each time.
+        //
+        // THE RETRY THAT RELEASES THE LATCH IS DELIBERATE AND IS NOT WHAT CHANGED. A failed genesis must
+        // not brick the cell (test_genesis_fail_releases_lock_allows_retry pins exactly that state). Two
+        // correct intentions with one wrong predicate between them; only the predicate moved.
+        //
+        // Genesis rows are created with skipBountyEscrow = true, so they are excluded by this test just
+        // as they were by the old one - the difference is that they STAY excluded after the slot reopens.
+        if (a.bountyEscrowed) {
             if (!(L.token.transfer(a.auditor, a.bounty))) revert BountyPayoutFailed();
+            // VD-101: THE FLAG CLEARS WHERE CUSTODY ENDS. `bountyEscrowed` had one write site (:913,
+            // submit) and ZERO clear sites in the tree, so after this payout the row went on asserting
+            // escrow over tokens that had just left. `_voidAuditRow` (AuditCell:1392) reads that flag
+            // and re-pays the bounty to the protocol - funded by whatever the cell happens to hold,
+            // which on a confirmed-then-CLAIMED row is the claimant's stake. The `state != InBlock`
+            // guard was meant to stop it; filing a claim moves the row to `Claimed` and walks around it.
+            // Not stranding - taking, silently, which is why nothing noticed.
+            // `a.bounty` is deliberately NOT zeroed here: the void arm zeroes it as refund bookkeeping,
+            // confirm COMPLETES the promise, and the flag is the shared truth every reader keys on.
+            a.bountyEscrowed = false;
         }
 
         if (!a.isClaimDispute) {
@@ -704,6 +796,10 @@ library CellLogicLib {
         _assignNext(L, id);
     }
 
+    /// @dev PC-99 (G5, I5): a second excluded party reaches this ONE entry point through `AuditCell.settlementSetDisputeExclude2`,
+    ///      keyed on the original id AND the spawning module (VD-223(1)), and consumed below. A second spawn entry point is
+    ///      the shape that reads better, and it costs the library about 1.5 KB, because `initDisputeRow` is inlined into
+    ///      every external that reaches the spawn body - measured 2026-09-17 on G5's first shape, 781 bytes over EIP-170.
     function spawnDisputeReaudit(
         uint256 originalId,
         uint256 disputeBounty,
@@ -713,12 +809,21 @@ library CellLogicLib {
         address resolverModule
     ) external returns (uint256 disputeId) {
         CellStorage.Layout storage L = CellStorage.layout();
-        if (msg.sender != L.claimDisputeModule && msg.sender != L.specGapModule) revert NotAdmin();
-        _requireNoSettlementBlock(L, originalId);
+        if (
+            msg.sender != L.claimDisputeModule && msg.sender != L.specGapModule
+                && msg.sender != L.integrityReviewModule
+        ) revert NotAdmin();
+        // VD-90: the FOREIGN-block form, at this site only. See `_requireNoForeignSettlementBlock`.
+        _requireNoForeignSettlementBlock(L, originalId, msg.sender);
         CellTypeDefs.Audit storage orig = L.audits[originalId];
 
         disputeId = initDisputeRow(L, orig, originalId, disputeBounty, lastDiscoverer);
         L.disputeExtraExclude[disputeId] = extraExclude;
+        address pending2 = L.pendingDisputeExclude2[originalId][msg.sender];
+        if (pending2 != address(0)) {
+            L.disputeExtraExclude2[disputeId] = pending2;
+            L.pendingDisputeExclude2[originalId][msg.sender] = address(0);
+        }
         L.disputeRequiredTool[disputeId] = requiredTool;
         L.disputeResolver[disputeId] = resolverModule == address(0) ? L.claimDisputeModule : resolverModule;
         _setAuditState(L, disputeId, CellTypeDefs.AuditState.Submitted);
@@ -1217,6 +1322,12 @@ library CellLogicLib {
 
         if (r.position == 0) {
             uint256 newPosition = ++L.auditorCount;
+            // PC-85 (G6, I6): position 1 holds nothing at any increment and is the queue head the genesis audit is drawn
+            // from. When the admin has NAMED the genesis auditor, the first registration while genesis is pending must be
+            // that address - a squatter can no longer take the free seat and the genesis draw with it.
+            if (
+                newPosition == 1 && L.genesisPending && L.genesisAuditor != address(0) && msg.sender != L.genesisAuditor
+            ) revert NotGenesisAuditor();
             if (!(L.token.balanceOf(msg.sender) >= (newPosition - 1) * L.increment)) revert InsufficientHold();
             r.position = newPosition;
             emit AuditorRegistered(msg.sender, newPosition);
@@ -1292,6 +1403,9 @@ library CellLogicLib {
         if (!(a.state == CellTypeDefs.AuditState.Assigned)) revert NotInDecisionWindow();
         _requireProtocolAssignmentReady(a);
         if (!(block.timestamp > a.pickupTime + L.decisionWindow)) revert DecisionWindowNotPassed();
+        // PC-91 bug_003 (G4(a), I3): accept refuses under a settlement overlay, so the timeout does too. The frozen time
+        // is given back when the overlay ends without a void (`SubmitAuditLib.resumeClockExt`).
+        _requireNoSettlementBlock(L, id);
         _pushOutSlacker(L, id, a);
     }
 
@@ -1300,6 +1414,8 @@ library CellLogicLib {
         CellTypeDefs.Audit storage a = L.audits[id];
         if (!(a.state == CellTypeDefs.AuditState.InAudit)) revert NotInAudit();
         if (!(block.timestamp > a.pickupTime + L.inAuditWindow)) revert InAuditWindowActive();
+        // PC-91 bug_003 (G4(a), I3): the verdict refuses under a settlement overlay, so the timeout does too.
+        _requireNoSettlementBlock(L, id);
         _pushOutSlacker(L, id, a);
     }
 
@@ -1312,7 +1428,7 @@ library CellLogicLib {
     uint256 internal constant MIN_AUDIT_WINDOW = 10 minutes;
     uint256 internal constant MAX_AUDIT_WINDOW = 30 days;
 
-    uint8 internal constant PARAM_ID_MAX = 12;
+    uint8 internal constant PARAM_ID_MAX = 13; // 13 = TOOL_WITNESS_FLAGS (door 16); lockParam(13) must pass
     uint8 internal constant PARAM_CLAIM_STAKE_BPS = 12;
     uint8 internal constant PARAM_MIN_AUDIT = 8;
     uint8 internal constant PARAM_DECISION = 9;

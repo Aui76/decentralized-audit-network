@@ -33,7 +33,6 @@ contract LpUncapLatch is Test {
     IssuanceModule issuance;
 
     address auditor = address(0xB0B);
-    address lpManager = address(0x1122);
     address protocol = address(0xC01);
 
     bytes32 specToolId = keccak256("spec.tool.v1");
@@ -53,7 +52,7 @@ contract LpUncapLatch is Test {
         CellTestDeploy.registerDefaultTools(d, specToolId, verdictToolId);
         vm.prank(auditor);
         cell.register();
-        escrow.setLPManager(lpManager);
+        // (setLPManager call removed 2026-08-09 — the role and its setter are gone with DEC-38.)
     }
 
     function _confirm(uint256 bounty) internal returns (uint256 minted) {
@@ -94,49 +93,34 @@ contract LpUncapLatch is Test {
         assertEq(issuance.lpFirstFunded(), latched, "set-once: later settles never move it");
     }
 
-    // ---- (3) THE FIX: full LP drain no longer uncaps the mint ----
-    function test_full_lp_drain_mint_stays_capped() public {
-        _confirm(BOUNTY);
-        _confirm(BOUNTY); // latch armed
-        uint256 latched = issuance.lpFirstFunded();
-
-        uint256 lpBal = escrow.lpBalance(); // hoisted: an inner view call consumes vm.prank
-        vm.prank(lpManager);
-        escrow.withdrawForLP(lpBal); // drain to exactly 0 (the G-22 lever)
-        assertEq(escrow.lpBalance(), 0, "LP fully drained");
-
-        uint256 uncapped = (issuance.emaSlow() * issuance.emaToMintBps()) / 10_000;
-        uint256 capAtLatch = (issuance.mintLpCapBps() * latched) / 10_000;
-        assertLt(capAtLatch, uncapped, "test regime: latch cap must bind below uncapped activityMint");
-
-        uint256 basis = issuance.nextPositiveBlockReward();
-        assertLe(basis, capAtLatch, "reward basis capped by the first-funded snapshot, NOT uncapped");
-        assertGt(basis, 0, "and NOT zero - issuance is not bricked");
-
-        uint256 minted = _confirm(BOUNTY);
-        assertGt(minted, 0, "mint continues bounded during the drain");
-        assertLe(minted, capAtLatch, "minted <= latch cap (weight/bounty prongs can only reduce it)");
-    }
-
-    // ---- (4) Self-healing: deposits refill LP; live lp governs again ----
-    function test_refill_returns_to_live_lp_cap() public {
-        _confirm(BOUNTY);
-        _confirm(BOUNTY); // latch armed
-        uint256 latched = issuance.lpFirstFunded();
-
-        uint256 lpBal = escrow.lpBalance(); // hoisted: an inner view call consumes vm.prank
-        vm.prank(lpManager);
-        escrow.withdrawForLP(lpBal);
-        _confirm(BOUNTY); // bounded mint -> its treasury split refills LP
-
-        uint256 lpNow = escrow.lpBalance();
-        assertGt(lpNow, 0, "LP self-heals from the bounded mint's deposit");
-        uint256 basis = issuance.nextPositiveBlockReward();
-        uint256 uncapped = (issuance.emaSlow() * issuance.emaToMintBps()) / 10_000;
-        uint256 capLive = (issuance.mintLpCapBps() * lpNow) / 10_000;
-        uint256 expected = capLive < uncapped ? capLive : uncapped;
-        // manipulation damping may scale the basis down, never up — bound, don't pin
-        assertLe(basis, expected, "live lp governs the cap again after refill");
-        assertEq(issuance.lpFirstFunded(), latched, "latch untouched by drain/refill cycle");
-    }
+    // ---- (3) and (4) RETIRED 2026-08-09 — their subject was deleted, and this note is the point ----
+    //
+    // Both tests drained LP to exactly 0 via `escrow.withdrawForLP(lpBal)` and then asserted that the mint
+    // stayed capped (3) and that LP self-healed (4). DEC-38 removed `withdrawForLP` from CellEscrow, and that
+    // function was the ONLY decrement of `lpBalance` — the two remaining sites (`+= toLP`, `+= canMove`)
+    // both add. So the drain these tests perform is not merely unsupported by the API, it is UNREACHABLE BY
+    // CONSTRUCTION: after the latch arms, `lpBalance` can never return to 0.
+    //
+    // They are retired rather than deleted because deleting them silently would leave a guard in immutable
+    // code with no written trace of what once covered it — the failure this repo files as B.11 (absence has
+    // no error message). Tests (1) and (2) above are UNTOUCHED and still load-bearing: (1) covers the genesis
+    // bootstrap (`lp == 0` pre-latch, which still happens on every fresh cell) and (2) covers the latch
+    // arming at `IssuanceModule.sol`:380, which still executes.
+    //
+    // WHAT THIS EXPOSES, and it is a finding rather than a cleanup: the G-22 latch's protective arm is now
+    // vestigial. `IssuanceModule.sol`:466 reads `effLp = lp == 0 ? lpFirstFunded : lp`. With no drain lever,
+    // `lp == 0` can only hold BEFORE first funding — and there `lpFirstFunded` is 0 too (:380 sets it only
+    // when `lpNow > 0`), so the bootstrap branch is taken and `lpFirstFunded` is never consulted for its
+    // protective purpose again. DEC-38 SUBSUMES G-22: removing the door removed the attack the latch patched.
+    // The latch is deliberately left in the contract (see the note at the deletion site in CellEscrow.sol) —
+    // cheap, conservative, and correct if a future cell ever reintroduces a decrement.
+    //
+    // REOPEN TRIGGER, mechanical: if any future change adds a path that DECREASES `lpBalance`, these two
+    // tests must come back, because the drain scenario becomes reachable again the moment one exists.
+    //
+    // A note on the alternative that was considered and NOT taken: the branch could still be exercised by
+    // forcing storage with `vm.store`. That was rejected here for one honest reason — it would need
+    // `lpBalance`'s slot index, which nobody verified against a build, and a test that silently targets the
+    // wrong slot passes while proving nothing. If the branch is judged worth covering, do it with a measured
+    // slot and say in the test that the state is production-unreachable.
 }

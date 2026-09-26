@@ -18,6 +18,7 @@ See [`LICENSE`](LICENSE). Free to **read, fork, modify and run for non-productio
                       SpecGapModule · SpecGapLib · StructuralUpgradeModule
                       IntegrityReviewModule · WitnessClaimLib · SubmitAuditLib
                       RunDigests · FmeaRegistry · ToolUseLib
+    cell/contracts/satellites/   AuditEthMembrane (the one exit from AUDIT to ETH; it pays out)
 
 ## MIT — the integration surface
 
@@ -27,7 +28,7 @@ from us.**
     cell/contracts/   all I*.sol interfaces — IClaimDisputeModule · IClaimSettlementMutator
                       IAssignmentModule · ISpecGapModule · ISpecArbiterModule
                       IDisputeResolver · IEntropyProvider · IRunProofVerifier
-    tools/            demo LP tooling
+    tools/            demo LP tooling · dan-check.mjs + keccak256.mjs (reads a verdict, changes none)
     ui/               the browser explorer + participant flows
 
 **These are the files you need to build an organ** — an indexer, a tier service, an FMEA

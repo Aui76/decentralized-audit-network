@@ -5,6 +5,7 @@ import "./helpers/SpecValidationCellSetup.sol";
 import "../contracts/CellParamIds.sol";
 import "../contracts/CellStorage.sol";
 import "../contracts/StructuralUpgradeModule.sol";
+import "../contracts/ClaimDisputeModule.sol";
 
 contract CanonicalTarget {
     uint256 public version = 1;
@@ -20,6 +21,7 @@ contract StructuralUpgradeFlowCellTest is SpecValidationCellSetup {
     AuditCell cell;
     IssuanceModule issuance;
     StructuralUpgradeModule structural;
+    ClaimDisputeModule claimModule;
 
     CanonicalTarget canonical;
     FixTarget fixContract;
@@ -42,6 +44,7 @@ contract StructuralUpgradeFlowCellTest is SpecValidationCellSetup {
         cell = d.cell;
         issuance = d.issuance;
         structural = d.structuralUpgradeModule;
+        claimModule = d.claimModule;
         CellTestDeploy.registerDefaultTools(d, specToolId, harnessToolId);
         cell.registerTool(opsToolId, false);
 
@@ -191,7 +194,7 @@ contract StructuralUpgradeFlowCellTest is SpecValidationCellSetup {
 
         vm.prank(juror);
         vm.expectRevert(StructuralUpgradeModule.AlreadyOfficial.selector);
-        structural.rollbackStructuralUpgrade(gapId, opsSpecHash, opsToolId, _resultRoot("ops"));
+        structural.rollbackStructuralUpgrade(gapId, opsSpecHash, opsToolId, _resultRoot("ops"), 0);
     }
 
     function test_gap_filing_against_probationary_reverts() external {
@@ -271,5 +274,183 @@ contract StructuralUpgradeFlowCellTest is SpecValidationCellSetup {
         vm.prank(cell.auditAuditorOf(gapAuditId));
         vm.expectRevert(StructuralUpgradeModule.GapAuditRequiresFail.selector);
         cell.provePass(gapAuditId, harnessToolId, _resultRoot("bad"));
+    }
+
+    // ================================================================================================
+    // bug_001 (DEC-44 paid review; remedy ruled by VD-143(1)) — the rollback's THREE witness parameters
+    // were checked for SHAPE only: non-zero, a registered non-spec tool. Never compared to state, never
+    // stored, never emitted. So any registered eligible non-proposer could, inside opsRegressionWindow,
+    // un-adopt a legitimate upgrade AND slash its proposer for FREE, with a fabricated proof that the
+    // chain kept no record of.
+    //
+    // RED HALF FIRST: `_fabricatedWitness` below SUCCEEDS against the unfixed module, and that success is
+    // the defect measured. The control that follows is the half that stops the fix being "revert always".
+    // ================================================================================================
+
+    /// Drive an audit on `target` all the way to `Exploited` - the ONE state the cell writes for an
+    /// ADJUDICATED failure, and the predicate VD-153 ruled after this fix's first writing used `InBlock`
+    /// and the control test caught it.
+    ///
+    /// The route is the realistic one: a discoverer claims against a passed audit, the protocol opens a
+    /// dispute re-audit, and a SECOND auditor reproduces the failure under stake. That is what a rollback
+    /// now costs. `stopBeforeDispute` leaves the claim unresolved - the red half for a regression that was
+    /// alleged and never adjudicated.
+    function _exploitedWitness(address target, bytes32 spec, bytes32 tool, bytes32 root, bool stopBeforeDispute)
+        internal
+        returns (uint256 id)
+    {
+        address[4] memory pool = [filer, gapAuditor, fixAuditor, juror];
+        for (uint256 i = 0; i < pool.length; i++) {
+            vm.prank(pool[i]);
+            token.approve(address(cell), type(uint256).max);
+        }
+        address wProtocol = address(0xD222);
+        address discoverer = address(0xD333);
+        token.transfer(wProtocol, 100_000 ether);
+        token.transfer(discoverer, 100_000 ether);
+        vm.prank(discoverer);
+        cell.register();
+
+        vm.startPrank(wProtocol);
+        token.approve(address(cell), type(uint256).max);
+        bytes32[] memory tools = new bytes32[](1);
+        tools[0] = tool;
+        id = cell.submitAudit(
+            target, target.codehash, spec, specToolId, EMPTY_SPEC_ERRORS, 10_000 ether, tools, 0, 0
+        );
+        vm.stopPrank();
+        _protocolAcceptAndAssignedAccept(cell, id, wProtocol, EMPTY_SPEC_ERRORS);
+        vm.prank(cell.auditAuditorOf(id));
+        cell.provePass(id, tool, _resultRoot("witness-pass"));
+
+        // THE CLAIM RECORD is what the fix reads - not the audit's verdict fields, which on this path
+        // still describe the PASS being overturned. That is VD-153's correction, and this helper is the
+        // only place a test could have noticed it.
+        vm.startPrank(discoverer);
+        token.approve(address(cell), type(uint256).max);
+        cell.claimVulnerability(id, tool, root, "");
+        vm.stopPrank();
+        if (stopBeforeDispute) return id;
+
+        vm.startPrank(wProtocol);
+        token.approve(address(cell), type(uint256).max);
+        uint256 disputeId = claimModule.openDisputeReaudit(id, (10_000 ether * 5000) / 10_000);
+        vm.stopPrank();
+        address da = cell.auditAuditorOf(disputeId);
+        vm.prank(da);
+        cell.acceptAudit(disputeId, EMPTY_SPEC_ERRORS);
+        vm.prank(da);
+        cell.proveFail(disputeId, tool, root);
+        vm.warp(block.timestamp + cell.minAuditWindow() + 1);
+        cell.confirmAudit(disputeId);
+        assertEq(uint256(cell.auditStateOf(id)), uint256(CellTypeDefs.AuditState.Exploited));
+    }
+
+    function _adopted() internal returns (uint256 gapId) {
+        (gapId,) = _probationAfterFixConfirm();
+        _voteOk(gapId, _submitWorkAudit());
+        structural.adoptStructuralUpgrade(gapId);
+    }
+
+    /// CONTROL, and VD-143(1)'s third acceptance clause: the event carries the witness and the roller,
+    /// and the witness is STORED. Without this a regression that drops a field from the emit stays green.
+    function test_rollback_accepts_an_adjudicated_regression_bug001() external {
+        uint256 gapId = _adopted();
+        bytes32 root = _resultRoot("ops-fail");
+        uint256 w = _exploitedWitness(address(fixContract), opsSpecHash, opsToolId, root, false);
+        uint256 failedBefore = _auditorFailed(cell, filer);
+
+        // The EMIT half, asserted from the log rather than predicted: `blockHash` is derived inside the
+        // cell and cannot be known here, so `vm.expectEmit` would either check nothing useful or force the
+        // test to reimplement the hash. Recording and decoding checks the fields that matter - and it is
+        // the clause VD-143(1) named and the first writing of these tests left untested, so a regression
+        // that dropped a field from the emit stayed green.
+        vm.recordLogs();
+        vm.prank(juror);
+        structural.rollbackStructuralUpgrade(gapId, opsSpecHash, opsToolId, root, w);
+
+        Vm.Log[] memory logs = vm.getRecordedLogs();
+        bool seen;
+        for (uint256 i = 0; i < logs.length; i++) {
+            if (logs[i].emitter != address(structural)) continue;
+            if (logs[i].topics[0] != keccak256(
+                "StructuralUpgradeRolledBack(uint256,uint256,uint256,address,bytes32,uint256,bytes32,bytes32,bytes32)"
+            )) continue;
+            seen = true;
+            assertEq(uint256(logs[i].topics[1]), gapId, "event: gapId");
+            assertEq(address(uint160(uint256(logs[i].topics[3]))), juror, "event: the ROLLER");
+            // data is priorCanonicalAuditId, blockHash, then the four witness fields - SIX values, not
+            // five. The first writing skipped one and decoded the block hash as the audit id.
+            (,, uint256 evOps, bytes32 evSpec, bytes32 evTool, bytes32 evRoot) =
+                abi.decode(logs[i].data, (uint256, bytes32, uint256, bytes32, bytes32, bytes32));
+            assertEq(evOps, w, "event: the witness audit");
+            assertEq(evSpec, opsSpecHash, "event: the ops spec hash");
+            assertEq(evTool, opsToolId, "event: the tool");
+            assertEq(evRoot, root, "event: the result root");
+        }
+        assertTrue(seen, "the rollback event was not emitted at all");
+
+        assertEq(uint256(structural.gapStateOf(gapId)), uint256(StructuralUpgradeModule.GapState.RolledBack));
+        assertEq(_auditorFailed(cell, filer), failedBefore + 1);
+        assertEq(structural.rollbackWitnessAuditId(gapId), w, "the STORE half of VD-143(1)");
+    }
+
+    /// RED: alleged and never adjudicated - a free grief with one extra step, which a looser predicate
+    /// than VD-153's would have waved through.
+    function test_rollback_refuses_an_unadjudicated_claim_bug001() external {
+        uint256 gapId = _adopted();
+        bytes32 root = _resultRoot("ops-fail");
+        uint256 w = _exploitedWitness(address(fixContract), opsSpecHash, opsToolId, root, true);
+
+        vm.prank(juror);
+        vm.expectRevert(StructuralUpgradeModule.WitnessNotUpheld.selector);
+        structural.rollbackStructuralUpgrade(gapId, opsSpecHash, opsToolId, root, w);
+    }
+
+    /// RED: a real adjudicated regression - against a DIFFERENT contract.
+    function test_rollback_refuses_a_witness_against_another_contract_bug001() external {
+        uint256 gapId = _adopted();
+        bytes32 root = _resultRoot("ops-fail");
+        uint256 w = _exploitedWitness(address(canonical), opsSpecHash, opsToolId, root, false);
+
+        vm.prank(juror);
+        vm.expectRevert(StructuralUpgradeModule.WitnessTargetMismatch.selector);
+        structural.rollbackStructuralUpgrade(gapId, opsSpecHash, opsToolId, root, w);
+    }
+
+    /// RED: the result root claimed here is not the one the claim record holds - the fabrication the
+    /// original defect waved straight through.
+    function test_rollback_refuses_a_fabricated_result_root_bug001() external {
+        uint256 gapId = _adopted();
+        uint256 w =
+            _exploitedWitness(address(fixContract), opsSpecHash, opsToolId, _resultRoot("ops-fail"), false);
+
+        vm.prank(juror);
+        vm.expectRevert(StructuralUpgradeModule.WitnessResultMismatch.selector);
+        structural.rollbackStructuralUpgrade(gapId, opsSpecHash, opsToolId, _resultRoot("fabricated"), w);
+    }
+
+    /// RED: a real adjudicated regression, credited to the wrong tool.
+    function test_rollback_refuses_a_wrong_tool_bug001() external {
+        uint256 gapId = _adopted();
+        bytes32 root = _resultRoot("ops-fail");
+        uint256 w = _exploitedWitness(address(fixContract), opsSpecHash, opsToolId, root, false);
+
+        vm.prank(juror);
+        vm.expectRevert(StructuralUpgradeModule.WitnessToolMismatch.selector);
+        structural.rollbackStructuralUpgrade(gapId, opsSpecHash, harnessToolId, root, w);
+    }
+
+    /// RED: the spec hash the parameter advertises is not the one the witness audit ran under. The vault
+    /// read this check as impossible without new cell bytes against AuditCell's 87; `AuditCell.audits()`
+    /// already returns specHash, so it is module-side and costs the cell nothing.
+    function test_rollback_refuses_a_wrong_spec_hash_bug001() external {
+        uint256 gapId = _adopted();
+        bytes32 root = _resultRoot("ops-fail");
+        uint256 w = _exploitedWitness(address(fixContract), opsSpecHash, opsToolId, root, false);
+
+        vm.prank(juror);
+        vm.expectRevert(StructuralUpgradeModule.WitnessSpecMismatch.selector);
+        structural.rollbackStructuralUpgrade(gapId, gapSpecHash, opsToolId, root, w);
     }
 }

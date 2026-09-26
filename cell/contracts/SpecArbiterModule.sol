@@ -22,6 +22,19 @@ contract SpecArbiterModule is ISpecArbiterModule {
     uint256 public specArbiterDecisionWindow = 7 days;
     uint256 public specArbiterRewardBps = 5000;
     uint256 public specChallengerInvalidationRewardBps = 5000;
+    /// VD-117(4) option (3), booked to this window on 2026-09-06 and ridden here. The unruled-expiry
+    /// charge is its OWN parameter, expressed as bps of the CHALLENGER's stake, because `specChallengeFee`
+    /// had two roles and two payers that VD-107 never separated: on a void it is the PROTOCOL's cancel
+    /// price drawn from the bounty (`_payoutAndVoid`), and on an unruled expiry the same number was drawn
+    /// from the CHALLENGER's stake. One parameter at one value forfeited the whole stake at the shipped
+    /// defaults and inverted the incentive - a challenger disproven by a defend forfeits nothing, while a
+    /// challenger nobody adjudicated forfeited everything. The person punished hardest was an honest
+    /// challenger who met a no-arbiter failure of the system.
+    ///
+    /// 1000 bps is exactly the shipped behaviour after VD-117(1): a 10 ether fee against a 100 ether stake.
+    /// So this separation changes no number today; it makes the two prices movable independently, which is
+    /// what having one parameter for two payers prevented.
+    uint256 public specChallengeExpiryChargeBps = 1000;
 
     uint256 internal constant MAX_SPEC_ARBITER_SCAN = 256; // gas bound; matches AssignmentModule.MAX_SCAN
 
@@ -67,11 +80,66 @@ contract SpecArbiterModule is ISpecArbiterModule {
     error SpecArbiterAssignedBlock();
     error ArbiterWindowOpen();
     error ChallengeWindowOpen();
+    error ArbiterWindowClosed();
+    error ChallengeWindowClosed();
     error ReentrantCall();
+    error BadParamId();
+    error ParamLocked();
+    error InvalidBps();
+    error WindowBelowFloor();
 
     uint256 private constant _NOT_ENTERED = 1;
     uint256 private constant _ENTERED = 2;
     uint256 private _reentrancyStatus = _NOT_ENTERED;
+
+    // Phase B1 (admin-door-residue-verdicts, VD-26): doors 4-8 lock+bound pass. Ported from
+    // IssuanceModule's issuanceParamLockMask shape (A1: capability now, armed later per parameter —
+    // ships UNARMED, mask = 0).
+    uint256 public specArbiterParamLockMask;
+    uint8 public constant LOCK_CHALLENGE_FEE = 0;                    // door 4: setSpecChallengeFee
+    uint8 public constant LOCK_CHALLENGE_STAKE = 1;                  // door 5: setSpecChallengeStake
+    uint8 public constant LOCK_REPEAT_SLASH = 2;                     // door 6: setSpecChallengeRepeatSlashBps
+    uint8 public constant LOCK_ARBITER_REWARD = 3;                   // door 7: setSpecArbiterRewardBps
+    uint8 public constant LOCK_CHALLENGER_INVALIDATION_REWARD = 4;   // door 8: setSpecChallengerInvalidationRewardBps
+    // VD-115 re-booked VD-109(1)'s bare setter to "its own item in the NEXT window", which is this one -
+    // and reading the file today, its SIBLING is bare in exactly the same way. Both are windows read live
+    // at evaluation, so an admin write moves a deadline under a challenge already in flight; that is the
+    // retroactivity class VD-96 accepted for the guarded phase.
+    //
+    // A LOCK ENDS THAT ACCEPTANCE ONLY ONCE IT IS ARMED, and NOTHING ARMS THESE (VD-157). No script in
+    // cell/script/ calls lockSpecArbiterParam for any door - not these three, and not the five that
+    // shipped before them; the only param lock a deploy arms is cell.lockParam(TOOL_WITNESS_FLAGS) in
+    // phase-f/PhaseFSetup.s.sol. So what lands here is the FLOOR, which holds from deploy, plus a door
+    // that exists. VD-96's guarded-phase acceptance of these two windows STANDS until doors 9 and 10 are
+    // armed, which is a keyed one-shot act on the runbook's G-h page - not a deploy default, and not a
+    // blocker on this window. The first writing of this comment said a lock ends the acceptance, full
+    // stop; that was true of an armed lock and of no lock in this repo.
+    uint8 public constant LOCK_CHALLENGE_WINDOW = 5;                 // door 9: setSpecChallengeWindow
+    uint8 public constant LOCK_ARBITER_DECISION_WINDOW = 6;          // door 10: setSpecArbiterDecisionWindow
+    uint8 public constant LOCK_EXPIRY_CHARGE = 7;                    // door 11: setSpecChallengeExpiryChargeBps
+
+    // FLOORS ONLY, AND DELIBERATELY NOT CEILINGS. The cell's idiom is a MIN/MAX pair
+    // (`CellLogicLib`:1368-1375), but VD-156 rules a FLOOR here and nothing else. A zero window expires a
+    // challenge in the block it is filed; that is the harm. A ceiling is a bound nobody ruled, and picking
+    // one would forbid a long window some future posture wants - substituting design, which non-negotiable
+    // 8 forbids. Named so the asymmetry with the cell's pairs reads as a decision rather than an omission.
+    uint256 internal constant MIN_SPEC_CHALLENGE_WINDOW = 1 minutes;
+    uint256 internal constant MIN_SPEC_ARBITER_DECISION_WINDOW = 1 minutes;
+
+    function specArbiterParamLocked(uint8 id) public view returns (bool) {
+        return (specArbiterParamLockMask & (uint256(1) << id)) != 0;
+    }
+
+    /// @notice Lock a spec-arbiter economic param one-way (irreversible). UNARMED at this deploy by design.
+    function lockSpecArbiterParam(uint8 id) external onlyAdmin {
+        if (id > LOCK_EXPIRY_CHARGE) revert BadParamId();
+        specArbiterParamLockMask |= (uint256(1) << id);
+        emit ParameterUpdated("specArbiterParamLock", id);
+    }
+
+    function _requireUnlocked(uint8 id) internal view {
+        if (specArbiterParamLocked(id)) revert ParamLocked();
+    }
 
     modifier onlyAdmin() {
         if (msg.sender != admin) revert NotAdmin();
@@ -89,6 +157,20 @@ contract SpecArbiterModule is ISpecArbiterModule {
         admin = _admin;
     }
 
+    // ---- DR-6a (mainnet-deploy.md): admin rotatability ------------------------------------------
+    // Matches AuditCell.transferAdmin (zero-address reject + AdminTransferred event). Without this
+    // the deploy sequence cannot hand the module to the Timelock (Section 3 step 8 / DR-3): the
+    // constructor bound admin and nothing could change it. Found 2026-08-01 by rehearsing the
+    // sequence on paper -- on an immutable mainnet cell it would have been permanent.
+    event AdminTransferred(address indexed oldAdmin, address indexed newAdmin);
+    error ZeroAdmin();
+
+    function transferAdmin(address newAdmin) external onlyAdmin {
+        if (!(newAdmin != address(0))) revert ZeroAdmin();
+        emit AdminTransferred(admin, newAdmin);
+        admin = newAdmin;
+    }
+
     function wire(address _cell) external onlyAdmin {
         if (wiringLocked) revert WiringLocked();
         cell = _cell;
@@ -100,36 +182,59 @@ contract SpecArbiterModule is ISpecArbiterModule {
     }
 
     function setSpecChallengeFee(uint256 v) external onlyAdmin {
+        _requireUnlocked(LOCK_CHALLENGE_FEE);
         specChallengeFee = v;
         emit ParameterUpdated("specChallengeFee", v);
     }
 
     function setSpecChallengeStake(uint256 v) external onlyAdmin {
+        _requireUnlocked(LOCK_CHALLENGE_STAKE);
         specChallengeStake = v;
         emit ParameterUpdated("specChallengeStake", v);
     }
 
     function setSpecChallengeWindow(uint256 v) external onlyAdmin {
+        _requireUnlocked(LOCK_CHALLENGE_WINDOW);
+        if (v < MIN_SPEC_CHALLENGE_WINDOW) revert WindowBelowFloor();
         specChallengeWindow = v;
         emit ParameterUpdated("specChallengeWindow", v);
     }
 
     function setSpecChallengeRepeatSlashBps(uint256 v) external onlyAdmin {
+        _requireUnlocked(LOCK_REPEAT_SLASH);
+        if (v > 10_000) revert InvalidBps();
         specChallengeRepeatSlashBps = v;
         emit ParameterUpdated("specChallengeRepeatSlashBps", v);
     }
 
     function setSpecArbiterDecisionWindow(uint256 v) external onlyAdmin {
+        _requireUnlocked(LOCK_ARBITER_DECISION_WINDOW);
+        if (v < MIN_SPEC_ARBITER_DECISION_WINDOW) revert WindowBelowFloor();
         specArbiterDecisionWindow = v;
         emit ParameterUpdated("specArbiterDecisionWindow", v);
     }
 
+    /// VD-117(4). `v` is STRICTLY below 10_000, so `charge < stake` holds by construction rather than by a
+    /// deploy-time read-back. VD-156 asked for the assert "the way it asserts fee < stake"; expressed as
+    /// bps of the stake the invariant is structural, which is the stronger form of the same guarantee -
+    /// a deploy assert can be skipped by a path nobody ran, and this cannot be reached at all.
+    function setSpecChallengeExpiryChargeBps(uint256 v) external onlyAdmin {
+        _requireUnlocked(LOCK_EXPIRY_CHARGE);
+        if (v >= 10_000) revert InvalidBps();
+        specChallengeExpiryChargeBps = v;
+        emit ParameterUpdated("specChallengeExpiryChargeBps", v);
+    }
+
     function setSpecArbiterRewardBps(uint256 v) external onlyAdmin {
+        _requireUnlocked(LOCK_ARBITER_REWARD);
+        if (v > 10_000) revert InvalidBps();
         specArbiterRewardBps = v;
         emit ParameterUpdated("specArbiterRewardBps", v);
     }
 
     function setSpecChallengerInvalidationRewardBps(uint256 v) external onlyAdmin {
+        _requireUnlocked(LOCK_CHALLENGER_INVALIDATION_REWARD);
+        if (v > 10_000) revert InvalidBps();
         specChallengerInvalidationRewardBps = v;
         emit ParameterUpdated("specChallengerInvalidationRewardBps", v);
     }
@@ -216,7 +321,9 @@ contract SpecArbiterModule is ISpecArbiterModule {
         AuditCell ac = _ac();
         IClaimSettlementMutator s = _settlement();
         CellTypeDefs.Audit memory a = ac.getAudit(auditId);
-        address protocol = a.protocol;
+        // G1: a DISPUTE row's escrowed bounty is its funder's (`lastDiscoverer`), not the disputed protocol's - reachable
+        // only since G1 escrows dispute rows (VD-199), and the same payee `SubmitAuditLib._voidAuditRow` now uses.
+        address protocol = a.isClaimDispute ? a.lastDiscoverer : a.protocol;
         uint256 lockedBounty = a.bounty;
 
         if (lockedBounty > 0 && ac.auditBountyEscrowed(auditId)) {
@@ -302,7 +409,8 @@ contract SpecArbiterModule is ISpecArbiterModule {
             stakeAmount: stake,
             openedAt: block.timestamp,
             active: true,
-            specArbiter: arbiter
+            specArbiter: arbiter,
+            frozenAt: block.timestamp
         });
 
         if (arbiter != address(0)) {
@@ -337,6 +445,9 @@ contract SpecArbiterModule is ISpecArbiterModule {
         if (!ch.active) revert NoChallenge();
         if (msg.sender != ch.specArbiter) revert NotSpecArbiter();
         if (ch.specArbiter == address(0)) revert NoSpecArbiter();
+        // PC-93 bug_013 (G3, I2): the ruling closes where `expireSilentSpecArbiter` opens, so a silent arbiter who wakes
+        // late cannot race its own expiry.
+        if (block.timestamp >= ch.openedAt + specArbiterDecisionWindow) revert ArbiterWindowClosed();
         if (!_isSpecArbiterEligible(auditId, ch.specArbiter, ch.challenger)) revert ArbiterIneligible();
 
         CellTypeDefs.Audit memory a = ac.getAudit(auditId);
@@ -345,10 +456,12 @@ contract SpecArbiterModule is ISpecArbiterModule {
         address challenger = ch.challenger;
         address arbiter = ch.specArbiter;
         uint256 stake = ch.stakeAmount;
+        uint256 frozenAt = ch.frozenAt;
         delete _challenges[auditId];
         IClaimSettlementMutator s = _settlement();
 
         if (passConfirmed) {
+            s.settlementResumeClock(auditId, frozenAt); // G4(a): the row survives, so does its clock
             if (stake > 0) {
                 s.settlementToken(2, address(0), address(0), stake);
             }
@@ -370,6 +483,9 @@ contract SpecArbiterModule is ISpecArbiterModule {
         SpecChallenge storage ch = _challenges[auditId];
         if (!ch.active) revert NoChallenge();
         if (ch.specArbiter != address(0)) revert SpecArbiterAssignedBlock();
+        // PC-93 bug_014 (G3, I2): the defend closes where `finalizeSpecChallenge` opens, so a protocol watching for
+        // finalisation can no longer always defend first.
+        if (block.timestamp >= _resolutionDeadline(ch)) revert ChallengeWindowClosed();
 
         CellTypeDefs.Audit memory a = ac.getAudit(auditId);
         if (msg.sender != a.protocol) revert NotProtocol();
@@ -377,6 +493,7 @@ contract SpecArbiterModule is ISpecArbiterModule {
 
         address challenger = ch.challenger;
         uint256 stake = ch.stakeAmount;
+        uint256 frozenAt = ch.frozenAt;
         delete _challenges[auditId];
 
         uint256 priorDefends = specDefendedChallengeCount[auditId][challenger];
@@ -387,6 +504,7 @@ contract SpecArbiterModule is ISpecArbiterModule {
         uint256 refundAmount = stake - slashAmount;
 
         IClaimSettlementMutator s = _settlement();
+        s.settlementResumeClock(auditId, frozenAt); // G4(a): the row survives, so does its clock
         if (refundAmount > 0) {
             s.settlementToken(1, address(0), challenger, refundAmount);
         }
@@ -422,11 +540,40 @@ contract SpecArbiterModule is ISpecArbiterModule {
 
         address challenger = ch.challenger;
         uint256 stake = ch.stakeAmount;
+        uint256 frozenAt = ch.frozenAt;
         delete _challenges[auditId];
+
+        // VD-107: a challenge nobody RULED on may void a row ONLY when no auditor is assigned.
+        // With an auditor on the row, a default void is assignment steering: the protocol - or a
+        // second address it funds, which is why `msg.sender != protocol` is not the fix - dodges
+        // the auditor it drew, takes the whole bounty back, and the auditor is paid nothing. That
+        // walks around INV-6.2's reject cap, which counts rejections and never sees this one.
+        // Withdrawal stays allowed, priced, and PRE-ASSIGNMENT; after assignment a spec dispute
+        // needs an arbiter's ruling (`declareSpecArbitrament`), which this branch leaves untouched.
+        IClaimSettlementMutator s = _settlement();
+        if (_ac().getAudit(auditId).auditor != address(0)) {
+            s.settlementResumeClock(auditId, frozenAt); // G4(a): the row survives, so does its clock
+            // Unresolved expiry: the row is untouched, and deleting the challenge above already
+            // unlocked the lane (the cell reads `challengeActive` live - there is no lock flag).
+            // The fee is charged to the CHALLENGER's stake, never to the bounty: the row survives,
+            // so drawing a fee out of an escrowed bounty would leave `a.bounty` overstating what
+            // actually backs it. Same clamp shape as `_payoutAndVoid`. A repeat challenge costs
+            // the fee again, so grinding this lever is bounded by the challenger's own money.
+            // VD-117(4): its OWN parameter now, not `specChallengeFee`. The clamp that used to sit here
+            // (`if (fee > stake) fee = stake`) is gone because it cannot bind: the setter refuses any value
+            // at or above 10_000 bps, so the charge is strictly below the stake by construction and a
+            // refund of zero is unreachable. That clamp biting at parity is exactly what VD-117 found.
+            uint256 charge = stake * specChallengeExpiryChargeBps / 10_000;
+            uint256 refund = stake - charge;
+            if (refund > 0) s.settlementToken(1, address(0), challenger, refund);
+            if (charge > 0) s.settlementToken(2, address(0), address(0), charge);
+            emit SpecChallengeFinalized(auditId, challenger, false);
+            return;
+        }
 
         _payoutAndVoid(auditId, challenger, address(0));
         if (stake > 0) {
-            _settlement().settlementToken(1, address(0), challenger, stake);
+            s.settlementToken(1, address(0), challenger, stake);
         }
         emit SpecChallengeFinalized(auditId, challenger, true);
     }

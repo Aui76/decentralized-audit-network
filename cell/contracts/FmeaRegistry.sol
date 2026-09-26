@@ -54,6 +54,20 @@ contract FmeaRegistry {
         emit VulnerabilityClassRegistered(unclassified, msg.sender, keccak256("dan:fmea:unclassified:v1"));
     }
 
+    // ---- DR-6a (mainnet-deploy.md): admin rotatability ------------------------------------------
+    // Matches AuditCell.transferAdmin (zero-address reject + AdminTransferred event). Without this
+    // the deploy sequence cannot hand the module to the Timelock (Section 3 step 8 / DR-3): the
+    // constructor bound admin and nothing could change it. Found 2026-08-01 by rehearsing the
+    // sequence on paper -- on an immutable mainnet cell it would have been permanent.
+    event AdminTransferred(address indexed oldAdmin, address indexed newAdmin);
+    error ZeroAdmin();
+
+    function transferAdmin(address newAdmin) external onlyAdmin {
+        if (!(newAdmin != address(0))) revert ZeroAdmin();
+        emit AdminTransferred(admin, newAdmin);
+        admin = newAdmin;
+    }
+
     function wireClaimModule(address _claimModule) external onlyAdmin {
         if (wiringLocked) revert WiringLocked();
         claimModule = _claimModule;

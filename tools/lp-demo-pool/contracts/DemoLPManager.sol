@@ -32,7 +32,16 @@ interface INonfungiblePositionManagerMint {
         returns (uint256 tokenId, uint128 liquidity, uint256 amount0, uint256 amount1);
 }
 
-/// @notice Holds AUDIT withdrawn via CellEscrow.withdrawForLP; admin seeds Uniswap off-chain / via script.
+/// @notice SUPERSEDED 2026-08-09 by DEC-38 — DO NOT DEPLOY AGAINST THE NEXT CELL.
+/// @dev This helper's entire purpose was withdrawing AUDIT via `CellEscrow.withdrawForLP` to seed a Uniswap
+///      position. DEC-38 (operator, 2026-08-08) removed that function from the next cell: the exit from the
+///      internal economy is now the membrane (`cell/contracts/satellites/AuditEthMembrane.sol`, FC-17),
+///      seeded once at genesis and touched by no one, and DEC-38 clause (d) explicitly supersedes DR-8's
+///      "Ops Safe seeds a real DEX / moves LP" language.
+///      NOTE THE FAILURE MODE, because it is quiet: `ICellEscrowLp` below is a LOCAL interface declaration,
+///      so this file still COMPILES against a cell that has no `withdrawForLP` — it fails at runtime, on
+///      chain, with no build-time warning. Kept, not deleted, as the record of the Part A LP demo that ran
+///      on 84532; it is testnet history, not live tooling.
 /// @dev L2 ops helper — NOT part of the frozen cell. Testnet (84532) only.
 contract DemoLPManager {
     address public admin;

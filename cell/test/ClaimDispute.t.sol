@@ -293,13 +293,16 @@ contract ClaimDisputeTest is Test {
         assertEq(cell.activeDisputeAuditId(id), 0, "dispute slot cleared");
         assertEq(token.balanceOf(protocol), protocolBefore + minB, "bounty refunded to funder");
 
-        vm.warp(block.timestamp + cell.claimResolutionWindow() + 1);
-        cell.expireClaim(id);
+        // PC-115 (G4, VD-216(3)): the protocol-funded dispute ended unverdicted, so the claim resolved UNADJUDICATED with
+        // it - the row is back and the lapse has nothing left to slash. Before G4 this line expired the claim a window later.
         assertEq(
             uint256(cell.auditStateOf(id)),
             uint256(CellTypeDefs.AuditState.AwaitingWindow),
-            "claim expirable after G-16 unlock"
+            "the claim resolved with its dispute (G-16's unlock, then PC-115)"
         );
+        vm.warp(block.timestamp + cell.claimResolutionWindow() + 1);
+        vm.expectRevert();
+        cell.expireClaim(id);
     }
 
     function test_dispute_assignee_not_claimant_nor_original_auditor() public {

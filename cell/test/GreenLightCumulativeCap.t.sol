@@ -151,6 +151,26 @@ contract GreenLightCumulativeCap is Test {
     // the cap is capBps of a GROWING supply, so post-spent confirms reopen dust-sized headroom
     // (capBps x this block's mint <= ~1% of the block's funded bounty; cheap-lunch analysis in
     // body/proposals/fix-g20-cap-test-baseline-proposal.txt section 2).
+    /// @dev THE CEILING THE REOPEN CONVERGES TO (added 2026-09-05, VD-104's test-only rider).
+    ///      This test pins the reopen per mint. What it does not state is where the repeated reopen
+    ///      lands, and the arithmetic is worth having beside it because the nominal cap and the real
+    ///      one differ:
+    ///
+    ///        capTotal = supply x b            (b = capBps / 10_000)
+    ///        a mint of `amount` raises capTotal by amount x b while spending amount,
+    ///        so headroom falls by amount x (1 - b), and a CLAMPED mint leaves headroom x b behind.
+    ///
+    ///      The residue is therefore geometric and never reaches zero - which is the semantics this
+    ///      test calls decided. Summing it, the lifetime total is bounded at the fixed point of
+    ///      `minted = (supply0 + minted) x b`:
+    ///
+    ///        minted_max = supply0 x b / (1 - b)
+    ///
+    ///      At the default 200 bps that is 2.0408% of PRE-MINT supply, not 2% of final supply. The
+    ///      overshoot is the b/(1-b) term. Bounded, approached asymptotically, and the same for the
+    ///      structural budget (VD-92) which copied this pattern. `positiveBlockMintedCumulative` is
+    ///      NOT affected: PC-3's cap is against a LATCHED basis, not live supply, which is exactly
+    ///      what makes it immune to this.
     function test_self_scaling_reopen_is_exact() public {
         uint256 capBps = issuance.greenLightCumulativeCapBps();
         uint256 supplyBefore = token.totalSupply();

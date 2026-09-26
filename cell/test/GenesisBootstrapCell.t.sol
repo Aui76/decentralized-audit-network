@@ -34,6 +34,12 @@ contract GenesisBootstrapCellTest is SpecValidationCellSetup {
 
     function setUp() public {
         d = CellTestDeploy.deploy(address(this));
+        // G6 (PC-89): the genesis slot belongs to the admin or a genesis protocol the admin names; this fixture's
+        // protocol is a separate address, so the admin names it. Encoded, so the file also compiles on pre-G6 bytes.
+        (bool named,) = address(d.cell).call(
+            abi.encodeWithSignature("setGenesisBootstrap(address,address)", genesisProtocol, address(0))
+        );
+        named;
         cell = d.cell;
         token = d.token;
         specArbiter = d.specArbiterModule;
@@ -253,12 +259,22 @@ contract GenesisBootstrapCellTest is SpecValidationCellSetup {
         uint256 id = _submitGenesis();
         _reachAwaitingWindow(cell, id, genesisProtocol, verdictToolId, resultRoot);
 
+        // VD-107 reopen (b): this flow invalidates a row an auditor is HOLDING, so since 2026-09-06 it
+        // needs an arbiter's RULING - a default finalize no longer voids such a row. The subject of this
+        // test is the genesis lock releasing on invalidation, not the route that reaches it, so the route
+        // gets an arbiter rather than an exception.
+        vm.prank(secondAuditor);
+        cell.register();
+
         vm.startPrank(challenger);
         token.approve(address(cell), specArbiter.specChallengeStake());
         specArbiter.challengeSpecInvalid(id, failErrorsRoot);
         vm.stopPrank();
-        vm.warp(block.timestamp + specArbiter.specChallengeWindow() + 1);
-        specArbiter.finalizeSpecChallenge(id);
+
+        (,,,,, address assigned) = specArbiter.specChallenges(id);
+        assertEq(assigned, secondAuditor);
+        vm.prank(secondAuditor);
+        specArbiter.declareSpecArbitrament(id, failErrorsRoot);
 
         assertEq(uint256(cell.auditStateOf(id)), uint256(CellTypeDefs.AuditState.Invalidated));
         assertFalse(cell.genesisAuditOpen());

@@ -102,6 +102,77 @@ contract ToolCanonizationCellTest is Test {
         assertFalse(d.issuance.isEstablishedProtocol(protocols[0]), "gate ground truth");
     }
 
+    // ---- t4 G-31 door 16: `canonical` is MONOTONE - clearing it would RE-ARM the CAN mint ----
+    // The bug: ToolUseLib gates the one-shot on `!t.canonical` plus a distinct-use counter that is
+    // incremented and never reset, so an admin clearing the flag minted to the proposer AGAIN, once
+    // per clear, at will. Guard measured 2026-08-23: it fits in 46 of AuditCell's 54 spare bytes.
+    // NOT closed here: the DENIAL half of G-31 (an admin setting `canonical` EARLY to rob a proposer
+    // of a mint they would have earned) still needs a param-lock, and the lock plus this guard came to
+    // 69 B against 54 - measured OVER at 24,591 B. 8 B of headroom remain. See setToolWitnessFlags.
+    function test_canonical_cannot_be_cleared_so_the_mint_cannot_be_refarmed() public {
+        _passAudit(protocols[0]);
+        _passAudit(protocols[1]);
+        _passAudit(protocols[0]);
+        _passAudit(protocols[1]);
+
+        (, , , bool canonical, , ,) = d.cell.tools(verdictToolId);
+        assertTrue(canonical, "precondition: the tool canonized");
+        uint256 afterFirstMint = d.token.balanceOf(toolAuthor);
+        assertGt(afterFirstMint, 0, "precondition: the one-shot CAN mint fired once");
+
+        // THE GUARD. Admin cannot un-canonicalize. This is the whole of the fix.
+        vm.expectRevert(AuditCell.ToolAlreadyCanonical.selector);
+        d.cell.setToolWitnessFlags(verdictToolId, false, false);
+
+        // MONOTONE, not frozen: re-setting it true is still permitted, and so is flipping the
+        // OTHER flag while `canonical` stays set - the door is narrowed, not welded shut.
+        d.cell.setToolWitnessFlags(verdictToolId, true, true);
+
+        // THE HARM ITSELF. Because the clear reverted, further established use cannot mint again.
+        _passAudit(protocols[0]);
+        _passAudit(protocols[1]);
+        assertEq(d.token.balanceOf(toolAuthor), afterFirstMint, "no second CAN mint - the farm is dead");
+    }
+
+    // ---- t5 door 16's LOCK (param id 13): closes G-31's DENIAL half ----
+    // The denial attack: admin sets `canonical` EARLY on a tool a proposer is organically earning, and the
+    // mint they would have received never fires. The monotone guard cannot stop that - it only forbids
+    // CLEARING. This lock does, and it is armed by the deploy script the step after PhaseF's last legitimate
+    // seeding: `canonical` is a BOOTSTRAP SEED, not a measurement knob, so VD-26 A1's ship-unarmed rationale
+    // (arming forbids the tuning measurements) does not apply to it.
+    // Both directions asserted, because a lock proven only in the armed direction is a lock that might be
+    // refusing everything: PRE-arm the bootstrap must SUCCEED, POST-arm it must REVERT.
+    function test_lock13_kills_the_canonical_arm_and_spares_the_evaluator_arm() public {
+        (, , , bool canonicalStart, , ,) = d.cell.tools(verdictToolId);
+        assertFalse(canonicalStart, "precondition: the tool has not canonized");
+
+        // PRE-ARM: the bootstrap path works. This is PhaseFSetup.s.sol:33 in miniature.
+        d.cell.setToolWitnessFlags(verdictToolId, true, true);
+        (, , bool evalPre, bool canonicalPre, , ,) = d.cell.tools(verdictToolId);
+        assertTrue(canonicalPre, "pre-arm: admin CAN seed canonical - the bootstrap must survive");
+        assertTrue(evalPre, "pre-arm: evaluator flag set");
+
+        d.cell.lockParam(CellParamIds.TOOL_WITNESS_FLAGS);
+        assertTrue(d.cell.paramLocked(CellParamIds.TOOL_WITNESS_FLAGS), "lock 13 is armed");
+
+        // POST-ARM on a FRESH tool: the canonical arm is dead. This is the denial attack, refused.
+        bytes32 fresh = keccak256("verdict.tool.v2");
+        vm.prank(toolAuthor);
+        d.cell.registerTool(fresh, false);
+        vm.expectRevert(AuditCell.ParamLockedErr.selector);
+        d.cell.setToolWitnessFlags(fresh, false, true);
+
+        // ...and the CALIBRATION arm is untouched: isInvariantEvaluator still moves after arming.
+        d.cell.setToolWitnessFlags(fresh, true, false);
+        (, , bool evalPost, bool canonicalPost, , ,) = d.cell.tools(fresh);
+        assertTrue(evalPost, "the evaluator arm stays live after the lock - it is not a whole-function lock");
+        assertFalse(canonicalPost, "and canonical stayed false");
+
+        // Idempotence after arming: re-running the deploy script on an ALREADY-canonical tool must pass,
+        // because `canonical != t.canonical` is false and nothing is checked. PhaseFSetup is re-runnable.
+        d.cell.setToolWitnessFlags(verdictToolId, true, true);
+    }
+
     // ---- reward shape unchanged (bs=1 divisor) ----
     function test_canonization_reward_matches_positive_block_reward_at_bs1() public view {
         uint256 expected = d.issuance.nextPositiveBlockReward() / d.cell.currentBlockSize();
