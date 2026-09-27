@@ -48,16 +48,39 @@ These keep the **BUSL-1.1** header — **not** because we want to restrict them,
                             Gate0Target · Gate0R2Target · Gate0R2TargetFix · Gate0R3Target
                             Gate0G10Target · Gate0G10ThrowawayFix · Eip712Reference
 
-A tool's identity is content-bound: `WithdrawCreditsV1.TOOL_ARTIFACT_HASH` is
-`keccak256(runtime bytecode)`, and `toolId` derives from it. Solidity embeds a metadata hash of
-the **source text** in the runtime code — so changing even a comment (an SPDX line included)
-changes the bytecode, changes the artifact hash, and **breaks reproduction**: you would clone
-this repo, re-derive the hash, and get a value that does not match the one the chain pinned.
+A tool's identity is content bound. `TransferCreditsV1.TOOL_ARTIFACT_HASH` is `keccak256` of
+the library's runtime bytecode, built with that constant set to zero, and `toolId` derives from
+it. Solidity embeds a metadata hash of the **source text** in the runtime code, so changing even
+a comment (an SPDX line included) changes the bytecode and the hash. The same metadata records
+the build's remapping list, so the build settings count as much as the source.
 
-That reproduction is the entire promise of this project. It outranks a licensing preference.
+You can re-derive TransferCreditsV1 from this repo with Foundry. The `artifact` profile in
+`cell/foundry.toml` holds the two remappings the repo had when I registered it on Base Sepolia
+on 2026-06-29:
+
+    cd cell
+    pinned=0x390f7f7742a2419d6ddd8f9dc9afffacbdef7e41b861d6c295ec147e3a73fbed
+    zero=0x0000000000000000000000000000000000000000000000000000000000000000
+    sed -i "s/$pinned/$zero/" contracts/tools/TransferCreditsV1.sol
+    cast keccak "$(FOUNDRY_PROFILE=artifact forge inspect \
+      contracts/tools/TransferCreditsV1.sol:TransferCreditsV1 deployedBytecode)"
+    git checkout -- contracts/tools/TransferCreditsV1.sol
+
+It prints the pinned value on the second line. Write the zero as that hex literal, because
+`bytes32(0)` is the same value and compiles to different bytecode. CI runs this on every push
+(`pinned artifact re-derives`).
+
+WithdrawCreditsV1 does not re-derive from this repo yet. I registered its hash,
+`0x630e81f397d999d092e086f66d93af2828eed69363e37dc1cca6395c5670c2c7`, on 2026-06-14 from an
+earlier copy of the source. Since then `WithdrawCreditsV1` and `AuditResultV1` changed their
+SPDX line from MIT to BUSL-1.1 and the import moved to `genesis-tools/`, and I never committed
+the zero-slot file, so no source I hold rebuilds that hash. It re-derives again at its
+re-baseline, when I register a new version from committed source.
+
+Those reproductions are the promise of this project, and they outrank a licensing preference.
 These files are relicensed to MIT at the next artifact **re-baseline**, when source, deployed
 bytecode and published repo move as one generation. Until then the header stands, and you are
-free to read, run and verify them — which is all anyone needs them for.
+free to read, run and verify them.
 
 *(`cell/test/` and `cell/script/` also still carry BUSL headers — a test harness and deploy
 scripts, nothing to "productionise". Cosmetic, binds nobody.)*

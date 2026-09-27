@@ -114,43 +114,38 @@ jobs:
           done
           exit $fail
 
-      # The tools and audit targets are content-bound: TOOL_ARTIFACT_HASH = keccak256(runtime
-      # bytecode), and Solidity embeds a hash of the SOURCE TEXT in that bytecode. Change one
-      # comment — an SPDX line counts — and the artifact hash no longer reproduces the value
-      # pinned on-chain. "Clone it and re-derive the hash" is the whole promise of this project.
-      # These files are frozen until an artifact re-baseline. See NOTICE.
+      # The tools and audit targets are content bound: TOOL_ARTIFACT_HASH is keccak256 of the
+      # runtime bytecode, and Solidity embeds a hash of the SOURCE TEXT in that bytecode. Change
+      # one byte of these files (an SPDX line counts) and the bytecode registered on chain no
+      # longer comes from this source. So every byte is pinned here, by sha256 of the committed
+      # file. The job `pinned artifact re-derives` runs the recipe itself. These files are frozen
+      # until an artifact re-baseline; the digests move with it. See NOTICE.
       - name: Pinned artifacts must not drift
         run: |
           set -euo pipefail
-          fail=0
-          pinned=(
-            cell/contracts/tools/WithdrawCreditsV1.sol
-            cell/contracts/tools/WithdrawCreditsV1ArtifactProbe.sol
-            cell/contracts/tools/TransferCreditsV1.sol
-            cell/contracts/tools/TransferCreditsV1ArtifactProbe.sol
-            cell/contracts/tools/AuditResultV1.sol
-            cell/contracts/tools/AuditCaseV1.sol
-            cell/contracts/GenesisBootstrapTarget.sol
-            cell/contracts/TutorialDualVault.sol
-            cell/contracts/SmokeTarget.sol
-            cell/contracts/Gate0Target.sol
-            cell/contracts/Gate0R2Target.sol
-            cell/contracts/Gate0R2TargetFix.sol
-            cell/contracts/Gate0R3Target.sol
-            cell/contracts/Gate0G10Target.sol
-            cell/contracts/Gate0G10ThrowawayFix.sol
-            cell/contracts/Eip712Reference.sol
-          )
-          for path in "${pinned[@]}"; do
-            [ -e "$path" ] || continue
-            if ! head -1 "$path" | grep -q 'SPDX-License-Identifier: BUSL-1.1'; then
-              echo "::error::$path changed licence header — this file's BYTECODE IS PINNED ON-CHAIN."
-              echo "::error::Any source edit (comments included) changes its metadata hash, changes its"
-              echo "::error::artifact hash, and breaks 'clone and re-derive'. Relicense only at a re-baseline."
-              fail=1
-            fi
-          done
-          exit $fail
+          if ! sha256sum --check --strict <<'EOF'
+          27de5e1e50848f547306101eba036837dd6a6ae4b1283b930b163c21d1b55a2a  cell/contracts/tools/WithdrawCreditsV1.sol
+          c9bca659fb7a2b8557a4ed52346098dcebc5937990a63a69f6c101a541c0fe1c  cell/contracts/tools/WithdrawCreditsV1ArtifactProbe.sol
+          eba4989480191595f93b81635b20f0e67357dd41e31eda48a255146aec1ffaac  cell/contracts/tools/TransferCreditsV1.sol
+          bdb64e2317bb3cf1fa00ea21b1e3f138b039d7bc96895c909a0769d67bc108b1  cell/contracts/tools/TransferCreditsV1ArtifactProbe.sol
+          ab6f49e91843c4834a97ee761cec4bddac686b606cce26b401d91a83dc6d959b  cell/contracts/tools/AuditResultV1.sol
+          18bc61626e93e3424bf941cc8f913fc6b41eabf6c6202e8b71653f16a8b2face  cell/contracts/tools/AuditCaseV1.sol
+          3556278f63b68aca5be59eefc4f37db404a5760ffeb7fb662163cb2a654c66d0  cell/contracts/GenesisBootstrapTarget.sol
+          2d9c79782da91cb6a8031073c16fdc69847d3e1805a3144a9aed7fd64c67edaf  cell/contracts/TutorialDualVault.sol
+          8eeb6ae7a269f37da9ec3b1f8cf6ed82cbba108701530c487c2c870537233cc4  cell/contracts/SmokeTarget.sol
+          6d93d0bf3bf292c7da8814c7cfb728e4681712a28d98580fc4199df0e32b80f4  cell/contracts/Gate0Target.sol
+          ee9a72084b7f5dd9c2b233c565a8caa446f3aea7c07479a32c4821bfbab66ce8  cell/contracts/Gate0R2Target.sol
+          ae89483f7294a62b792320fc9cb8ca8d9f84d33c22fa8ca95d502fdaaab1199e  cell/contracts/Gate0R2TargetFix.sol
+          d658abfb48de34c3f0a1f50d216de38bd270dfb07c9e7ebe6a5c44c16db797d3  cell/contracts/Gate0R3Target.sol
+          25777a9d8e5a75a0aa00406f310ca46237d1743c7d0518a8484f1e1be2c04221  cell/contracts/Gate0G10Target.sol
+          5abd9313bb000d384d6efbd821b534bb7c1487368b2715efaa2a2cda94828a6c  cell/contracts/Gate0G10ThrowawayFix.sol
+          0467980fe714d4e78e38a2928732f24c55829a21b00656520be7403570065f27  cell/contracts/Eip712Reference.sol
+          EOF
+          then
+            echo "::error::A frozen file changed. Its bytecode is pinned on chain, so any edit"
+            echo "::error::(comments included) breaks 'clone and re-derive'. Edit only at a re-baseline."
+            exit 1
+          fi
 
       - name: Licence files present
         run: |
@@ -179,6 +174,43 @@ jobs:
             fi
           done
           exit $fail
+
+  artifact-rederive:
+    name: pinned artifact re-derives
+    runs-on: ubuntu-latest
+
+    # NOTICE's recipe, run the way a stranger would run it: set TransferCreditsV1's constant to
+    # zero, build it under the `artifact` profile, keccak256 the runtime bytecode, and compare
+    # with the value registered on Base Sepolia on 2026-06-29. Seconds, no forge-std needed.
+    # WithdrawCreditsV1 is left out because no source on record rebuilds its registered hash
+    # (NOTICE says why); it joins this job at its re-baseline.
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: stable
+
+      - name: TransferCreditsV1 re-derives its pinned hash
+        working-directory: cell
+        run: |
+          set -euo pipefail
+          pinned=0x390f7f7742a2419d6ddd8f9dc9afffacbdef7e41b861d6c295ec147e3a73fbed
+          zero=0x0000000000000000000000000000000000000000000000000000000000000000
+          f=contracts/tools/TransferCreditsV1.sol
+          [ "$(grep -c "$pinned" "$f")" = 1 ] || { echo "::error::$f does not hold $pinned once"; exit 1; }
+          sed -i "s/$pinned/$zero/" "$f"
+          got=$(cast keccak "$(FOUNDRY_PROFILE=artifact forge inspect "$f:TransferCreditsV1" deployedBytecode)")
+          git checkout -- "$f"
+          echo "recomputed $got"
+          echo "registered $pinned"
+          if [ "$got" != "$pinned" ]; then
+            echo "::error::TransferCreditsV1 no longer re-derives its registered hash from this repo."
+            echo "::error::The source, cell/foundry.toml's artifact profile, or the toolchain moved."
+            exit 1
+          fi
 
   no-secrets:
     name: no secrets

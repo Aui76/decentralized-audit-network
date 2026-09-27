@@ -21,6 +21,23 @@ fs_permissions = [
   { access = "read", path = "../tools/lp-demo-pool" },
 ]
 
+# The profile for re-deriving a pinned tool artifact (the zero-slot recipe in NOTICE).
+# solc writes the remapping list into the metadata it hashes into the bytecode, so the
+# recipe has to see the remappings TransferCreditsV1 was built with on 2026-06-30: these
+# two, and nothing auto-detected. Build only the tool file under it, because the rest of
+# the tree needs the demo-lp remapping:
+#   FOUNDRY_PROFILE=artifact forge build contracts/tools/TransferCreditsV1.sol
+[profile.artifact]
+remappings = [
+  "forge-std/=lib/forge-std/src/",
+  "genesis-tools/=contracts/tools/",
+]
+auto_detect_remappings = false
+# Its own build folders, because Foundry does not rebuild when only the profile changes,
+# so a shared out/ would hand one profile the other's bytecode (measured 2026-09-26).
+out = "out/artifact"
+cache_path = "cache/artifact"
+
 [rpc_endpoints]
 base_sepolia = "${BASE_SEPOLIA_RPC_URL}"
 
