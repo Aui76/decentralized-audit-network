@@ -26,10 +26,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # Pinned. On forge 1.8.3 the compile finished (1282s, successful) and the runner was shut
+      # down 23 seconds after the lint output, on every push from 2026-09-26. On 1.7.1 the same
+      # job passed in July, and the whole tree builds and tests green. Move the pin on purpose.
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
         with:
-          version: stable
+          version: v1.7.1
 
       # `via_ir = true` with `optimizer_runs = 1` is the slowest possible compile — correct for
       # production bytecode, brutal for CI (~60 min cold). Cache the compiler output, keyed on
@@ -191,7 +194,7 @@ jobs:
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
         with:
-          version: stable
+          version: v1.7.1
 
       - name: TransferCreditsV1 re-derives its pinned hash
         working-directory: cell
