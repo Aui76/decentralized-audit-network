@@ -27,6 +27,12 @@ contract SpecGapModule is ISpecGapModule {
     /// gap's one exit is `expireSpecGap` with the filer refunded. Its own mapping rather than a field on `Record`, so the
     /// public `specGaps` getter's return shape does not change.
     mapping(uint256 => mapping(bytes32 => bool)) public specGapContested;
+    /// PK-4 tier 3, built (spec-gap-funded-demonstration-proposal, 2026-09-30): a FUNDED DEMONSTRATION's discovery
+    /// reward, keyed on its dispute row. Non-zero means the row is a demonstration and not a contest, which is how
+    /// `resolveFromDispute` and `expireSpecGapDispute` tell the two apart. The reward sits in the cell from funding to
+    /// settlement and leaves it exactly once: to the filer on a FAIL replay, back to the funder on anything else.
+    /// Keyed on the dispute id rather than on the gap so several demonstrations can be funded in turn.
+    mapping(uint256 => uint256) public demonstrationReward;
 
     event SpecGapOpened(
         uint256 indexed auditId, bytes32 indexed classId, address indexed filer, bytes32 evaluatorToolId, uint256 stake
@@ -39,6 +45,24 @@ contract SpecGapModule is ISpecGapModule {
     event SpecGapContested(uint256 indexed auditId, bytes32 indexed classId, uint256 contestStake);
     event SpecGapDisputeOpened(uint256 indexed originalAuditId, bytes32 indexed classId, uint256 disputeAuditId);
     event SpecGapDisputeExpired(uint256 indexed originalAuditId, bytes32 indexed classId, uint256 disputeAuditId);
+    event SpecGapDemonstrationFunded(
+        uint256 indexed originalAuditId,
+        bytes32 indexed classId,
+        address indexed funder,
+        uint256 disputeAuditId,
+        uint256 reRunBounty,
+        uint256 discoveryReward
+    );
+    /// `demonstrated` true: the drawn re-runner's FAIL replayed the filer's witness and `paidTo` is the filer.
+    /// false: a PASS, a verdict that replayed neither side, or an expiry, and `paidTo` is the funder, refunded.
+    event SpecGapDemonstrationSettled(
+        uint256 indexed originalAuditId,
+        bytes32 indexed classId,
+        uint256 disputeAuditId,
+        bool demonstrated,
+        address paidTo,
+        uint256 amount
+    );
 
     error NotAdmin();
     error NotCell();
@@ -77,6 +101,8 @@ contract SpecGapModule is ISpecGapModule {
     error ContestWitnessMismatch();
     error SilenceHasConfirmed();
     error GapContested();
+    error FunderCannotBeFiler();
+    error NotDemonstrable();
 
     modifier onlyAdmin() {
         if (msg.sender != admin) revert NotAdmin();
@@ -295,6 +321,46 @@ contract SpecGapModule is ISpecGapModule {
         emit SpecGapAdopted(auditId, classId, g.filer, discoveryReward);
     }
 
+    /// @notice PK-4 tier 3 (dan-core F-83 Part B B6, parked 2026-06-16, built 2026-09-30): ANYONE BUT THE FILER pays to
+    ///         have a recorded gap demonstrated, and pays the filer if it holds. Before this the overlay had ONE payout,
+    ///         `adoptSpecGap`, and only the protocol could call it: a gap the protocol conceded, or let silence confirm,
+    ///         and then declined to adopt, paid its discoverer nothing, ever. This is the market path the proposal named
+    ///         and never built. The funder puts up a re-run bounty (the same floor as a contest, so a re-runner is paid
+    ///         for the same work) and a discovery reward; the cell draws a re-runner the same way it draws for a contest,
+    ///         with the filer AND the funder excluded from the draw; the re-runner's FAIL replay of the filer's witness
+    ///         pays the reward to the filer, and anything else returns it to the funder. No S-escrow draw, no mint, no
+    ///         treasury pull: the reward is capital someone chose to put behind this gap (PC-8's constraint).
+    ///         Only a gap the protocol has already answered (Confirmed or Declined) is demonstrable: a Filed gap is the
+    ///         protocol's to concede, decline or contest inside its window, and this must not pre-empt that.
+    function fundSpecGapDemonstration(uint256 auditId, bytes32 classId, uint256 reRunBounty, uint256 discoveryReward)
+        external
+        returns (uint256 disputeId)
+    {
+        AuditCell ac = _ac();
+        SpecGapLib.Record storage g = specGaps[auditId][classId];
+        if (!g.exists) revert NoGap();
+        if (g.status != SpecGapLib.Status.Confirmed && g.status != SpecGapLib.Status.Declined) revert NotDemonstrable();
+        if (msg.sender == g.filer) revert FunderCannotBeFiler();
+        if (activeSpecGapDisputeAuditId[auditId][classId] != 0) revert ContestOpen();
+        if (discoveryReward == 0) revert RewardRequired();
+
+        CellTypeDefs.Audit memory a = ac.getAudit(auditId);
+        uint256 minBounty = (a.bounty * DISPUTE_BOUNTY_MIN_BPS) / 10_000;
+        if (reRunBounty < minBounty || reRunBounty == 0) revert BountyLow();
+        address deployed = a.deployedAddress;
+        if (deployed != address(0) && deployed.codehash != a.artifactHash) revert BytecodeDrift();
+        ac.settlementToken(0, msg.sender, address(0), reRunBounty + discoveryReward);
+
+        // The funder is the second exclusion (PC-99's hook): a funder who is also a queued auditor must not draw the row
+        // they funded and settle their own reward. The filer is the first, as on a contest.
+        ac.settlementSetDisputeExclude2(auditId, msg.sender);
+        disputeId = ac.spawnDisputeReaudit(auditId, reRunBounty, msg.sender, g.filer, g.evaluatorToolId, address(this));
+        activeSpecGapDisputeAuditId[auditId][classId] = disputeId;
+        disputeSpecGapClassId[disputeId] = classId;
+        demonstrationReward[disputeId] = discoveryReward;
+        emit SpecGapDemonstrationFunded(auditId, classId, msg.sender, disputeId, reRunBounty, discoveryReward);
+    }
+
     function expireSpecGap(uint256 auditId, bytes32 classId) external {
         AuditCell ac = _ac();
         SpecGapLib.Record storage g = specGaps[auditId][classId];
@@ -339,6 +405,15 @@ contract SpecGapModule is ISpecGapModule {
         // the field, clears the escrow flag and makes the row terminal. This module used to refund the bounty itself
         // and leave the row live with the field set, which G1's escrow would have made payable a second time.
         ac.settlementOverlay(2, 2, disputeId, address(0));
+        uint256 reward = demonstrationReward[disputeId];
+        if (reward > 0) {
+            // A demonstration nobody ran: the reward goes back where it came from, beside the re-run bounty the cell
+            // just refunded. The gap's status was never touched by funding, so there is nothing to restore.
+            demonstrationReward[disputeId] = 0;
+            ac.settlementToken(1, address(0), funder, reward);
+            emit SpecGapDemonstrationSettled(auditId, classId, disputeId, false, funder, reward);
+            return;
+        }
         if (g.contestStake > 0) {
             ac.settlementToken(1, address(0), funder, g.contestStake);
             g.contestStake = 0;
@@ -346,12 +421,40 @@ contract SpecGapModule is ISpecGapModule {
         emit SpecGapDisputeExpired(auditId, classId, disputeId);
     }
 
+    /// @dev The demonstration half of `resolveFromDispute`. The row's verdict was paid at confirm (the re-run bounty to
+    ///      the drawn re-runner, by the cell, G1). What is settled here is the reward only, and the gap's STATUS IS NOT
+    ///      REWRITTEN in any branch: it was fixed by the protocol's own answer or by its silence, and one re-run funded by
+    ///      a third party is evidence about the payout, not a second adjudication of the fact.
+    function _settleDemonstration(
+        AuditCell ac,
+        uint256 originalAuditId,
+        bytes32 classId,
+        uint256 disputeId,
+        SpecGapLib.Record storage g,
+        uint256 reward
+    ) internal {
+        demonstrationReward[disputeId] = 0;
+        CellTypeDefs.Audit memory a = ac.getAudit(originalAuditId);
+        bool failReplay = SpecGapLib.disputeFailReplay(
+            ac.auditProofHash(disputeId), ac.auditVerdictPass(disputeId), g, a.artifactHash, a.specHash
+        );
+        address paidTo = failReplay ? g.filer : ac.getAudit(disputeId).lastDiscoverer;
+        ac.settlementToken(1, address(0), paidTo, reward);
+        emit SpecGapDemonstrationSettled(originalAuditId, classId, disputeId, failReplay, paidTo, reward);
+    }
+
     function resolveFromDispute(uint256 originalAuditId, uint256 disputeId) external onlyCell {
         AuditCell ac = _ac();
         bytes32 classId = disputeSpecGapClassId[disputeId];
         SpecGapLib.Record storage g = specGaps[originalAuditId][classId];
-        if (!g.exists || g.status != SpecGapLib.Status.Filed) revert GapNotOpen();
         if (activeSpecGapDisputeAuditId[originalAuditId][classId] != disputeId) revert ContestMismatch();
+        uint256 reward = demonstrationReward[disputeId];
+        if (reward != 0) {
+            activeSpecGapDisputeAuditId[originalAuditId][classId] = 0;
+            _settleDemonstration(ac, originalAuditId, classId, disputeId, g, reward);
+            return;
+        }
+        if (!g.exists || g.status != SpecGapLib.Status.Filed) revert GapNotOpen();
 
         CellTypeDefs.Audit memory a = ac.getAudit(originalAuditId);
         bytes32 specHash = a.specHash;
@@ -374,13 +477,14 @@ contract SpecGapModule is ISpecGapModule {
             emit SpecGapDisputeExpired(originalAuditId, classId, disputeId);
             return;
         }
-        address reRunner = ac.auditAuditorOf(disputeId);
-
         if (failReplay) {
-            if (g.contestStake > 0 && reRunner != address(0)) {
-                uint256 toRunner = g.contestStake;
+            // The contest stake goes to the FILER whose witness held, not to the re-runner (changed 2026-09-30,
+            // spec-gap-funded-demonstration-proposal). The re-runner is paid the dispute bounty by the cell whichever
+            // way the replay goes; paying them 500 more on FAIL only priced one verdict above the other.
+            if (g.contestStake > 0) {
+                uint256 toFiler = g.contestStake;
                 g.contestStake = 0;
-                ac.settlementToken(1, address(0), reRunner, toRunner);
+                ac.settlementToken(1, address(0), g.filer, toFiler);
             }
             _confirmSpecGapFact(originalAuditId, classId, g, SpecGapLib.Status.Confirmed);
             return;
@@ -391,10 +495,12 @@ contract SpecGapModule is ISpecGapModule {
             g.filingStake = 0;
         }
         if (g.contestStake > 0) {
-            address protocol = ac.auditProtocolOf(originalAuditId);
+            // Back to whoever funded the contest: the row's `lastDiscoverer`, which is the protocol today and stays the
+            // right identity if the contest is ever opened to others.
+            address contester = ac.getAudit(disputeId).lastDiscoverer;
             uint256 returned = g.contestStake;
             g.contestStake = 0;
-            ac.settlementToken(1, address(0), protocol, returned);
+            ac.settlementToken(1, address(0), contester, returned);
         }
         g.status = SpecGapLib.Status.False;
         emit SpecGapFalse(originalAuditId, classId, g.filer);

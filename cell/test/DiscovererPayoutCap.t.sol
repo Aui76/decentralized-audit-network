@@ -74,7 +74,9 @@ contract DiscovererPayoutCap is Test {
     bytes32 constant SHORTFALL_TOPIC0 = keccak256("DiscovererShortfall(address,uint256,uint256,bool)");
 
     // Escrow nearly empty, pot UNLOCKED (post-settlement claim): target = floor 50% of 5 = 2.5,
-    // escrow can only pay 1, no topup source -> event with the exact gap AND the gap recorded as debt.
+    // escrow can only pay 1, no topup source -> event with the exact gap. DEC-48 (2026-10-01): the gap is
+    // NOT recorded as debt any more. The market pays the finding on a post-confirm claim and the pool's
+    // share is a best-effort bonus; the mock keeps its ledger so this test can prove nothing wrote into it.
     function test_shortfall_emits_when_escrow_short() public {
         MockEscrow escrow = new MockEscrow(1 ether);
         vm.expectEmit(true, false, false, true);
@@ -84,9 +86,8 @@ contract DiscovererPayoutCap is Test {
             CAP_BPS, FLOOR_BPS, 8, P, C, B, 15 ether, false, 5 ether
         );
         assertEq(paid, 1 ether, "paid only what the escrow held");
-        assertEq(escrow.debtCalls(), 1, "shortfall recorded exactly once");
-        assertEq(escrow.lastDebtClaimant(), C, "debt recorded for the claimant");
-        assertEq(escrow.lastDebtAmount(), 1.5 ether, "debt == target - paid, the event's exact gap");
+        assertEq(escrow.debtCalls(), 0, "DEC-48: a shortfall is loud but records no debt");
+        assertEq(escrow.lastDebtAmount(), 0, "nothing owed on the ledger");
     }
 
     // Same short escrow but the pot is LOCKED: the topup covers the gap from the bounty, paid == target,

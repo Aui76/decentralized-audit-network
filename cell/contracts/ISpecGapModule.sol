@@ -25,6 +25,10 @@ interface ISpecGapModule {
     function adoptSpecGap(uint256 auditId, bytes32 classId, uint256 discoveryReward) external;
     function expireSpecGap(uint256 auditId, bytes32 classId) external;
     function expireSpecGapDispute(uint256 auditId, bytes32 classId) external;
+    function fundSpecGapDemonstration(uint256 auditId, bytes32 classId, uint256 reRunBounty, uint256 discoveryReward)
+        external
+        returns (uint256 disputeId);
+    function demonstrationReward(uint256 disputeId) external view returns (uint256);
 
     function resolveFromDispute(uint256 originalAuditId, uint256 disputeId) external;
 

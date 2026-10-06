@@ -61,8 +61,32 @@ contract ClaimDisputeModule is IClaimDisputeModule {
     error ClaimantLaneNotOpen();
     error AlreadyDeclined();
     error DisputeAlreadySpent();
+    error AskNotAllowedHere();
+    error AskNotOpen();
+    error AskNotLower();
+    error AskAlreadyFunded();
+    error NothingToReclaim();
+    error ReviewClaimNeedsWitness();
+    error ReviewWindowPassed();
+    error ReviewAuditorNotEligible();
 
     uint256 internal constant DISPUTE_BOUNTY_MIN_BPS = 5000;
+    /// @dev DEC-48: the network's bonus on a post-confirm finding never exceeds this share of the re-run bounty. The re-run
+    ///      bounty is the one payment a claimant-and-funder circle cannot get back (it goes to the drawn re-auditor), so a
+    ///      bonus below half of it makes the circle lose money by construction, whatever the farmed reputation says.
+    uint256 internal constant BONUS_RERUN_CAP_BPS = 5000;
+
+    /// @dev DEC-48 (2026-10-01): THE FINDER'S PRICE. On a row whose bounty already went to the auditor at confirm, the cell
+    ///      names no price for a hole found afterwards: the finder names one before filing (`pendingAsk`), it binds to the
+    ///      claim at filing (`claimAsk`), and whoever funds the re-run puts that price beside the re-run bounty
+    ///      (`claimAskFunded`, `claimAskFunder`). A FAIL that reproduces pays the price to the finder from the funder's money;
+    ///      every other exit returns it to the funder. The pool then adds only a reputation bonus, best-effort, no debt.
+    ///      Pre-confirm claims (the pot still escrowed) carry no ask: the posted bounty is their price.
+    mapping(uint256 => mapping(address => uint256)) public pendingAsk;
+    mapping(uint256 => uint256) public claimAsk;
+    mapping(uint256 => uint256) public claimAskFunded;
+    mapping(uint256 => address) public claimAskFunder;
+    mapping(uint256 => uint256) public claimAskPaid;
 
     /// @dev F-80: protocol decline + claimant-funded dispute lane.
     mapping(uint256 => bool) public disputeFundingDeclined;
@@ -90,6 +114,14 @@ contract ClaimDisputeModule is IClaimDisputeModule {
     event ProtocolDeclinedDisputeFunding(uint256 indexed originalId);
     event DisputeReauditOpened(uint256 indexed originalId, uint256 indexed disputeId);
     event DisputeReauditOpenedByClaimant(uint256 indexed originalId, uint256 indexed disputeId);
+    /// @dev DEC-48: the finder's price, on the row for anyone to read. `reason` on a return: 1 the re-run reproduced the
+    ///      PASS, 2 it reproduced neither side, 3 the drawn re-auditor stayed silent, 4 reclaimed after the row or the
+    ///      re-run was ended by another lane (void) or superseded.
+    event ClaimAskNamed(uint256 indexed originalId, address indexed claimant, uint256 ask);
+    event ClaimAskFunded(uint256 indexed originalId, address indexed funder, uint256 ask, uint256 indexed disputeId);
+    event ClaimAskPaid(uint256 indexed originalId, address indexed claimant, address indexed funder, uint256 ask);
+    event ClaimAskReturned(uint256 indexed originalId, address indexed funder, uint256 ask, uint8 reason);
+    event ClaimAskUnfunded(uint256 indexed originalId, address indexed claimant, uint256 ask);
 
     modifier onlyAdmin() {
         if (msg.sender != admin) revert NotAdmin();
@@ -160,11 +192,24 @@ contract ClaimDisputeModule is IClaimDisputeModule {
         AuditCell ac = _ac();
 
         CellTypeDefs.Audit memory a = ac.getAudit(originalAuditId);
-        if (!_claimEligible(a.state)) revert OriginalNotEligibleForClaim();
+        // THE AUDITOR'S WITNESS IN REVIEW. The row's own auditor, while the row is InAudit, files the witness claim a
+        // stranger files after the PASS. Without it a finding the declared spec does not carry had no lane from that
+        // seat: `proveFail` takes a declared tool's root and writes no witness, the gap lane refuses the row's auditor,
+        // and the spec arbiter reproduces a well-formed spec's PASS. The hull settles it as it settles `proveFail`'s own
+        // claim (`stateBeforeClaim == InAudit`): the pot pays, nobody is blamed, an unadjudicated exit gives the clock back.
+        bool inReview = uint8(a.state) == STATE_IN_AUDIT;
+        if (inReview) {
+            _requireReviewClaim(ac, a, claimant, originalAuditId, witnessCommitment);
+        } else if (!_claimEligible(a.state)) {
+            revert OriginalNotEligibleForClaim();
+        }
         bytes32 specHash = a.specHash;
         bytes32 artifactHash = a.artifactHash;
 
-        (, , , , , bool resolved, bool exists, , , , , , ) = ac.vulnerabilityClaims(originalAuditId);
+        (address priorClaimant, , , , , bool resolved, bool exists, , , , , , ) = ac.vulnerabilityClaims(originalAuditId);
+        // VD-218(3), the hull's own test on the same record: one claim of its own per auditor per row in review, whichever
+        // of the two lanes filed the first one. The clock comes back on an unadjudicated exit, so a second would stall.
+        if (inReview && exists && priorClaimant == claimant) revert ClaimAlreadyFiled();
         // PC-81 (G2, I1): REFUSE ONLY WHILE A CLAIM IS OPEN. This refused on `exists`, which no exit ever cleared - every
         // terminal exit writes only `resolved` - so ONE lapsed or settled claim immunised the audit for good, and a
         // protocol shielding an exploitable contract paid one stake for it. The record is not deleted: the resolved claim
@@ -184,7 +229,7 @@ contract ClaimDisputeModule is IClaimDisputeModule {
         (,,, uint256 claimantPosition,,) = ac.auditors(claimant);
         if (claimantPosition == 0) revert ClaimantNotRegistered();
         if (claimant == protocol) revert ClaimantCannotBeProtocol();
-        if (claimant == auditor) revert ClaimantCannotBeOriginalAuditor();
+        if (claimant == auditor && !inReview) revert ClaimantCannotBeOriginalAuditor();
 
         (address toolProposer, bool isSpec, bool isEvaluator, bool canonical, bool toolExists) =
             _toolFlags(ac, toolId);
@@ -248,6 +293,25 @@ contract ClaimDisputeModule is IClaimDisputeModule {
         );
         claimProtocolDecisionDue[originalAuditId] =
             block.timestamp + _effectiveProtocolClaimDecisionWindow(ac);
+        _bindAsk(m, originalAuditId, claimant, a.bountyEscrowed);
+    }
+
+    /// @dev The guards the hull's verdict path applies to the auditor in review (`submitVerdictAfterProof`), applied here
+    ///      because this claim does not pass through it: the seat, the hold, the in-audit deadline, the attestation. A
+    ///      declared tool's FAIL stays the verdict's (`proveFail`), so the witness is required. A re-run row is judged by
+    ///      its verdict and the genesis row keeps its latch, so both are refused.
+    function _requireReviewClaim(
+        AuditCell ac,
+        CellTypeDefs.Audit memory a,
+        address claimant,
+        uint256 originalAuditId,
+        bytes32 witnessCommitment
+    ) internal view {
+        if (claimant != a.auditor || a.isClaimDispute) revert OriginalNotEligibleForClaim();
+        if (ac.genesisAuditOpen() && ac.genesisAuditId() == originalAuditId) revert OriginalNotEligibleForClaim();
+        if (witnessCommitment == bytes32(0)) revert ReviewClaimNeedsWitness();
+        if (block.timestamp > a.pickupTime + ac.inAuditWindow()) revert ReviewWindowPassed();
+        if (!a.specAuditorAttested || !ac.isEligible(claimant)) revert ReviewAuditorNotEligible();
     }
 
     function resolveFromDispute(uint256 originalId, uint256 disputeId) external onlyCell {
@@ -310,16 +374,18 @@ contract ClaimDisputeModule is IClaimDisputeModule {
         // root. The claim resolves unadjudicated. The verdict itself stands and its auditor was paid at confirm, exactly as
         // any unreviewed verdict is: an integrity review of the dispute row during its audit window is the check on it.
         if (!passReproduces && !failReproduces) {
+            _returnAsk(m, originalId, 2);
             m.settlementResolveUnadjudicated(originalId);
             return;
         }
 
         if (passReproduces) {
+            _returnAsk(m, originalId, 1);
             m.settlementResolveClaim(originalId, claimant, stake, true, false);
             return;
         }
 
-        m.settlementResolveClaim(originalId, claimant, _payoutDiscoverer(m, ac, originalId, claimant), false, true);
+        m.settlementResolveClaim(originalId, claimant, _payFinder(m, ac, originalId, disputeId, claimant), false, true);
         _recordFmeaGap(ac, originalId);
     }
 
@@ -353,6 +419,7 @@ contract ClaimDisputeModule is IClaimDisputeModule {
                 rDispWitness, binding, artifactHash, specHash, AuditResultV1.VERDICT_FAIL
             );
         if (!passReplay && !failReplay) {
+            _returnAsk(m, originalId, 2);
             m.settlementResolveUnadjudicated(originalId); // PC-98 (G4(c)), the witness path's same outcome
             return;
         }
@@ -360,11 +427,14 @@ contract ClaimDisputeModule is IClaimDisputeModule {
         (address claimant, , , , uint256 stake, , , , , , , , ) = ac.vulnerabilityClaims(originalId);
 
         if (failReplay) {
-            m.settlementResolveClaim(originalId, claimant, _payoutDiscoverer(m, ac, originalId, claimant), false, false);
+            m.settlementResolveClaim(
+                originalId, claimant, _payFinder(m, ac, originalId, disputeId, claimant), false, false
+            );
             _recordFmeaGap(ac, originalId);
             return;
         }
 
+        _returnAsk(m, originalId, 1);
         m.settlementResolveClaim(originalId, claimant, stake, true, false);
     }
 
@@ -436,10 +506,15 @@ contract ClaimDisputeModule is IClaimDisputeModule {
         (, bytes32 toolId, , , , , , bool witnessPath, bytes32 evaluatorToolId, , , , ) =
             ac.vulnerabilityClaims(originalId);
         bytes32 requiredTool = witnessPath ? evaluatorToolId : toolId;
-        m.settlementToken(0, funder, address(0), disputeBounty);
+        // DEC-48: a priced claim is re-run with the finder's price on the table beside the re-run bounty; the finder's own
+        // lane buys the re-run alone (`_takeAsk`).
+        m.settlementToken(0, funder, address(0), disputeBounty + _takeAsk(m, ac, originalId, funder, byClaimant));
         disputeId = m.spawnDisputeReaudit(
             originalId, disputeBounty, funder, address(0), requiredTool, address(0)
         );
+        if (claimAskFunded[originalId] > 0) {
+            emit ClaimAskFunded(originalId, funder, claimAskFunded[originalId], disputeId);
+        }
         if (byClaimant) {
             emit DisputeReauditOpenedByClaimant(originalId, disputeId);
         } else {
@@ -459,12 +534,35 @@ contract ClaimDisputeModule is IClaimDisputeModule {
         address funder = ac.getAudit(ac.activeDisputeAuditId(originalId)).lastDiscoverer;
         m.settlementExpireClaimDispute(originalId); // reverts on no open dispute, so the mark below always has a funder
         disputeSpent[originalId][funder] = true; // PC-116
+        _returnAsk(m, originalId, 3); // DEC-48: nobody adjudicated, the price goes home with the re-run bounty
+    }
+
+    /// @dev DEC-48: a FAIL that reproduces pays the finder the funded price first (the market's money, held in the cell
+    ///      since the re-run was funded), then the pool's bonus. Returns the total, which the cell emits on the row.
+    function _payFinder(
+        IClaimSettlementMutator m,
+        AuditCell ac,
+        uint256 originalAuditId,
+        uint256 disputeId,
+        address claimant
+    ) internal returns (uint256 paid) {
+        uint256 ask = claimAskFunded[originalAuditId];
+        if (ask > 0) {
+            address funder = claimAskFunder[originalAuditId];
+            claimAskFunded[originalAuditId] = 0;
+            claimAskFunder[originalAuditId] = address(0);
+            claimAskPaid[originalAuditId] = ask;
+            m.settlementToken(1, address(0), claimant, ask);
+            emit ClaimAskPaid(originalAuditId, claimant, funder, ask);
+        }
+        paid = ask + _payoutDiscoverer(m, ac, originalAuditId, disputeId, claimant);
     }
 
     function _payoutDiscoverer(
         IClaimSettlementMutator m,
         AuditCell ac,
         uint256 originalAuditId,
+        uint256 disputeId,
         address claimant
     ) internal returns (uint256 paid) {
         CellTypeDefs.Audit memory a = ac.getAudit(originalAuditId);
@@ -477,12 +575,131 @@ contract ClaimDisputeModule is IClaimDisputeModule {
             : ac.auditorReputationBoostBps(
                 lastDiscoverer != address(0) ? lastDiscoverer : auditor
             );
-        uint256 escrowDraw = (bounty * boostBps) / 10_000;
         bool bountyPotLocked = stateBeforeClaim == CellTypeDefs.AuditState.AwaitingWindow
             || stateBeforeClaim == CellTypeDefs.AuditState.InAudit;
+        uint256 escrowDraw;
+        if (bountyPotLocked) {
+            // The pot is still in the cell: the posted bounty prices the finding and the boost draws on the pool as before.
+            escrowDraw = (bounty * boostBps) / 10_000;
+        } else {
+            // DEC-48: the bounty went to the auditor at confirm and the market (the ask, `_payFinder`) prices the finding.
+            // The pool adds the reputation boost alone: keyed to the posted bounty and never to the ask, never above half
+            // the re-run bounty (`BONUS_RERUN_CAP_BPS`), and never above what the pool holds now. Best-effort, no debt.
+            escrowDraw = (bounty * (boostBps - 10_000)) / 10_000;
+            uint256 rerunCap = (ac.getAudit(disputeId).bounty * BONUS_RERUN_CAP_BPS) / 10_000;
+            if (escrowDraw > rerunCap) escrowDraw = rerunCap;
+            address pool = ac.treasuryEscrow();
+            uint256 held = pool == address(0) ? 0 : IPayoutEscrow(pool).escrowBalance();
+            if (escrowDraw > held) escrowDraw = held;
+        }
         if (escrowDraw > 0) {
             paid = m.settlementPayDiscoverer(originalAuditId, claimant, escrowDraw, bountyPotLocked, bounty);
         }
+    }
+
+    // ---- DEC-48: the finder's price ---------------------------------------------------------------------------------
+
+    /// @notice Name the price you will ask for a hole in `originalId`, before you file the claim. Binds at your filing.
+    ///         Only on a row whose bounty already left the cell (confirmed); a pre-confirm claim is priced by the bounty.
+    ///         Naming 0 clears a pending price.
+    function nameClaimAsk(uint256 originalId, uint256 ask) external {
+        AuditCell ac = _ac();
+        if (originalId >= ac.nextAuditId()) revert InvalidOriginalId();
+        CellTypeDefs.Audit memory a = ac.getAudit(originalId);
+        if (!_claimEligible(a.state) || a.bountyEscrowed) revert AskNotAllowedHere();
+        pendingAsk[originalId][msg.sender] = ask;
+    }
+
+    /// @notice Lower the bound price of your open claim while nobody has funded it. Never raise it: a price that came
+    ///         down is a signal, a price that went up after a bid would be a trap.
+    function lowerClaimAsk(uint256 originalId, uint256 newAsk) external {
+        AuditCell ac = _ac();
+        if (originalId >= ac.nextAuditId()) revert InvalidOriginalId();
+        (address claimant, , , , , bool resolved, bool exists, , , , , , ) = ac.vulnerabilityClaims(originalId);
+        if (!exists || resolved) revert NoOpenClaim();
+        if (msg.sender != claimant) revert OnlyClaimant();
+        uint256 ask = claimAsk[originalId];
+        if (ask == 0) revert AskNotOpen();
+        if (claimAskFunded[originalId] != 0) revert AskAlreadyFunded();
+        if (ac.activeDisputeAuditId(originalId) != 0) revert DisputeOpen();
+        if (newAsk >= ask) revert AskNotLower();
+        claimAsk[originalId] = newAsk;
+        emit ClaimAskNamed(originalId, claimant, newAsk);
+    }
+
+    /// @notice Anyone funds the re-run and puts the finder's price beside it, once the protocol has declined or its window
+    ///         has closed. The protocol may use it too, late. On a FAIL that reproduces the price goes to the finder; on
+    ///         every other exit it comes back. PC-116 applies to the funder.
+    function fundClaimAsk(uint256 originalId, uint256 disputeBounty) external returns (uint256 disputeId) {
+        if (claimAsk[originalId] == 0 || !claimantDisputeLaneOpen(originalId)) revert AskNotOpen();
+        return _openDisputeReaudit(originalId, disputeBounty, msg.sender, false);
+    }
+
+    /// @notice Return a funded price that no exit of this module moved: the row or its re-run was ended by another lane
+    ///         (a void through the integrity overlay or the spec arbiter), or the claim lapsed. Permissionless; pays the
+    ///         recorded funder only. Refused while the funded re-run is still running.
+    function reclaimClaimAsk(uint256 originalId) external {
+        IClaimSettlementMutator m = _mutator();
+        AuditCell ac = _ac();
+        if (claimAskFunded[originalId] == 0) revert NothingToReclaim();
+        (, , , , , bool resolved, bool exists, , , , , , ) = ac.vulnerabilityClaims(originalId);
+        if (exists && !resolved && ac.activeDisputeAuditId(originalId) != 0) revert DisputeOpen();
+        _returnAsk(m, originalId, 4);
+    }
+
+    /// @notice The row's price, for anyone: what was asked, who funded it, what is held, what the last FAIL paid.
+    function claimAskStatus(uint256 originalId)
+        external
+        view
+        returns (uint256 ask, address funder, uint256 funded, uint256 paid)
+    {
+        return (claimAsk[originalId], claimAskFunder[originalId], claimAskFunded[originalId], claimAskPaid[originalId]);
+    }
+
+    /// @dev At filing: a price left behind by a previous claim on the row goes home, the pending price binds when the
+    ///      bounty is no longer escrowed, and a pending price on an escrowed row is dropped (the filing goes through
+    ///      unpriced; `nameClaimAsk` refuses such a row, this guards the window between naming and filing).
+    function _bindAsk(IClaimSettlementMutator m, uint256 originalId, address claimant, bool potEscrowed) internal {
+        if (claimAskFunded[originalId] > 0) _returnAsk(m, originalId, 4);
+        claimAsk[originalId] = 0;
+        claimAskPaid[originalId] = 0;
+        uint256 ask = pendingAsk[originalId][claimant];
+        if (ask == 0) return;
+        delete pendingAsk[originalId][claimant];
+        if (potEscrowed) return;
+        claimAsk[originalId] = ask;
+        emit ClaimAskNamed(originalId, claimant, ask);
+    }
+
+    /// @dev At funding: the extra the funder puts in beside the re-run bounty. A stale funded price goes home first
+    ///      (its re-run was ended by another lane). The finder's own lane funds nothing beyond the re-run and kills
+    ///      the price for this claim, on the row for anyone to read.
+    function _takeAsk(IClaimSettlementMutator m, AuditCell ac, uint256 originalId, address funder, bool byClaimant)
+        internal
+        returns (uint256 extra)
+    {
+        if (claimAskFunded[originalId] > 0) _returnAsk(m, originalId, 4);
+        uint256 ask = claimAsk[originalId];
+        if (ask == 0) return 0;
+        if (byClaimant) {
+            (address claimant, , , , , , , , , , , , ) = ac.vulnerabilityClaims(originalId);
+            claimAsk[originalId] = 0;
+            emit ClaimAskUnfunded(originalId, claimant, ask);
+            return 0;
+        }
+        claimAskFunded[originalId] = ask;
+        claimAskFunder[originalId] = funder;
+        return ask;
+    }
+
+    function _returnAsk(IClaimSettlementMutator m, uint256 originalId, uint8 reason) internal {
+        uint256 ask = claimAskFunded[originalId];
+        if (ask == 0) return;
+        address funder = claimAskFunder[originalId];
+        claimAskFunded[originalId] = 0;
+        claimAskFunder[originalId] = address(0);
+        m.settlementToken(1, address(0), funder, ask);
+        emit ClaimAskReturned(originalId, funder, ask, reason);
     }
 
     function _claimEligible(CellTypeDefs.AuditState s) internal pure returns (bool) {

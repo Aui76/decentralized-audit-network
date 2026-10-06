@@ -8,7 +8,6 @@ interface IPayoutToken {
 interface IPayoutEscrow {
     function escrowBalance() external view returns (uint256);
     function payDiscoverer(address recipient, uint256 amount, uint256 maxIterations) external returns (uint256);
-    function recordDiscovererDebt(address claimant, uint256 amount) external;
 }
 
 /// @dev Discoverer payout math extracted from AuditCell for EIP-170 headroom (P1 gate 4).
@@ -64,16 +63,16 @@ library DiscovererPayoutLib {
                     paid += topup;
                 }
             }
-            // Loudness + debt (2026-08-09): `paid` is now final for the escrow leg — every source has
-            // had its chance. If it is still short of the target: say so where an indexer will see it,
-            // and RECORD the gap as owed (discoverer-debt-ledger-proposal) so a drained pot delays a
-            // payment instead of denying it. The record call is guarded on a wired escrow — the floor
-            // prong prices the target off the bounty alone, so this branch is reachable with
-            // escrow == address(0), and an unguarded call there would brick settlement.
+            // Loudness (2026-08-09): `paid` is now final for the escrow leg — every source has had its
+            // chance. If it is still short of the target: say so where an indexer will see it.
+            // DEC-48 (2026-10-01): the gap is no longer recorded as debt. On a post-confirm claim the
+            // market pays the finding (the finder's price, ClaimDisputeModule) and the pool adds a
+            // bonus from what it holds at that moment: best-effort, no IOU. On a pre-confirm claim the
+            // pot's topup above always reaches the target, so nothing was ever recorded there. The
+            // escrow keeps `recordDiscovererDebt` and `settleDiscovererDebt`; nothing on the cell
+            // writes into them any more, and the live cell keeps calling the library it was linked
+            // with until a hull redeploy, so the module also clamps its bonus to the pool's balance.
             if (paid < payoutTarget) {
-                if (address(escrow) != address(0)) {
-                    escrow.recordDiscovererDebt(claimant, payoutTarget - paid);
-                }
                 emit DiscovererShortfall(claimant, payoutTarget, paid, bountyPotLocked);
             }
         }

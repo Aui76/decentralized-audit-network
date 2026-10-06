@@ -462,10 +462,22 @@ contract SpecArbiterModule is ISpecArbiterModule {
 
         if (passConfirmed) {
             s.settlementResumeClock(auditId, frozenAt); // G4(a): the row survives, so does its clock
-            if (stake > 0) {
-                s.settlementToken(2, address(0), address(0), stake);
-            }
-            emit SpecArbitramentDeclared(auditId, arbiter, specErrorsRoot, true, stake, 0);
+            // DEC-47 (2026-09-30): the arbiter is paid the same on either ruling. Before this the PASS
+            // branch forfeited the whole stake to the treasury escrow and paid the arbiter nothing, while
+            // the FAIL branch paid them `specArbiterRewardBps` of the fee out of the bounty, so one ruling
+            // was priced above the other: the tilt DEC-46 took out of the spec-gap contest, found again
+            // here by the payout-family review. The PASS reward comes out of the challenger's forfeited
+            // stake and is sized exactly as `_payoutAndVoid` sizes the FAIL reward (the fee, clamped to
+            // what is actually there), so the challenger who lost funds the ruling against them and the
+            // protocol whose row survived pays nothing. At the shipped `specChallengeFee` of 0 both
+            // branches pay 0: parity, not a change in what the live cell would do.
+            uint256 passFee = specChallengeFee;
+            if (passFee > stake) passFee = stake;
+            uint256 passReward = passFee * specArbiterRewardBps / 10_000;
+            uint256 forfeited = stake - passReward;
+            if (passReward > 0) s.settlementToken(1, address(0), arbiter, passReward);
+            if (forfeited > 0) s.settlementToken(2, address(0), address(0), forfeited);
+            emit SpecArbitramentDeclared(auditId, arbiter, specErrorsRoot, true, forfeited, passReward);
             emit SpecChallengeFinalized(auditId, challenger, false);
             return;
         }

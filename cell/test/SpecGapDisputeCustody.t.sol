@@ -122,6 +122,8 @@ contract SpecGapDisputeCustodyTest is Test {
     function test_a_FAIL_replay_pays_the_rerunner_the_dispute_bounty_and_the_cell_holds_nothing() public {
         (uint256 id, bytes32 pinned, uint256 disputeId, uint256 minB) = _contested();
         uint256 before = token.balanceOf(auditorC);
+        uint256 filerBefore = token.balanceOf(filer);
+        uint256 filingStake = cell.requiredClaimStake(id);
         vm.prank(auditorC);
         cell.acceptAudit(disputeId, specErrors);
         vm.prank(auditorC);
@@ -130,9 +132,13 @@ contract SpecGapDisputeCustodyTest is Test {
         cell.confirmAudit(disputeId);
 
         assertEq(uint256(specGap.specGapStatusOf(id, classId)), uint256(SpecGapLib.Status.Confirmed));
+        // 2026-09-30 (spec-gap-funded-demonstration-proposal): the re-runner is paid the SAME on either verdict, the
+        // dispute bounty by the cell. The contest stake goes to the filer whose witness held. Before this the re-runner
+        // took the 500 on FAIL and nothing on PASS, which priced one verdict above the other.
+        assertEq(token.balanceOf(auditorC), before + minB, "the re-runner is paid the dispute bounty by the cell, and no more");
         assertEq(
-            token.balanceOf(auditorC), before + minB + CONTEST_STAKE,
-            "the re-runner is paid the dispute bounty by the cell, and the contest stake by the lane"
+            token.balanceOf(filer), filerBefore + filingStake + CONTEST_STAKE,
+            "the filer's stake comes back and the protocol's contest stake is theirs"
         );
         assertEq(token.balanceOf(address(cell)), 0, "the cell holds NOTHING once the gap has settled");
     }

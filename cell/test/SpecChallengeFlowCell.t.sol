@@ -11,6 +11,11 @@ contract ChallengeTarget {
     uint256 public x = 1;
 }
 
+/// @dev A second artifact with a different codehash, for tests that need two live rows.
+contract ChallengeTargetB {
+    uint256 public y = 2;
+}
+
 /// @notice F-44 spec challenge on puzzle cell + SpecArbiterModule (X1 oracle).
 contract SpecChallengeFlowCellTest is SpecValidationCellSetup {
     CellToken token;
@@ -35,6 +40,15 @@ contract SpecChallengeFlowCellTest is SpecValidationCellSetup {
 
     uint256 bounty = 10_000 ether;
     uint256 challengeFee = 100 ether;
+
+    event SpecArbitramentDeclared(
+        uint256 indexed auditId,
+        address indexed arbiter,
+        bytes32 specErrorsRoot,
+        bool passConfirmed,
+        uint256 challengerSlash,
+        uint256 arbiterReward
+    );
 
     function setUp() external {
         CellTestDeploy.Deployment memory d = CellTestDeploy.deploy(address(this));
@@ -258,19 +272,103 @@ contract SpecChallengeFlowCellTest is SpecValidationCellSetup {
         assertEq(escrow.escrowBalance(), escrowBefore + stake / 2);
     }
 
+    /// @notice DEC-47 (2026-09-30): a PASS ruling still costs the challenger the whole stake, but the
+    /// arbiter is now paid out of it, sized as the FAIL branch sizes their reward (`specArbiterRewardBps`
+    /// of the fee, here 100 ether / 2), and only the remainder is forfeited to the treasury escrow. Before
+    /// this the escrow took all 500 and the arbiter took nothing for a ruling that took the same work.
     function test_arbiter_declare_pass_slashes_challenger_stake() external {
         uint256 auditId = _submitAndReachAwaitingWindow();
         uint256 stake = specArbiter.specChallengeStake();
         uint256 challengerBefore = token.balanceOf(challenger);
         uint256 escrowBefore = escrow.escrowBalance();
+        uint256 protocolBefore = token.balanceOf(protocol);
 
         _challengeWithArbiter(auditId);
+        uint256 arbiterBefore = token.balanceOf(specArbiterAddr);
+        uint256 reward = challengeFee * specArbiter.specArbiterRewardBps() / 10_000;
+        assertEq(reward, challengeFee / 2);
+
+        vm.expectEmit(true, true, false, true, address(specArbiter));
+        emit SpecArbitramentDeclared(auditId, specArbiterAddr, specErrorsRoot, true, stake - reward, reward);
         vm.prank(specArbiterAddr);
         specArbiter.declareSpecArbitrament(auditId, specErrorsRoot);
 
-        assertEq(token.balanceOf(challenger), challengerBefore - stake);
-        assertEq(escrow.escrowBalance(), escrowBefore + stake);
+        assertEq(token.balanceOf(challenger), challengerBefore - stake, "challenger loses the whole stake");
+        assertEq(token.balanceOf(specArbiterAddr), arbiterBefore + reward, "arbiter paid from the stake");
+        assertEq(escrow.escrowBalance(), escrowBefore + stake - reward, "escrow takes the remainder");
+        assertEq(token.balanceOf(protocol), protocolBefore, "the protocol whose row survived pays nothing");
+        assertEq(token.balanceOf(address(cell)), bounty, "the cell still holds exactly the bounty");
         assertEq(uint256(_auditState(cell, auditId)), uint256(CellTypeDefs.AuditState.AwaitingWindow));
+    }
+
+    /// @notice DEC-47: the arbiter earns the same for PASS as for FAIL at one fee, measured on two rows
+    /// at whichever arbiter each draw picked. The tilt the review found was that this number was 0 on PASS.
+    function test_arbiter_paid_the_same_on_pass_and_fail() external {
+        // The arbiter registers AFTER the first submit, as every sibling does: a two-member pool at
+        // submit time can draw the arbiter as the row's auditor. The draw is read, not assumed, and
+        // the reward is measured at whoever was drawn; parity is a claim about the amount, not the address.
+        uint256 passAudit = _submitAndReachAwaitingWindow();
+        _registerSpecArbiter();
+        _challenge(passAudit);
+        (,,,,, address arbiterA) = specArbiter.specChallenges(passAudit);
+        assertTrue(arbiterA != address(0));
+        uint256 before = token.balanceOf(arbiterA);
+        vm.prank(arbiterA);
+        specArbiter.declareSpecArbitrament(passAudit, specErrorsRoot);
+        uint256 passEarned = token.balanceOf(arbiterA) - before;
+
+        target = ChallengeTarget(address(new ChallengeTargetB()));
+        uint256 failAudit = _submitAndReachAwaitingWindow();
+        _challenge(failAudit);
+        (,,,,, address arbiterB) = specArbiter.specChallenges(failAudit);
+        assertTrue(arbiterB != address(0));
+        before = token.balanceOf(arbiterB);
+        vm.prank(arbiterB);
+        specArbiter.declareSpecArbitrament(failAudit, failErrorsRoot);
+        uint256 failEarned = token.balanceOf(arbiterB) - before;
+
+        assertEq(passEarned, challengeFee / 2);
+        assertEq(failEarned, passEarned, "one ruling is not priced above the other");
+        assertEq(uint256(_auditState(cell, passAudit)), uint256(CellTypeDefs.AuditState.AwaitingWindow));
+        assertEq(uint256(_auditState(cell, failAudit)), uint256(CellTypeDefs.AuditState.Invalidated));
+    }
+
+    /// @notice DEC-47: the PASS reward is clamped to the stake, the same clamp `_payoutAndVoid` applies to
+    /// the bounty, so a fee set above the stake cannot pay the arbiter money the challenger never posted.
+    function test_arbiter_pass_reward_clamps_to_stake() external {
+        uint256 auditId = _submitAndReachAwaitingWindow();
+        uint256 stake = specArbiter.specChallengeStake();
+        specArbiter.setSpecChallengeFee(stake * 4);
+        uint256 escrowBefore = escrow.escrowBalance();
+
+        _challengeWithArbiter(auditId);
+        uint256 arbiterBefore = token.balanceOf(specArbiterAddr);
+        vm.prank(specArbiterAddr);
+        specArbiter.declareSpecArbitrament(auditId, specErrorsRoot);
+
+        assertEq(token.balanceOf(specArbiterAddr), arbiterBefore + stake / 2);
+        assertEq(escrow.escrowBalance(), escrowBefore + stake / 2);
+        assertEq(token.balanceOf(address(cell)), bounty, "nothing left behind in the cell");
+    }
+
+    /// @notice DEC-47: at the shipped `specChallengeFee` of 0 the PASS branch does what the live module
+    /// does today, the whole stake to the escrow and nothing to the arbiter; the FAIL branch pays 0 at
+    /// that fee too, so parity holds at the default without moving a number on the live cell.
+    function test_arbiter_pass_reward_zero_at_shipped_fee() external {
+        uint256 auditId = _submitAndReachAwaitingWindow();
+        uint256 stake = specArbiter.specChallengeStake();
+        specArbiter.setSpecChallengeFee(0);
+        uint256 escrowBefore = escrow.escrowBalance();
+
+        _challengeWithArbiter(auditId);
+        uint256 arbiterBefore = token.balanceOf(specArbiterAddr);
+        vm.expectEmit(true, true, false, true, address(specArbiter));
+        emit SpecArbitramentDeclared(auditId, specArbiterAddr, specErrorsRoot, true, stake, 0);
+        vm.prank(specArbiterAddr);
+        specArbiter.declareSpecArbitrament(auditId, specErrorsRoot);
+
+        assertEq(token.balanceOf(specArbiterAddr), arbiterBefore);
+        assertEq(escrow.escrowBalance(), escrowBefore + stake);
     }
 
     function test_arbiter_declare_fail_invalidates_and_pays_rewards() external {
