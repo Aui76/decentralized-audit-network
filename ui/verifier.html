@@ -60,6 +60,11 @@ node verify.mjs 7</pre>
 
       <p class="d" style="margin-top:8px">More detail: <a href="docs-verify.html">How verification works</a>.</p>
 
+      <p class="d" style="margin-top:8px">Two more checks, one for each end of an audit. Before an audit exists,
+        <a href="check.html">Checkable</a> tells you whether a contract spec could ever be checked. It runs in your
+        browser and installs nothing. After a verdict settles, <span style="font-family:var(--mono)">dan-check</span>
+        hashes a contract's live code and refuses it unless the cell holds a clean settled verdict for that code.</p>
+
     </div>
   </main>
 

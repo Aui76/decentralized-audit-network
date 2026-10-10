@@ -1,0 +1,20 @@
+{
+  "chainId": 84532,
+  "cell": "0xb034F198869726c36965B95879eCB65Bdb1076c9",
+  "block": 47915326,
+  "blockTime": "2026-10-10T02:22:20.000Z",
+  "source": "AuditCell nextAuditId() and audits(i) at this block, by cell/indexer/snapshotDanAudits.mjs",
+  "nextAuditId": 1,
+  "audits": [
+    {
+      "id": 0,
+      "state": "InBlock",
+      "specHash": "0xecfe3195122da49b2997ea87b7c16f12b20815c96637188611a7619acd325c17",
+      "specLabel": "genesis.bootstrap.spec.v1",
+      "protocol": "0xc9da07eC949261bAD9ffE51f11177A7a011D5708",
+      "auditor": "0xDC4d0BBBF1Da2B54326B804FcF95A3B2F55c8fB3",
+      "target": "0xE546193fc52faa37413ab74d72092005115F4691",
+      "bountyWei": "5000000000000000000000"
+    }
+  ]
+}

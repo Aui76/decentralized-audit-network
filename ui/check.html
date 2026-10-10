@@ -1,0 +1,5492 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Checkable · Audit Cell</title>
+<link rel="icon" href="data:,">
+<meta name="description" content="Paste a claim about a smart contract or a trading strategy and see whether anyone could ever check it.">
+<!--
+  The claim linter's page (VD-225 proposal section 4.2 D). One file: no network, no wallet, no module loader.
+  The script between the BUNDLE markers is written by cell/indexer/buildCheckPage.mjs from the linter's core;
+  cell/indexer/checkPage.test.mjs fails when it is stale. Text marked COPY is the operator's to write.
+-->
+<style>
+/* SITE-CSS:BEGIN, copied from body/membrane/site.css by cell/indexer/buildCheckPage.mjs; do not edit by hand */
+/* Membrane design system — single source (tokens + layout + components) */
+
+:root {
+  /* color — high contrast, strong green */
+  --bg: #050807;
+  --panel: #0a0f0c;
+  --panel-raised: #101712;
+  --panel-hover: #141c17;
+  --well: #070a09;             /* input / code well background */
+  --banner-bg: #1c1710;        /* amber testnet-note banners */
+  --banner-bd: #3a2d12;
+  --banner-ink: #e3c97a;
+  --bd: #243028;
+  --bd2: #3a5044;
+  --fg: #eef8f2;
+  --fg-secondary: rgba(238, 248, 242, 0.84);
+  --mut: #b0c4b8;
+  --mut-dim: #9fb0a6;
+  --mut-faint: #667a6e;
+  --lede: #dce8e0;
+  --acc: #2bff8a;
+  --acc-hover: #5dffb0;
+  --acc-muted: rgba(43, 255, 138, 0.1);
+  --acc-border: rgba(43, 255, 138, 0.42);
+  --acc-glow: rgba(43, 255, 138, 0.16);
+  --doc-notebook: #6cb0f5;
+  --doc-notebook-hover: #8fc4ff;
+  --doc-notebook-border: rgba(108, 176, 245, 0.42);
+  --doc-notebook-glow: rgba(108, 176, 245, 0.16);
+  --ok: #2bff8a;
+  --bad: #ff6b63;
+  --warn: #e6b422;
+  --btn-on-acc: #031a0f;
+  --sans: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --radius: 10px;
+  --radius-sm: 7px;
+  /* layout — nav column sizes to link text (max-content), not a fixed width */
+  --content: 720px;
+  /* explorer aliases (legacy JS/CSS) */
+  --tx: var(--fg);
+  --tx2: var(--mut);
+  --tx3: var(--mut-faint);
+  /* type scale — readable (20px body) */
+  --fs-body: 20px;
+  --fs-small: 16px;
+  --fs-xs: 14px;
+  --fs-label: 16px;
+  --fs-ui: 18px;
+  --fs-pill: 15px;
+  --fs-h1: 42px;
+  --fs-h1-tool: 34px;
+  --fs-h2: 19px;
+  --fs-h2-doc: 24px;
+  --fs-h3: 22px;
+  --fs-nav: 22px;
+  --fs-sidebar: 22px;
+  --fs-sidebar-label: 18px;
+  --fs-pre: 16px;
+  --fs-act: 22px;
+  --lh: 1.65;
+  /* spacing */
+  --pad-main-y: 40px;
+  --pad-main-x: 44px;
+  --pad-nav: 32px 32px;
+  --gap-block: 13px;
+  --gap-section: 22px;
+  /* motion */
+  --motion-fast: 120ms;
+  --motion-medium: 200ms;
+  --motion-slow: 320ms;
+  --motion-stagger: 40ms;
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { font-size: 125%; }
+
+@view-transition { navigation: auto; }
+
+@keyframes fadeup {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes rail-enter {
+  from { opacity: 0; transform: translateX(8px); }
+  to { opacity: 1; transform: none; }
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  background-image: radial-gradient(ellipse 120% 80% at 50% -20%, rgba(43, 255, 138, 0.06), transparent 55%);
+  color: var(--fg);
+  font-family: var(--sans);
+  font-size: var(--fs-body);
+  line-height: var(--lh);
+}
+
+a {
+  color: var(--acc);
+  text-decoration: none;
+  transition:
+    color var(--motion-fast) var(--ease-out),
+    text-decoration-color var(--motion-fast) var(--ease-out);
+}
+
+a:hover {
+  color: var(--acc-hover);
+  text-decoration: underline;
+  text-decoration-color: currentColor;
+}
+
+html.cold-load main {
+  animation: fadeup var(--motion-slow) var(--ease-out) both;
+}
+
+html.nav-session main {
+  animation: none;
+}
+
+main { padding: var(--pad-main-y) var(--pad-main-x); min-width: 0; }
+
+html.cold-load .motion-stagger > * {
+  opacity: 0;
+  animation: fadeup var(--motion-slow) var(--ease-out) both;
+  animation-delay: calc(var(--motion-i, 0) * var(--motion-stagger));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.cold-load main,
+  html.cold-load .motion-stagger > *,
+  #docRail.doc-rail--mounted {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  *, *::before, *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: var(--motion-medium);
+  }
+}
+
+.layout { display: grid; max-width: 1180px; margin: 0; width: 100%; }
+/* Third column only when the rail has mounted — rail grows like left nav (max-content) */
+.layout-docs { grid-template-columns: auto minmax(0, 1fr); }
+.layout-docs.layout-docs--rail {
+  grid-template-columns: auto minmax(0, 1fr) max-content;
+  max-width: min(100%, 1480px);
+}
+.layout-docs--full { grid-template-columns: auto minmax(0, 1fr); }
+.layout-tool { grid-template-columns: auto minmax(0, 1fr); }
+.layout-tool--links {
+  grid-template-columns: auto minmax(0, 1fr) max-content;
+  max-width: min(100%, 1480px);
+}
+
+nav,
+nav.side {
+  padding: var(--pad-nav);
+  border-right: 1px solid var(--bd);
+  background: rgba(5, 8, 7, 0.92);
+  backdrop-filter: blur(8px);
+  min-height: 100vh;
+  position: sticky;
+  top: 0;
+  align-self: start;
+  justify-self: start;
+  width: 300px;
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: var(--fs-act);
+  margin: 0 0 12px;
+  padding: 0;
+  color: var(--fg);
+  line-height: var(--lh);
+  white-space: nowrap;
+}
+
+.brand .dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  background: var(--acc);
+  box-shadow: 0 0 12px var(--acc-glow);
+  flex-shrink: 0;
+}
+
+.navgroup {
+  font-size: var(--fs-sidebar-label);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--mut);
+  margin: 20px 0 10px 0;
+}
+
+.navgroup:first-of-type { margin-top: 0; }
+
+.navlink {
+  display: block;
+  padding: 8px 12px;
+  border-radius: 6px;
+  color: var(--fg-secondary);
+  font-size: var(--fs-act);
+  font-weight: 500;
+  line-height: var(--lh);
+  text-decoration: none;
+  white-space: nowrap;
+  text-align: left;
+  transition:
+    color var(--motion-fast) var(--ease-out),
+    background var(--motion-fast) var(--ease-out),
+    box-shadow var(--motion-fast) var(--ease-out);
+}
+
+.navlink:hover {
+  color: var(--fg);
+  background: var(--panel-raised);
+  text-decoration: none;
+}
+
+.navlink.on {
+  color: var(--acc);
+  font-weight: 600;
+  background: var(--acc-muted);
+  box-shadow: inset 0 0 0 1px var(--acc-border);
+}
+
+.navsub { padding-left: 18px; }
+
+.inner { max-width: var(--content); }
+
+.wrap {
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 12px 16px 48px;
+}
+
+body.page-tool .wrap {
+  max-width: 960px;
+}
+
+body.page-explorer .wrap {
+  max-width: 920px;
+  padding: var(--pad-main-y) 20px 40px;
+}
+
+.eyebrow {
+  font-size: var(--fs-xs);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--acc);
+  font-weight: 600;
+  margin: 0 0 6px;
+}
+
+h1 {
+  font-size: var(--fs-h1);
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  margin: 0 0 8px;
+}
+
+body.page-tool h1 {
+  font-size: var(--fs-h1-tool);
+  line-height: 1.25;
+  margin: 0 0 4px;
+}
+
+h2 {
+  font-size: var(--fs-h2);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  margin: 0 0 6px;
+}
+
+.lede, .sub {
+  font-size: var(--fs-body);
+  color: var(--lede);
+  margin: 0 0 16px;
+  max-width: 60ch;
+}
+
+.sub { color: var(--mut); margin: 0 0 10px; }
+
+.card {
+  background: var(--panel);
+  border: 1px solid var(--bd);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  margin-bottom: var(--gap-block);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.03) inset;
+}
+
+body.page-explorer .card { padding: 14px 16px; margin-bottom: var(--gap-block); }
+
+.banner {
+  border-color: var(--banner-bd);
+  background: var(--banner-bg);
+  color: var(--banner-ink);
+  font-size: var(--fs-small);
+}
+
+.tiny {
+  font-size: var(--fs-small);
+  color: var(--mut);
+}
+
+label {
+  display: block;
+  font-size: var(--fs-label);
+  color: var(--mut);
+  margin: 6px 0 2px;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  background: var(--well);
+  border: 1px solid var(--bd);
+  border-radius: var(--radius-sm);
+  color: var(--fg);
+  padding: 9px 11px;
+  font-family: var(--mono);
+  font-size: var(--fs-ui);
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--acc);
+  box-shadow: 0 0 0 2px var(--acc-glow);
+}
+
+/* checkboxes/radios: never full-width blocks; theme the native control */
+input[type="checkbox"],
+input[type="radio"] {
+  width: auto;
+  accent-color: var(--acc);
+  vertical-align: middle;
+  margin-right: 6px;
+}
+
+button {
+  background: var(--acc);
+  color: var(--btn-on-acc);
+  border: 0;
+  border-radius: var(--radius-sm);
+  padding: 10px 18px;
+  font-size: var(--fs-ui);
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition:
+    background var(--motion-fast) var(--ease-out),
+    box-shadow var(--motion-fast) var(--ease-out),
+    transform 80ms var(--ease-in),
+    border-color var(--motion-fast) var(--ease-out);
+}
+
+button:hover:not(:disabled) {
+  background: var(--acc-hover);
+  box-shadow: 0 0 20px var(--acc-glow);
+}
+
+button:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--acc-border);
+}
+
+button.sec {
+  background: var(--panel-raised);
+  border: 1px solid var(--bd2);
+  color: var(--fg);
+}
+
+button.sec:hover:not(:disabled) {
+  background: var(--panel-hover);
+  border-color: var(--acc-border);
+  color: var(--fg);
+  box-shadow: 0 0 16px var(--acc-glow);
+}
+
+button:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; }
+
+.row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+/* chip shape — status notch: square, neutral frame, 3px left edge = state color */
+.pill,
+.badge {
+  display: inline-block;
+  font-size: var(--fs-pill);
+  padding: 2px 8px;
+  border-radius: 0;
+  border: 1px solid var(--bd);
+  border-left: 3px solid var(--mut-faint);
+  color: var(--mut);
+}
+
+.pill.ok, .badge.ok { color: var(--ok); border-left-color: var(--acc); background: var(--acc-muted); }
+.pill.bad { color: var(--bad); border-left-color: var(--bad); }
+.pill.warn { color: var(--warn); border-left-color: var(--warn); }
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.badge .live {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--ok);
+}
+
+.badge.warn {
+  color: var(--warn);
+  border-left-color: var(--warn);
+  background: rgba(230, 180, 34, 0.08);
+}
+
+.badge.warn .live { background: var(--warn); }
+
+
+.kv {
+  display: grid;
+  grid-template-columns: 120px minmax(66ch, 1fr);
+  gap: 6px 14px;
+  font-size: var(--fs-small);
+  align-items: baseline;
+}
+
+.k,
+.kv .k {
+  color: var(--mut-dim);
+  font-size: var(--fs-small);
+}
+
+.k-read {
+  color: var(--fg-secondary);
+  line-height: var(--lh);
+  font-size: var(--fs-body);
+}
+
+.k-read strong { color: var(--lede); }
+
+.stat .k {
+  color: var(--mut-faint);
+  font-size: var(--fs-xs);
+}
+
+.statgrid .k {
+  color: var(--mut-faint);
+  font-size: var(--fs-xs);
+}
+
+.kv .v {
+  font-family: var(--mono);
+  font-size: var(--fs-pre);
+  white-space: nowrap;
+  overflow-x: auto;
+  word-break: normal;
+  min-width: 0;
+  padding: 6px 10px;
+  background: var(--well);
+  border: 1px solid var(--bd);
+  border-radius: var(--radius-sm);
+}
+
+.mono { font-family: var(--mono); word-break: break-all; }
+
+code {
+  font-family: var(--mono);
+  font-size: 0.92em;
+  color: var(--banner-ink);
+}
+
+pre,
+pre.cmd {
+  background: var(--well);
+  border: 1px solid var(--bd2);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  overflow: auto;
+  font-size: var(--fs-pre);
+  white-space: pre-wrap;
+  word-break: break-all;
+  margin: 8px 0;
+  font-family: var(--mono);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
+}
+
+.hr { height: 1px; background: var(--bd); margin: 14px 0; }
+
+.danger { color: var(--bad); }
+.good { color: var(--ok); }
+.warnc { color: var(--warn); }
+
+.log { font-family: var(--mono); font-size: var(--fs-small); }
+
+/* home — three primary paths (proposal #7) */
+.home-paths {
+  display: grid;
+  gap: 12px;
+  margin-top: 22px;
+}
+
+.home-path {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 18px 20px;
+  border: 1px solid var(--bd);
+  border-radius: var(--radius);
+  background: var(--panel);
+  color: inherit;
+  text-decoration: none;
+  transition:
+    border-color var(--motion-medium) var(--ease-out),
+    background var(--motion-medium) var(--ease-out),
+    box-shadow var(--motion-medium) var(--ease-out),
+    transform var(--motion-fast) var(--ease-out);
+}
+
+.home-path:hover {
+  border-color: var(--acc-border);
+  background: var(--panel-raised);
+  box-shadow: 0 0 24px var(--acc-glow);
+  transform: translateY(-1px);
+  text-decoration: none;
+}
+
+.home-path .name { font-size: var(--fs-act); font-weight: 600; color: var(--fg); }
+.home-path .line { font-size: var(--fs-body); color: var(--mut); line-height: var(--lh); max-width: 52ch; }
+.home-path .go { font-size: var(--fs-small); color: var(--acc); font-weight: 600; margin-top: 4px; }
+
+/* home (legacy list — unused on welcome after #7) */
+.do { display: grid; gap: 2px; }
+
+.do a {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 4px;
+  border-bottom: 1px solid var(--bd);
+  color: inherit;
+  text-decoration: none;
+}
+
+.do a:first-child { border-top: 1px solid var(--bd); }
+.do a:hover { text-decoration: none; }
+.do a:hover .act { color: var(--acc); }
+.do .act { font-size: var(--fs-act); font-weight: 500; }
+.do .who { font-size: var(--fs-small); color: var(--mut); }
+.do .arrow { color: var(--mut); font-size: var(--fs-body); }
+
+.rule { height: 1px; background: var(--bd); margin: var(--gap-section) 0; }
+.testnote { color: var(--mut); font-size: var(--fs-small); margin: 6px 0 0; }
+
+/* quickstart roles */
+.roles {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.role {
+  border: 1px solid var(--bd);
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition:
+    border-color var(--motion-medium) var(--ease-out),
+    background var(--motion-medium) var(--ease-out),
+    box-shadow var(--motion-medium) var(--ease-out),
+    transform var(--motion-fast) var(--ease-out);
+  color: inherit;
+  text-decoration: none;
+}
+
+.role:hover {
+  border-color: var(--acc-border);
+  background: var(--panel-raised);
+  box-shadow: 0 0 20px var(--acc-glow);
+  transform: translateY(-1px);
+  text-decoration: none;
+}
+
+.role .name { font-size: var(--fs-act); font-weight: 600; }
+.role .line { font-size: var(--fs-small); color: var(--mut); flex: 1; }
+.role .go { font-size: var(--fs-xs); color: var(--acc); margin-top: 4px; }
+
+/* resources hub (resources.html) */
+.cards {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+a.card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: inherit;
+  text-decoration: none;
+  transition:
+    border-color var(--motion-medium) var(--ease-out),
+    background var(--motion-medium) var(--ease-out),
+    box-shadow var(--motion-medium) var(--ease-out),
+    transform var(--motion-fast) var(--ease-out);
+}
+
+a.card:hover {
+  border-color: var(--acc-border);
+  background: var(--panel-raised);
+  box-shadow: 0 0 20px var(--acc-glow);
+  transform: translateY(-1px);
+  text-decoration: none;
+}
+
+a.card .name { font-size: var(--fs-act); font-weight: 600; }
+a.card .line { font-size: var(--fs-small); color: var(--mut); flex: 1; }
+a.card .go { font-size: var(--fs-xs); color: var(--acc); margin-top: 4px; }
+
+/* docs hub list */
+.list { display: grid; gap: 2px; }
+
+.item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 4px;
+  border-bottom: 1px solid var(--bd);
+  color: inherit;
+  text-decoration: none;
+}
+
+.item:first-child { border-top: 1px solid var(--bd); }
+a.item:hover { text-decoration: none; }
+a.item:hover .act { color: var(--acc); }
+.item .act { font-size: var(--fs-act); font-weight: 500; }
+.item .who { font-size: var(--fs-small); color: var(--mut); }
+.item .arrow { color: var(--mut); font-size: var(--fs-body); }
+.soon {
+  font-size: var(--fs-xs);
+  color: var(--mut);
+  border: 1px solid var(--bd);
+  border-left: 3px solid var(--mut-faint);
+  border-radius: 0;
+  padding: 1px 8px;
+}
+.stub { opacity: 0.6; }
+
+/* role flow pages (protocol, auditor, …) */
+.flow { display: grid; gap: 0; margin-top: 8px; }
+
+.flow .step {
+  display: grid;
+  grid-template-columns: 26px 1fr;
+  gap: 12px;
+  padding: 0 0 16px;
+  position: relative;
+}
+
+.flow .step:not(:last-child)::before {
+  content: "";
+  position: absolute;
+  left: 12px;
+  top: 28px;
+  bottom: 0;
+  width: 1px;
+  background: var(--bd);
+}
+
+.flow .num {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1px solid var(--bd);
+  display: grid;
+  place-items: center;
+  font-size: var(--fs-xs);
+  color: var(--mut);
+  background: var(--bg);
+  z-index: 1;
+}
+
+.flow .t { font-size: var(--fs-body); font-weight: 600; margin: 3px 0; }
+.flow .d { font-size: var(--fs-body); color: var(--mut); margin: 0; }
+.flow .call { font-family: var(--mono); font-size: var(--fs-small); color: var(--mut); margin-top: 5px; }
+a.link {
+  display: inline-block;
+  margin-top: 9px;
+  color: var(--acc);
+  font-size: var(--fs-body);
+  font-weight: 600;
+}
+
+a.link:hover { color: var(--acc-hover); }
+.tag {
+  display: inline-block;
+  font-size: var(--fs-xs);
+  color: var(--mut);
+  border: 1px solid var(--bd);
+  border-left: 3px solid var(--mut-faint);
+  border-radius: 0;
+  padding: 1px 8px;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+
+.branch { margin: 2px 0 16px 38px; border-left: 1px dashed var(--bd); padding: 6px 0 2px 14px; }
+.branch .bh { font-size: var(--fs-small); color: var(--mut); margin: 0 0 3px; }
+
+/* write pages (post, manage) */
+body.page-tool .step {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin-bottom: 6px;
+}
+
+body.page-tool .step .num {
+  flex: 0 0 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--panel-raised);
+  border: 1px solid var(--bd);
+  display: grid;
+  place-items: center;
+  font-size: var(--fs-xs);
+  color: var(--mut);
+}
+
+body.page-tool .step .num.done {
+  background: var(--acc-muted);
+  color: var(--acc);
+  border-color: var(--acc-border);
+}
+
+/* whitepaper / long prose */
+body.page-prose blockquote {
+  border-left: 2px solid var(--acc);
+  margin: 0 0 12px;
+  padding: 2px 0 2px 12px;
+  color: var(--lede);
+  max-width: 66ch;
+}
+
+body.page-prose hr {
+  border: 0;
+  border-top: 1px solid var(--bd);
+  margin: var(--gap-section) 0;
+}
+
+body.page-prose h2 {
+  font-size: var(--fs-h2-doc);
+  letter-spacing: -0.01em;
+  margin: 20px 0 6px;
+  scroll-margin-top: 16px;
+}
+
+body.page-prose p { margin: 0 0 10px; max-width: 68ch; }
+body.page-prose .subtitle { color: var(--mut); font-style: italic; margin: 0 0 12px; }
+body.page-prose .note { color: var(--mut); font-size: var(--fs-small); margin-top: 16px; }
+
+/* Inline identifiers — amber chip (code, not a link — green is for clickable) */
+body.page-prose code:not(pre code) {
+  display: inline;
+  font-family: var(--mono);
+  font-size: 0.88em;
+  font-weight: 500;
+  line-height: 1.35;
+  color: var(--banner-ink);
+  background: rgba(230, 180, 34, 0.08);
+  box-shadow: inset 0 0 0 1px rgba(230, 180, 34, 0.35);
+  border-radius: 4px;
+  padding: 0.1em 0.42em;
+  cursor: default;
+  text-decoration: none;
+  word-break: break-word;
+  transition:
+    color var(--motion-fast) var(--ease-out),
+    background var(--motion-fast) var(--ease-out),
+    box-shadow var(--motion-fast) var(--ease-out);
+}
+
+body.page-prose code:not(pre code):hover {
+  background: rgba(230, 180, 34, 0.14);
+  box-shadow: inset 0 0 0 1px rgba(230, 180, 34, 0.55);
+}
+
+/* toc aside */
+aside {
+  padding: var(--pad-main-y) 18px;
+  font-size: var(--fs-sidebar);
+  line-height: var(--lh);
+  position: sticky;
+  top: 0;
+  align-self: start;
+  border-left: 1px solid var(--bd);
+}
+
+aside .lbl {
+  font-size: var(--fs-sidebar-label);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--mut-faint);
+  margin: 0 0 12px;
+}
+
+aside a {
+  display: block;
+  color: var(--mut);
+  font-size: inherit;
+  padding: 7px 0;
+  text-decoration: none;
+  transition: color var(--motion-fast) var(--ease-out);
+}
+
+aside a:hover { color: var(--acc); }
+
+/* explorer */
+body.page-explorer .pill {
+  font-weight: 500;
+}
+
+body.page-explorer .audit {
+  cursor: pointer;
+  transition:
+    border-color var(--motion-fast) var(--ease-out),
+    background var(--motion-fast) var(--ease-out);
+}
+
+body.page-explorer .audit:hover { border-color: var(--bd2); background: var(--panel-raised); }
+body.page-explorer .audit.sel {
+  border-color: var(--acc-border);
+  background: var(--acc-muted);
+  box-shadow: 0 0 20px var(--acc-glow);
+}
+
+.stat {
+  background: var(--panel);
+  border: 1px solid var(--bd);
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+}
+
+.stat .k {
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: var(--fs-xs);
+}
+
+.stat b {
+  font-size: 26px;
+  font-weight: 600;
+  display: block;
+  margin-top: auto;
+  padding-top: 2px;
+}
+
+.grid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+.tl { display: flex; gap: 10px; margin-bottom: 12px; }
+
+.tl .dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--bd2);
+  margin-top: 6px;
+  flex: none;
+}
+
+.tabs {
+  display: flex;
+  gap: 4px;
+  margin: 16px 0 12px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--bd);
+}
+
+.tab {
+  border: 0;
+  background: none;
+  padding: 6px 10px;
+  font-size: var(--fs-small);
+  cursor: pointer;
+  color: var(--mut);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  font-family: inherit;
+}
+
+.tab:hover { color: var(--fg); }
+.tab.on { color: var(--acc); font-weight: 600; border-bottom-color: var(--acc); box-shadow: 0 2px 12px var(--acc-glow); }
+.tab.faded { opacity: 0.38; cursor: not-allowed; pointer-events: none; }
+
+.rolebar { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+
+.rolepill {
+  border: 1px solid var(--bd);
+  border-left: 3px solid var(--mut-faint);
+  background: var(--panel);
+  border-radius: 0;
+  padding: 4px 12px;
+  font-size: var(--fs-small);
+  cursor: pointer;
+  color: var(--mut);
+  font-family: inherit;
+}
+
+.rolepill.on { border-left-color: var(--acc); color: var(--fg); font-weight: 500; background: var(--acc-muted); }
+
+.audit-whats-next {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 16px;
+  background: var(--acc-muted);
+  border: 1px solid var(--acc-border);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  margin-bottom: 12px;
+  box-shadow: 0 0 28px var(--acc-glow);
+}
+
+.audit-whats-next-title {
+  display: block;
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+a.btn-whats-next {
+  display: inline-block;
+  padding: 10px 18px;
+  border-radius: var(--radius-sm);
+  background: var(--acc);
+  color: var(--btn-on-acc);
+  font-weight: 600;
+  font-size: var(--fs-small);
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    background var(--motion-fast) var(--ease-out),
+    box-shadow var(--motion-fast) var(--ease-out);
+}
+
+a.btn-whats-next:hover {
+  background: var(--acc-hover);
+  box-shadow: 0 0 20px var(--acc-glow);
+  text-decoration: none;
+}
+
+body.page-explorer a.link-jump-in {
+  color: var(--acc);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+body.page-explorer a.link-jump-in:hover {
+  text-decoration: underline;
+}
+
+body.page-explorer .step {
+  margin-bottom: 14px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--bd);
+}
+
+body.page-explorer .step:last-child {
+  border-bottom: 0;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.copy {
+  margin-top: 8px;
+  font-size: var(--fs-small);
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--bd2);
+  background: var(--panel-raised);
+  cursor: pointer;
+  color: var(--mut);
+  font-family: inherit;
+  font-weight: 500;
+  transition:
+    border-color var(--motion-fast) var(--ease-out),
+    color var(--motion-fast) var(--ease-out),
+    box-shadow var(--motion-fast) var(--ease-out);
+}
+
+.copy:hover {
+  border-color: var(--acc-border);
+  color: var(--fg);
+}
+
+.copy.ok {
+  border-color: var(--acc-border);
+  color: var(--acc);
+  background: var(--acc-muted);
+}
+
+.copy-mono {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+  font-family: var(--mono);
+  text-align: left;
+}
+
+.copy-mono:hover { color: var(--acc); }
+.copy-mono.ok { color: var(--acc); }
+
+.hide { display: none; }
+
+.repro {
+  border-top: 1px solid var(--bd);
+  margin-top: 16px;
+  padding-top: 16px;
+}
+
+.repro h4 { margin: 0 0 10px; font-size: var(--fs-small); font-weight: 600; }
+
+.statgrid {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px 12px;
+  font-size: var(--fs-small);
+  margin-bottom: 12px;
+}
+
+.helplink {
+  border: none;
+  background: none;
+  padding: 0;
+  font: inherit;
+  font-size: var(--fs-small);
+  color: var(--acc);
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+a.helplink:hover { text-decoration: underline; }
+
+/* help feedback */
+.panel {
+  border: 1px solid var(--bd);
+  border-radius: var(--radius);
+  padding: 20px;
+  background: var(--panel);
+}
+
+.msg { font-size: var(--fs-small); color: var(--mut); }
+
+/* tokenomics intro */
+.intro {
+  border-left: 2px solid var(--acc);
+  padding: 2px 0 2px 12px;
+  color: var(--lede);
+  font-size: var(--fs-body);
+  margin: 0 0 16px;
+  max-width: 66ch;
+}
+
+.sign-full pre {
+  margin-top: 6px;
+  font-size: var(--fs-pre);
+}
+
+/* —— shared accordions (concern router, network Q&A, adv-term) —— */
+.membrane-fold,
+.router-appendix,
+.qa-item,
+.adv-term {
+  margin-top: 12px;
+  border: 1px solid var(--bd);
+  border-radius: var(--radius);
+  padding: 0 16px;
+  background: var(--panel);
+  transition:
+    border-color var(--motion-fast) var(--ease-out),
+    box-shadow var(--motion-fast) var(--ease-out);
+}
+
+.membrane-fold[open],
+.router-appendix[open],
+.qa-item[open] {
+  border-color: var(--bd2);
+  box-shadow: 0 0 24px rgba(0, 0, 0, 0.35);
+}
+
+.membrane-fold summary,
+.router-appendix summary,
+.qa-item summary,
+.adv-term summary {
+  cursor: pointer;
+  padding: 14px 0;
+  font-weight: 600;
+  line-height: 1.4;
+  list-style-position: outside;
+  color: var(--fg);
+}
+
+.membrane-fold summary::marker,
+.router-appendix summary::marker,
+.qa-item summary::marker {
+  color: var(--acc);
+}
+
+.membrane-fold[open] summary,
+.router-appendix[open] summary,
+.qa-item[open] summary,
+.adv-term[open] summary {
+  border-bottom: 1px solid var(--bd);
+  margin-bottom: 14px;
+}
+
+.router-appendix.highlight,
+.qa-item.highlight {
+  border-color: var(--acc-border);
+  box-shadow: 0 0 28px var(--acc-glow), inset 3px 0 0 var(--acc);
+}
+
+.router-appendix summary .link,
+.qa-item summary .link {
+  margin-top: 0;
+  font-size: inherit;
+  font-weight: 600;
+}
+
+.append-num {
+  flex: 0 0 auto;
+  min-width: 36px;
+  text-align: center;
+  font-family: var(--mono);
+  font-size: var(--fs-small);
+  font-weight: 500;
+  color: var(--mut-faint);
+  border: 1px solid var(--bd);
+  border-left: 3px solid var(--mut-faint);
+  padding: 1px 8px;
+  transition:
+    color var(--motion-fast) var(--ease-out),
+    border-color var(--motion-fast) var(--ease-out);
+}
+
+.router-appendix summary:hover .append-num,
+.router-appendix[open] .append-num {
+  color: var(--acc);
+  border-left-color: var(--acc);
+}
+
+.append-tag {
+  display: inline-block;
+  font-size: var(--fs-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--warn);
+  margin-right: 8px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border: 1px solid var(--bd);
+  border-left: 3px solid var(--warn);
+  border-radius: 0;
+  vertical-align: middle;
+}
+
+.router-appendix-advanced {
+  border-color: rgba(230, 180, 34, 0.22);
+  background: #0a0c0b;
+}
+
+.router-appendix-advanced[open] {
+  border-color: rgba(230, 180, 34, 0.38);
+  box-shadow: 0 0 24px rgba(230, 180, 34, 0.08);
+}
+
+#structuralOut { margin-top: 14px; }
+#structuralOut:empty { display: none; }
+
+.append-body,
+.qa-body,
+.adv-term .adv-body {
+  padding-bottom: 16px;
+}
+
+/* collapsed rail: narrow when closed, room for the list when opened */
+.your-links-body { min-width: 240px; }
+
+/* ---- Toolbelt — the site's tools dock: one green strip, everything personal behind it ---- */
+.toolbelt {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 0;
+  height: 0;
+  z-index: 90;
+}
+
+.toolbelt-strip {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 34px;
+  height: 100vh;
+  z-index: 90;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 0;
+  cursor: pointer;
+  background: var(--panel);
+  border: none;
+  border-left: 3px solid var(--acc-border);
+  border-radius: 0;
+  color: var(--acc);
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  transition:
+    background var(--motion-fast) var(--ease-out),
+    border-color var(--motion-fast) var(--ease-out),
+    color var(--motion-fast) var(--ease-out);
+}
+
+.toolbelt-strip:hover:not(:disabled),
+.toolbelt--open .toolbelt-strip {
+  background: var(--acc-muted);
+  border-left-color: var(--acc);
+  color: var(--acc-hover);
+  box-shadow: none;
+}
+
+.toolbelt-strip:active:not(:disabled) { transform: none; }
+
+.toolbelt-label { writing-mode: vertical-rl; }
+
+.toolbelt-count {
+  font-size: 12px;
+  line-height: 1.4;
+  padding: 0 5px;
+  border: 1px solid var(--acc-border);
+  color: var(--acc);
+  background: var(--bg);
+}
+
+.toolbelt-count--changed {
+  color: var(--warn);
+  border-color: rgba(230, 180, 34, 0.45);
+}
+
+.toolbelt-dock {
+  position: fixed;
+  top: 0;
+  right: 34px;
+  height: 100vh;
+  width: 380px;
+  max-width: calc(100vw - 34px);
+  z-index: 85;
+  overflow-y: auto;
+  padding: 22px 22px 30px;
+  background: var(--panel);
+  border-left: 1px solid var(--bd2);
+  box-shadow: -24px 0 56px rgba(0, 0, 0, 0.55);
+  visibility: hidden;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateX(14px);
+  transition:
+    opacity var(--motion-medium) var(--ease-out),
+    transform var(--motion-medium) var(--ease-out),
+    visibility 0s linear var(--motion-medium);
+}
+
+.toolbelt--open .toolbelt-dock {
+  visibility: visible;
+  pointer-events: auto;
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity var(--motion-medium) var(--ease-out),
+    transform var(--motion-medium) var(--ease-out);
+}
+
+.toolbelt-dock .your-links-summary { cursor: pointer; }
+
+/* retired rail slots collapse away */
+aside:empty { display: none; }
+
+/* static "On this page" asides lost their column to the toolbelt — retire them too */
+aside:has(> .lbl):not(#docRail):not(#toolRail) { display: none; }
+
+/* ---- Split view — current page on top, a linked page below ---- */
+html.split-open body { padding-bottom: 52vh; }
+
+.split-pane {
+  position: fixed;
+  left: 0;
+  right: 34px;
+  bottom: 0;
+  height: 50vh;
+  z-index: 80;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  border-top: 1px solid var(--acc-border);
+  box-shadow: 0 -18px 48px rgba(0, 0, 0, 0.55);
+}
+
+.split-handle {
+  flex: 0 0 auto;
+  height: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: ns-resize;
+  color: var(--mut-faint);
+  background: var(--panel);
+  border-bottom: 1px solid var(--bd);
+  user-select: none;
+  touch-action: none;
+}
+
+.split-handle:hover {
+  color: var(--acc);
+  background: var(--acc-muted);
+}
+
+.split-handle span {
+  font-size: 12px;
+  line-height: 1;
+}
+
+.split-bar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 6px 14px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--bd);
+  font-size: var(--fs-xs);
+}
+
+.split-title {
+  font-family: var(--mono);
+  color: var(--acc);
+  border: 1px solid var(--bd);
+  border-left: 3px solid var(--acc);
+  padding: 1px 8px;
+}
+
+.split-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 16px;
+}
+
+.split-actions .helplink {
+  color: var(--mut);
+  text-decoration: none;
+}
+
+.split-actions .helplink:hover { color: var(--fg); }
+
+.split-frame {
+  flex: 1;
+  width: 100%;
+  border: 0;
+  background: var(--bg);
+}
+
+@media (max-width: 900px) {
+  .split-pane { right: 0; }
+}
+
+/* a page inside the split pane sheds its chrome — content only */
+html.framed nav,
+html.framed .toolbelt,
+html.framed aside,
+html.framed #navBookRail,
+html.framed .nav-watch {
+  display: none !important;
+}
+
+html.framed .layout {
+  grid-template-columns: minmax(0, 1fr) !important;
+  max-width: 100%;
+  padding-right: 0;
+}
+
+html.framed main { padding: 18px 28px; }
+
+@media (min-width: 901px) {
+  .layout { padding-right: 44px; }
+}
+
+@media (max-width: 900px) {
+  .toolbelt-strip {
+    top: auto;
+    bottom: 14px;
+    right: 14px;
+    width: auto;
+    height: auto;
+    flex-direction: row;
+    gap: 8px;
+    padding: 8px 12px;
+    border: 1px solid var(--acc-border);
+    border-left: 3px solid var(--acc);
+  }
+
+  .toolbelt-label { writing-mode: horizontal-tb; }
+
+  .toolbelt-dock {
+    right: 0;
+    width: 100vw;
+    max-width: none;
+  }
+}
+
+/* signing-page marker — the few pages that send transactions announce it */
+.tag.tag-signs {
+  font-family: var(--mono);
+  font-size: 12px;
+  padding: 0 6px;
+  color: var(--warn);
+  border-left-color: var(--warn);
+  vertical-align: middle;
+}
+
+/* The Book rail relocated into the left nav (docs pages) */
+#navBookRail {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--bd);
+}
+
+#navBookRail .doc-rail-book { margin-top: 0; }
+
+/* concern router */
+.concern-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-top: 8px;
+}
+
+#routerOut { margin-top: 14px; }
+#routerOut:empty { display: none; }
+
+#routerOut .outcome-card,
+.outcome-card--success {
+  border: 1px solid var(--acc-border);
+  border-radius: var(--radius);
+  padding: 18px;
+  background: var(--acc-muted);
+  box-shadow: 0 0 24px var(--acc-glow);
+}
+
+#gateOut:empty { display: none; }
+
+#gateOut .outcome-card,
+.outcome-card--neutral {
+  border: 1px solid var(--bd2);
+  border-radius: var(--radius);
+  padding: 18px;
+  margin-top: 12px;
+  background: var(--panel-raised);
+}
+
+.outcome-label {
+  font-size: var(--fs-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin: 0 0 4px;
+  color: var(--mut-faint);
+}
+
+.outcome-card h2 {
+  font-size: var(--fs-h2-doc);
+  font-weight: 600;
+  margin: 8px 0;
+}
+
+.outcome-note {
+  margin-top: 6px;
+  font-size: var(--fs-small);
+  color: var(--fg-secondary);
+}
+
+.wizard-step {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--bd);
+}
+
+.wizard-step[hidden] { display: none !important; }
+
+fieldset.concern-q {
+  border: 1px solid var(--bd2);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  margin: 0;
+  background: var(--well);
+}
+
+fieldset.concern-q legend { padding: 0 4px; }
+
+.radio-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 8px 0;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition:
+    background var(--motion-fast) var(--ease-out),
+    border-color var(--motion-fast) var(--ease-out);
+}
+
+.radio-row:hover { background: var(--panel-raised); }
+
+.radio-row:has(input:checked) {
+  border-color: var(--acc-border);
+  background: var(--acc-muted);
+  box-shadow: inset 0 0 0 1px var(--acc-glow);
+}
+
+.radio-row input { margin-top: 3px; flex-shrink: 0; width: auto; }
+.radio-row span { line-height: 1.45; flex: 1; min-width: 0; }
+
+.concern-step-bar {
+  font-size: var(--fs-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--acc);
+  font-weight: 600;
+  margin: 0 0 12px;
+}
+
+.session-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  margin-bottom: 4px;
+}
+
+.session-head .pill { font-size: var(--fs-xs); }
+.session-back { margin-left: auto; font-size: var(--fs-small); }
+
+.wizard-loading {
+  font-size: var(--fs-small);
+  color: var(--fg-secondary);
+  margin: 0 0 12px;
+}
+
+.wizard-loading[hidden] { display: none; }
+.trust-line { margin: -4px 0 16px; font-size: var(--fs-small); color: var(--fg-secondary); }
+#status:empty { display: none; }
+#status .card { border-color: var(--warn); }
+
+.theory-block {
+  margin-bottom: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--bd);
+}
+
+.theory-block h3 {
+  font-size: var(--fs-h2-doc);
+  font-weight: 600;
+  margin: 0 0 8px;
+  color: var(--fg);
+}
+
+.placement-intro { margin: 0 0 12px; color: var(--fg-secondary); }
+
+.callout-key {
+  margin: 12px 0;
+  padding: 14px 16px;
+  border-left: 3px solid var(--acc);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  background: var(--acc-muted);
+  box-shadow: 0 0 20px var(--acc-glow);
+}
+
+/* network Q&A */
+.qa-hook {
+  margin: 0 0 20px;
+  font-size: var(--fs-body);
+  color: var(--fg-secondary);
+  font-style: italic;
+}
+
+.qa-list { margin-top: 8px; }
+
+/* accordions (Q&A + concern sections) — notch numbers, chevron state, open edge */
+.qa-item,
+.router-appendix,
+.membrane-fold {
+  border-left: 3px solid transparent;
+}
+
+.qa-item[open],
+.router-appendix[open],
+.membrane-fold[open] {
+  border-left-color: var(--acc);
+}
+
+.router-appendix-advanced[open] {
+  border-left-color: var(--warn);
+}
+
+/* highlight already draws its own inset edge — avoid doubling when open */
+.router-appendix.highlight[open] {
+  box-shadow: 0 0 28px var(--acc-glow);
+}
+
+.qa-item summary,
+.router-appendix summary,
+.membrane-fold summary {
+  list-style: none;
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+}
+
+.qa-item summary::-webkit-details-marker,
+.router-appendix summary::-webkit-details-marker,
+.membrane-fold summary::-webkit-details-marker { display: none; }
+
+.qa-num {
+  flex: 0 0 auto;
+  min-width: 36px;
+  text-align: center;
+  font-family: var(--mono);
+  font-size: var(--fs-small);
+  font-weight: 500;
+  color: var(--mut-faint);
+  border: 1px solid var(--bd);
+  border-left: 3px solid var(--mut-faint);
+  padding: 1px 8px;
+  transition:
+    color var(--motion-fast) var(--ease-out),
+    border-color var(--motion-fast) var(--ease-out);
+}
+
+.qa-item summary:hover .qa-num,
+.qa-item[open] .qa-num {
+  color: var(--acc);
+  border-left-color: var(--acc);
+}
+
+.qa-q { flex: 1 1 auto; min-width: 0; }
+
+.qa-item summary::after,
+.router-appendix summary::after,
+.membrane-fold summary::after {
+  content: "▸";
+  flex: 0 0 auto;
+  margin-left: auto;
+  color: var(--mut-faint);
+  transition:
+    transform var(--motion-fast) var(--ease-out),
+    color var(--motion-fast) var(--ease-out);
+}
+
+.qa-item[open] summary::after,
+.router-appendix[open] summary::after,
+.membrane-fold[open] summary::after {
+  transform: rotate(90deg);
+  color: var(--acc);
+}
+
+.qa-item summary:hover::after,
+.router-appendix summary:hover::after,
+.membrane-fold summary:hover::after { color: var(--acc); }
+
+.router-appendix-advanced[open] summary::after { color: var(--warn); }
+
+.qa-body p { margin: 0 0 12px; line-height: 1.55; }
+.qa-body p:last-child { margin-bottom: 0; }
+.qa-body ul { margin: 0 0 12px; padding-left: 20px; }
+.qa-body li { margin: 6px 0; line-height: 1.5; }
+
+.qa-meta {
+  font-size: var(--fs-xs);
+  color: var(--mut-faint);
+  margin: 0 0 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.qa-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-small);
+  margin: 12px 0;
+}
+
+.qa-table th,
+.qa-table td {
+  text-align: left;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--bd);
+  vertical-align: top;
+}
+
+.qa-table th {
+  font-weight: 600;
+  color: var(--fg);
+  background: var(--panel-raised);
+}
+
+.qa-table tr:hover td { background: rgba(255, 255, 255, 0.02); }
+
+.adv-term summary {
+  font-size: var(--fs-small);
+  color: var(--mut);
+  font-weight: 500;
+  padding: 10px 0;
+  list-style: none;
+}
+
+.adv-term summary::-webkit-details-marker { display: none; }
+
+.adv-term .adv-body { padding: 12px 0 14px; }
+
+.qa-more {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--bd);
+  font-size: var(--fs-small);
+}
+
+.demo-addrs h2 {
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin: 0 0 6px;
+}
+
+.demo-stats h2 {
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin: 0 0 6px;
+}
+
+.demo-stats .stat b {
+  font-size: 22px;
+  font-family: var(--mono);
+  font-weight: 600;
+  word-break: break-word;
+}
+
+.demo-stat-tvl {
+  border-color: var(--acc-muted);
+  background: linear-gradient(135deg, var(--panel) 0%, color-mix(in srgb, var(--acc-muted) 18%, var(--panel)) 100%);
+}
+
+.demo-stat-tvl b {
+  font-size: 26px;
+  color: var(--fg);
+}
+
+.demo-addrs-list {
+  margin-top: 14px;
+  background: var(--panel);
+  border: 1px solid var(--bd);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.demo-addr {
+  display: grid;
+  grid-template-columns: minmax(7rem, 9rem) minmax(0, 1fr);
+  gap: 12px 16px;
+  align-items: baseline;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--bd);
+  font-size: var(--fs-small);
+}
+
+.demo-addr:last-child {
+  border-bottom: 0;
+}
+
+.demo-addr-label {
+  color: var(--mut);
+  font-weight: 500;
+}
+
+.demo-addr-link {
+  color: var(--fg-secondary);
+  text-decoration: none;
+  word-break: break-all;
+}
+
+.demo-addr-link:hover {
+  color: var(--acc);
+}
+
+.doc-page-foot {
+  margin-top: 28px;
+  padding-top: 14px;
+  border-top: 1px solid var(--bd);
+  color: var(--mut-dim);
+  font-size: var(--fs-small);
+  line-height: var(--lh);
+}
+
+.doc-page-foot a {
+  color: var(--mut);
+  font-weight: 500;
+}
+
+.doc-page-foot a:hover { color: var(--fg-secondary); }
+
+@media (max-width: 900px) {
+  .layout-docs,
+  .layout-tool,
+  .layout-tool--links { grid-template-columns: 1fr; max-width: 100%; }
+
+  nav,
+  nav.side,
+  aside {
+    position: static;
+    min-height: 0;
+    border-right: 0;
+  }
+
+  nav,
+  nav.side {
+    display: flex;
+    gap: 8px 12px;
+    flex-wrap: wrap;
+    align-items: center;
+    border-bottom: 1px solid var(--bd);
+    padding: 16px;
+  }
+
+  .brand {
+    margin-bottom: 0;
+    margin-right: 4px;
+  }
+
+  .navlink {
+    display: inline-block;
+    padding: 8px 12px;
+    font-size: var(--fs-act);
+  }
+
+  aside { display: none; }
+  main { padding: 20px 16px; }
+  .roles { grid-template-columns: 1fr; }
+}
+
+.act-intro {
+  border-color: var(--banner-bd);
+  background: var(--banner-bg);
+  color: var(--banner-ink);
+  font-size: var(--fs-small);
+  margin-bottom: var(--gap-block);
+}
+
+.act-cards { margin-top: 4px; }
+
+.act-section {
+  margin-top: var(--gap-section);
+  padding-top: var(--gap-section);
+  border-top: 1px solid var(--bd);
+}
+
+/* wallet bar (write pages) */
+.wallet-steps {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+  font-size: var(--fs-small);
+}
+
+.wstep {
+  padding: 4px 10px;
+  border-radius: 0;
+  border: 1px solid var(--bd);
+  border-left: 3px solid var(--mut-faint);
+  color: var(--mut);
+}
+
+.wstep.on {
+  border-left-color: var(--acc);
+  color: var(--fg);
+  font-weight: 600;
+}
+
+.wstep.done {
+  border-left-color: var(--acc);
+  color: var(--acc);
+  background: var(--acc-muted);
+}
+
+/* pills riding in the wallet steps row match the chips' height */
+.wallet-steps .pill {
+  padding: 4px 8px;
+  font-size: var(--fs-small);
+}
+
+#wsteps {
+  gap: 6px;
+  flex-wrap: nowrap;
+}
+
+#wsteps .wstep { padding: 4px 8px; }
+
+/* folded: pre-connection only the first chip is on stage */
+#wsteps.wallet-steps--folded > *:not(:first-child) { display: none; }
+
+/* connected unfold — the sequence assembles left-to-right out of the first chip */
+@keyframes wallet-unfold {
+  from {
+    max-width: 0;
+    opacity: 0;
+    padding-left: 0;
+    padding-right: 0;
+    border-left-width: 0;
+    border-right-width: 0;
+  }
+  to {
+    max-width: 240px;
+    opacity: 1;
+  }
+}
+
+.wallet-steps--unfold > *:not(:first-child) {
+  overflow: hidden;
+  white-space: nowrap;
+  animation: wallet-unfold var(--motion-medium) var(--ease-out) both;
+  animation-delay: calc(var(--wu-i, 0) * 70ms);
+}
+
+/* steady chips: each slot is sized for its widest label, so nothing
+   resizes or shifts when Connect→Connected, Network→chain, — →MetaMask */
+#wsteps .wstep,
+#wsteps .pill {
+  display: inline-block;
+  text-align: center;
+}
+
+#wsteps .wstep[data-step="connect"] { min-width: 106px; }
+#wsteps .wstep[data-step="network"] { min-width: 174px; }
+#wsteps .wstep[data-step="ready"] { min-width: 62px; }
+#wsteps #acct { min-width: 124px; }
+#wsteps #wprovider { min-width: 98px; }
+
+.wstep.warn {
+  border-left-color: var(--warn);
+  color: var(--warn);
+  background: rgba(230, 180, 34, 0.08);
+}
+
+.wstep.bad {
+  border-left-color: var(--bad);
+  color: var(--bad);
+  background: rgba(255, 107, 99, 0.08);
+}
+
+.wstep-arrow {
+  color: var(--mut-dim);
+  font-size: var(--fs-xs);
+}
+
+#walletlog .bad { color: var(--bad); }
+#walletlog .warn { color: var(--warn); }
+
+/* calldata hero — write pages (proposal #5) */
+.sign-hero {
+  margin: 12px 0 8px;
+  padding: 14px 16px;
+  border: 2px solid var(--bd);
+  border-radius: 10px;
+  background: #0b100e;
+  transition:
+    border-color var(--motion-medium) var(--ease-out),
+    box-shadow var(--motion-medium) var(--ease-out);
+}
+
+.sign-hero--unread {
+  border-color: var(--warn);
+  box-shadow: 0 0 0 1px rgba(210, 153, 34, 0.22);
+}
+
+.sign-hero--idle {
+  border-style: dashed;
+  border-color: var(--bd2);
+  opacity: 0.88;
+}
+
+.sign-hero__head {
+  font-size: var(--fs-xs);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--warn);
+  font-weight: 600;
+  margin: 0 0 10px;
+}
+
+.sign-hero--idle .sign-hero__head { color: var(--mut); }
+
+.sign-hero__row {
+  display: grid;
+  grid-template-columns: 88px minmax(0, 1fr);
+  gap: 8px 12px;
+  align-items: baseline;
+  margin-bottom: 8px;
+}
+
+.sign-hero__row:last-of-type { margin-bottom: 0; }
+
+.sign-hero__k {
+  font-size: var(--fs-small);
+  color: var(--mut);
+}
+
+.sign-hero__v {
+  font-size: var(--fs-act);
+  line-height: 1.45;
+  color: var(--fg);
+  word-break: break-all;
+}
+
+.sign-hero__tag {
+  font-size: var(--fs-small);
+  color: var(--mut);
+  font-family: var(--sans);
+  font-weight: 400;
+}
+
+.sign-hero__idle {
+  margin: 0;
+  font-size: var(--fs-body);
+  color: var(--mut);
+}
+
+.sign-hero__note { margin: 10px 0 0; color: var(--mut); }
+
+.sign-full {
+  margin: 4px 0 10px;
+  border: 0;
+}
+
+.sign-full summary {
+  cursor: pointer;
+  font-size: var(--fs-small);
+  color: var(--mut);
+  padding: 4px 0;
+  list-style: none;
+}
+
+.sign-full summary::-webkit-details-marker { display: none; }
+
+.sign-full pre {
+  margin-top: 6px;
+  font-size: var(--fs-pre);
+}
+
+/* —— RealDeal docs (book + notebook) —— */
+.doc-layer {
+  display: inline-block;
+  font-size: var(--fs-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 0;
+  margin-bottom: 10px;
+}
+
+.doc-layer-story {
+  color: var(--acc);
+  border: 1px solid var(--bd);
+  border-left: 3px solid var(--acc);
+  background: rgba(43, 255, 138, 0.08);
+}
+
+.doc-layer-spec {
+  color: var(--doc-notebook);
+  border: 1px solid var(--bd);
+  border-left: 3px solid var(--doc-notebook);
+  background: rgba(108, 176, 245, 0.06);
+}
+
+.doc-layer-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.doc-layer-row .doc-layer {
+  margin-bottom: 0;
+}
+
+a.doc-layer {
+  text-decoration: none;
+}
+
+a.doc-layer:hover {
+  text-decoration: underline;
+}
+
+a.doc-layer-spec:hover {
+  background: rgba(108, 176, 245, 0.12);
+}
+
+a.doc-layer-story:hover {
+  background: rgba(43, 255, 138, 0.14);
+}
+
+.doc-bridge {
+  margin: 20px 0;
+  padding: 14px 16px;
+  border: 1px solid var(--doc-notebook-border);
+  border-radius: var(--radius);
+  background: rgba(108, 176, 245, 0.06);
+}
+
+.doc-bridge a {
+  color: var(--doc-notebook);
+}
+
+.doc-bridge a:hover {
+  color: var(--doc-notebook-hover);
+}
+
+.doc-bridge-story {
+  border-color: var(--acc-border);
+  background: rgba(43, 255, 138, 0.06);
+}
+
+.doc-bridge-story a {
+  color: var(--acc);
+}
+
+.doc-bridge-story a:hover {
+  color: var(--acc-hover);
+}
+
+.doc-bridge-lbl {
+  font-size: var(--fs-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--mut-faint);
+  font-weight: 600;
+  margin: 0 0 8px;
+}
+
+.doc-bridge ul {
+  margin: 0;
+  padding-left: 1.2em;
+}
+
+.doc-bridge li { margin: 4px 0; }
+
+.doc-chapter-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: space-between;
+  margin-top: 28px;
+  padding-top: 16px;
+  border-top: 1px solid var(--bd);
+}
+
+.doc-chapter-nav a {
+  color: var(--acc);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.doc-chapter-nav a:hover { text-decoration: underline; }
+
+.doc-part {
+  margin-top: 24px;
+}
+
+.doc-part h2 {
+  font-size: var(--fs-h3);
+  margin: 0 0 10px;
+  color: var(--fg);
+}
+
+.doc-soon {
+  color: var(--mut-faint);
+  font-size: var(--fs-small);
+}
+
+body.page-prose .doc-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0 16px;
+  font-size: var(--fs-small);
+}
+
+body.page-prose .doc-table th,
+body.page-prose .doc-table td {
+  border: 1px solid var(--bd);
+  padding: 8px 10px;
+  text-align: left;
+  vertical-align: top;
+}
+
+body.page-prose .doc-table th {
+  background: var(--panel);
+  color: var(--fg-secondary);
+  font-weight: 600;
+}
+
+body.page-prose .doc-pre {
+  font-family: var(--mono);
+  font-size: var(--fs-pre);
+  background: var(--panel);
+  border: 1px solid var(--bd);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  overflow-x: auto;
+  margin: 12px 0 16px;
+  white-space: pre-wrap;
+  line-height: 1.45;
+}
+
+body.page-prose h3 {
+  font-size: var(--fs-h3);
+  margin: 22px 0 8px;
+  color: var(--fg);
+}
+
+body.page-prose .doc-q {
+  color: var(--mut);
+  font-size: var(--fs-small);
+  margin: 0 0 14px;
+  font-style: italic;
+}
+
+.doc-tracks {
+  display: grid;
+  gap: 14px;
+  margin-top: 20px;
+}
+
+@media (min-width: 720px) {
+  .doc-tracks { grid-template-columns: 1fr 1fr; }
+}
+
+.doc-track-card {
+  display: block;
+  padding: 18px 20px;
+  border: 1px solid var(--bd);
+  border-radius: var(--radius);
+  background: var(--panel);
+  text-decoration: none;
+  color: inherit;
+  transition:
+    border-color var(--motion-medium) var(--ease-out),
+    box-shadow var(--motion-medium) var(--ease-out),
+    transform var(--motion-fast) var(--ease-out);
+}
+
+.doc-track-card:hover {
+  border-color: var(--acc-border);
+  box-shadow: 0 0 24px var(--acc-glow);
+  transform: translateY(-1px);
+}
+
+.doc-track-card-notebook:hover {
+  border-color: var(--doc-notebook-border);
+  box-shadow: 0 0 24px var(--doc-notebook-glow);
+}
+
+.doc-track-card .name {
+  display: block;
+  font-weight: 600;
+  font-size: var(--fs-h3);
+  margin-bottom: 6px;
+  color: var(--fg);
+}
+
+.doc-track-card .line {
+  display: block;
+  color: var(--fg-secondary);
+  margin-bottom: 10px;
+}
+
+.doc-track-card .go {
+  color: var(--acc);
+  font-weight: 500;
+}
+
+.doc-track-card-notebook .go {
+  color: var(--doc-notebook);
+}
+
+.doc-link-notebook {
+  color: var(--doc-notebook);
+}
+
+.doc-link-notebook:hover {
+  color: var(--doc-notebook-hover);
+}
+
+/* Book hub + chapter links in docs layout — green */
+.layout-docs a[href="docs-book.html"]:not(.doc-track-card),
+.layout-docs a[href^="docs-book-"]:not(.doc-track-card):not(.item) {
+  color: var(--acc);
+}
+
+.layout-docs a[href="docs-book.html"]:not(.doc-track-card):hover,
+.layout-docs a[href^="docs-book-"]:not(.doc-track-card):not(.item):hover {
+  color: var(--acc-hover);
+  text-decoration: underline;
+}
+
+.layout-docs a.item[href^="docs-book-"] .act {
+  color: var(--acc);
+}
+
+.layout-docs a.item[href^="docs-book-"]:hover .act {
+  color: var(--acc-hover);
+}
+
+/* Any link to the notebook hub in docs layout — blue, not green */
+.layout-docs a[href="docs-notebook.html"]:not(.doc-track-card),
+.layout-docs a[href^="docs-flows"]:not(.doc-track-card):not(.item),
+.layout-docs a[href^="docs-participants"]:not(.doc-track-card):not(.item),
+.layout-docs a[href^="docs-economy"]:not(.doc-track-card):not(.item),
+.layout-docs a[href^="docs-health"]:not(.doc-track-card):not(.item),
+.layout-docs a[href^="docs-integration"]:not(.doc-track-card):not(.item),
+.layout-docs a[href="docs-contract.html"]:not(.doc-track-card),
+.layout-docs a[href="docs-problem.html"]:not(.doc-track-card),
+.layout-docs a[href="docs-mechanism.html"]:not(.doc-track-card),
+.layout-docs a[href="docs-fingerprint.html"]:not(.doc-track-card),
+.layout-docs a[href="docs-structural.html"]:not(.doc-track-card) {
+  color: var(--doc-notebook);
+}
+
+.layout-docs a[href="docs-notebook.html"]:not(.doc-track-card):hover,
+.layout-docs a[href^="docs-flows"]:not(.doc-track-card):not(.item):hover,
+.layout-docs a[href^="docs-participants"]:not(.doc-track-card):not(.item):hover,
+.layout-docs a[href^="docs-economy"]:not(.doc-track-card):not(.item):hover,
+.layout-docs a[href^="docs-health"]:not(.doc-track-card):not(.item):hover,
+.layout-docs a[href^="docs-integration"]:not(.doc-track-card):not(.item):hover,
+.layout-docs a[href="docs-contract.html"]:not(.doc-track-card):hover,
+.layout-docs a[href="docs-problem.html"]:not(.doc-track-card):hover,
+.layout-docs a[href="docs-mechanism.html"]:not(.doc-track-card):hover,
+.layout-docs a[href="docs-fingerprint.html"]:not(.doc-track-card):hover,
+.layout-docs a[href="docs-structural.html"]:not(.doc-track-card):hover {
+  color: var(--doc-notebook-hover);
+  text-decoration: underline;
+}
+
+.layout-docs a.item[href^="docs-flows"] .act {
+  color: var(--doc-notebook);
+}
+
+.layout-docs a.item[href^="docs-flows"]:hover .act {
+  color: var(--doc-notebook-hover);
+}
+
+.layout-docs a.item[href^="docs-participants"] .act,
+.layout-docs a.item[href^="docs-economy"] .act,
+.layout-docs a.item[href^="docs-health"] .act,
+.layout-docs a.item[href^="docs-integration"] .act,
+.layout-docs a.item[href="docs-contract.html"] .act,
+.layout-docs a.item[href="docs-problem.html"] .act,
+.layout-docs a.item[href="docs-mechanism.html"] .act,
+.layout-docs a.item[href="docs-fingerprint.html"] .act {
+  color: var(--doc-notebook);
+}
+
+.layout-docs a.item[href^="docs-participants"]:hover .act,
+.layout-docs a.item[href^="docs-economy"]:hover .act,
+.layout-docs a.item[href^="docs-health"]:hover .act,
+.layout-docs a.item[href^="docs-integration"]:hover .act,
+.layout-docs a.item[href="docs-contract.html"]:hover .act,
+.layout-docs a.item[href="docs-problem.html"]:hover .act,
+.layout-docs a.item[href="docs-mechanism.html"]:hover .act,
+.layout-docs a.item[href="docs-fingerprint.html"]:hover .act {
+  color: var(--doc-notebook-hover);
+}
+
+.doc-fence {
+  margin: 16px 0;
+  padding: 12px 14px;
+  border-left: 3px solid var(--warn);
+  background: rgba(230, 180, 34, 0.06);
+  font-size: var(--fs-small);
+  color: var(--fg-secondary);
+}
+
+aside .doc-aside-part {
+  margin-top: 14px;
+  padding-top: 10px;
+  border-top: 1px solid var(--bd);
+}
+
+aside .doc-aside-page {
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--bd);
+}
+
+aside .doc-aside-part .lbl { margin-bottom: 6px; }
+aside .doc-aside-page .lbl { margin-bottom: 6px; }
+
+/* docs rail + your links — mirror left nav letters/lines; book/spec colors unchanged */
+aside#docRail,
+aside#toolRail {
+  padding: var(--pad-nav);
+  line-height: var(--lh);
+  width: max-content;
+  max-width: 36ch;
+  box-sizing: border-box;
+  overflow: visible;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+  position: sticky;
+  top: 0;
+  align-self: start;
+  transition: box-shadow var(--motion-medium) var(--ease-out);
+}
+
+html.doc-rail-scrolled aside#docRail,
+html.doc-rail-scrolled aside#toolRail {
+  box-shadow: -10px 0 28px rgba(0, 0, 0, 0.28);
+}
+
+#docRail.doc-rail--mounted {
+  animation: rail-enter var(--motion-medium) var(--ease-out) both;
+}
+
+#docRail,
+#toolRail {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+  width: 100%;
+}
+
+/* Layout only — do not set color here; #docRail a beats all track/active class colors */
+#docRail a,
+#toolRail a {
+  display: block;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: var(--fs-act);
+  font-weight: 500;
+  line-height: var(--lh);
+  text-decoration: none;
+  text-align: left;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  transition:
+    color var(--motion-fast) var(--ease-out),
+    background var(--motion-fast) var(--ease-out),
+    box-shadow var(--motion-fast) var(--ease-out);
+}
+
+#docRail .lbl,
+#toolRail .lbl,
+.your-links-summary {
+  display: block;
+  font-size: var(--fs-sidebar-label);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--mut);
+  font-weight: normal;
+  margin: 20px 0 10px;
+  padding: 0;
+}
+
+.doc-rail-block:first-child .lbl,
+.doc-rail-block:first-child .your-links-summary,
+.doc-rail-block:first-child a.doc-rail-book {
+  margin-top: 0;
+}
+
+.doc-rail-block {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+}
+
+.doc-rail-block--off {
+  opacity: 1;
+}
+
+.doc-rail-block--off .doc-rail-row--where,
+.doc-rail-block--off .doc-rail-row--seq {
+  opacity: 0.55;
+  transition: opacity var(--motion-medium) var(--ease-out);
+}
+
+.doc-rail-block--off:hover .doc-rail-row--where,
+.doc-rail-block--off:hover .doc-rail-row--seq {
+  opacity: 0.72;
+}
+
+.doc-rail-block--book.doc-rail-block--on a.doc-rail-book,
+.doc-rail-block--book.doc-rail-block--on .doc-rail-book,
+#docRail .doc-rail-block--book.doc-rail-block--on a.doc-rail-book {
+  color: var(--acc);
+  font-weight: 600;
+}
+
+.doc-rail-block--spec.doc-rail-block--on a.doc-rail-book,
+.doc-rail-block--spec.doc-rail-block--on .doc-rail-book,
+#docRail .doc-rail-block--spec.doc-rail-block--on a.doc-rail-book {
+  color: var(--doc-notebook);
+  font-weight: 600;
+}
+
+#docRail a.doc-rail-book,
+#toolRail a.doc-rail-book,
+.doc-rail-book {
+  padding: 0;
+  margin: 20px 0 10px;
+  border-radius: 0;
+  font-size: var(--fs-sidebar-label);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--mut);
+  font-weight: normal;
+  background: none;
+  box-shadow: none;
+  white-space: normal;
+}
+
+#docRail a.doc-rail-book:hover,
+#toolRail a.doc-rail-book:hover {
+  color: var(--fg);
+  background: none;
+  text-decoration: none;
+}
+
+.doc-rail-block--book a:hover,
+.doc-rail-block--book .doc-rail-part--link:hover {
+  color: var(--fg);
+  background: var(--panel-raised);
+}
+
+.doc-rail-block--spec a:hover {
+  color: var(--fg);
+  background: var(--panel-raised);
+}
+
+.doc-rail-part {
+  padding: 0 12px;
+  margin: -6px 0 6px;
+  font-size: var(--fs-small);
+  font-weight: 500;
+  color: var(--mut);
+  line-height: var(--lh);
+  white-space: normal;
+}
+
+.doc-rail-row--where {
+  margin-bottom: 0;
+  line-height: var(--lh);
+}
+
+.doc-rail-row--seq {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+}
+
+.doc-rail-part--link,
+.doc-rail-ch-now,
+.doc-rail-prev,
+.doc-rail-next,
+.doc-rail-row--related a {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 0;
+  max-height: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: var(--fs-act);
+  font-weight: 500;
+  line-height: var(--lh);
+  text-align: left;
+  white-space: normal;
+  overflow: visible;
+  word-break: break-word;
+}
+
+.doc-rail-block--book .doc-rail-ch-now,
+#docRail .doc-rail-block--book .doc-rail-ch-now {
+  color: var(--acc);
+  font-weight: 600;
+  background: var(--acc-muted);
+  box-shadow: inset 0 0 0 1px var(--acc-border);
+}
+
+.doc-rail-block--spec .doc-rail-ch-now,
+#docRail .doc-rail-block--spec .doc-rail-ch-now {
+  color: var(--doc-notebook);
+  font-weight: 600;
+  background: var(--doc-notebook-glow);
+  box-shadow: inset 0 0 0 1px var(--doc-notebook-border);
+}
+
+.doc-rail-block--spec.doc-rail-block--on .doc-rail-part,
+#docRail .doc-rail-block--spec.doc-rail-block--on .doc-rail-part {
+  color: var(--doc-notebook);
+}
+
+.doc-rail-block--book .doc-rail-part--link,
+.doc-rail-block--book .doc-rail-prev,
+.doc-rail-block--book .doc-rail-next {
+  color: var(--fg-secondary);
+  border: none;
+  background: transparent;
+}
+
+.doc-rail-block--book .doc-rail-prev:hover,
+.doc-rail-block--book .doc-rail-next:hover,
+.doc-rail-block--book a.doc-rail-part--link:hover {
+  color: var(--fg);
+  background: var(--panel-raised);
+  border: none;
+}
+
+.doc-rail-block--spec .doc-rail-prev,
+.doc-rail-block--spec .doc-rail-next,
+.doc-rail-block--spec .doc-rail-row--related a {
+  color: var(--fg-secondary);
+  border: none;
+  background: transparent;
+}
+
+.doc-rail-block--spec .doc-rail-prev:hover,
+.doc-rail-block--spec .doc-rail-next:hover,
+.doc-rail-block--spec .doc-rail-row--related a:hover {
+  color: var(--fg);
+  background: var(--panel-raised);
+  border: none;
+}
+
+.doc-rail-row--related {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 0;
+  width: 100%;
+}
+
+/* Your links — same nav typography/boxes; track colors on link text only */
+.doc-rail-block--links {
+  border: none;
+  background: transparent;
+}
+
+.your-links--collapsed.doc-rail-block--links {
+  margin-top: 0;
+}
+
+.your-links--collapsed summary.your-links-summary {
+  cursor: pointer;
+  list-style: none;
+}
+
+.your-links--collapsed summary.your-links-summary::-webkit-details-marker {
+  display: none;
+}
+
+.your-links--collapsed summary.your-links-summary::after {
+  content: " ▸";
+  color: var(--mut);
+  font-weight: 400;
+}
+
+.your-links--collapsed[open] summary.your-links-summary::after {
+  content: " ▾";
+}
+
+.your-links--collapsed summary.your-links-summary:hover {
+  color: var(--fg);
+}
+
+.your-links-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 4px;
+}
+
+.your-links-pin,
+.your-links-clear {
+  display: block;
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--fg-secondary);
+  font-size: var(--fs-act);
+  font-weight: 500;
+  font-family: inherit;
+  line-height: var(--lh);
+  cursor: pointer;
+  text-align: left;
+  transition:
+    color var(--motion-fast) var(--ease-out),
+    background var(--motion-fast) var(--ease-out);
+}
+
+.your-links-pin:hover,
+.your-links-clear:hover {
+  color: var(--fg);
+  background: var(--panel-raised);
+}
+
+.your-links-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.your-links-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  border-radius: 6px;
+  transition:
+    opacity var(--motion-fast) var(--ease-out),
+    transform var(--motion-fast) var(--ease-out);
+}
+
+.your-links-item--drag {
+  opacity: 0.55;
+  transform: scale(0.98);
+}
+
+.your-links-grip {
+  flex: 0 0 auto;
+  padding-left: 4px;
+  color: var(--mut);
+  font-size: 10px;
+  cursor: grab;
+  user-select: none;
+}
+
+.your-links-link {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: block;
+  padding: 8px 8px 8px 0;
+  border-radius: 6px;
+  font-size: var(--fs-act);
+  font-weight: 500;
+  line-height: var(--lh);
+  color: var(--fg-secondary);
+  text-decoration: none;
+  white-space: normal;
+  word-break: break-word;
+  transition:
+    color var(--motion-fast) var(--ease-out),
+    background var(--motion-fast) var(--ease-out);
+}
+
+#docRail .your-links-link--book,
+.your-links-link--book {
+  color: var(--acc);
+  font-weight: 600;
+}
+
+#docRail .your-links-link--spec,
+.your-links-link--spec {
+  color: var(--doc-notebook);
+  font-weight: 600;
+}
+
+#docRail .your-links-link--tool,
+.your-links-link--tool {
+  color: var(--acc);
+  font-weight: 600;
+}
+
+#docRail .your-links-link--neutral,
+.your-links-link--neutral {
+  color: var(--fg-secondary);
+  font-weight: 500;
+}
+
+.your-links-link:hover {
+  color: var(--fg);
+  background: var(--panel-raised);
+  text-decoration: none;
+  filter: none;
+}
+
+.your-links-remove {
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  margin-right: 4px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--mut);
+  cursor: pointer;
+  font-size: var(--fs-small);
+  line-height: 1;
+}
+
+.your-links-remove:hover {
+  color: var(--fg);
+  background: var(--panel-raised);
+}
+
+.your-links-drop {
+  padding: 8px 12px;
+  border: 1px dashed var(--bd);
+  border-radius: 6px;
+  text-align: left;
+  font-size: var(--fs-small);
+  font-weight: 500;
+  color: var(--mut);
+  min-height: 0;
+  display: block;
+  transition:
+    color var(--motion-medium) var(--ease-out),
+    background var(--motion-medium) var(--ease-out),
+    border-color var(--motion-medium) var(--ease-out),
+    box-shadow var(--motion-medium) var(--ease-out);
+}
+
+.your-links-drop--over {
+  color: var(--acc);
+  background: var(--panel-raised);
+  border-color: var(--acc-border);
+  box-shadow: 0 0 16px var(--acc-glow);
+}
+
+.your-links--full .your-links-drop:not(:only-child) {
+  margin-top: 4px;
+}
+
+pre.doc-pre {
+  margin: 12px 0;
+  padding: 12px 14px;
+  background: var(--panel-raised);
+  border: 1px solid var(--bd);
+  border-radius: 6px;
+  font-size: var(--fs-small);
+  line-height: 1.45;
+  overflow-x: auto;
+  white-space: pre-wrap;
+}
+
+/* ---- lacquer — the finishing coat; changes nothing, seals everything ---- */
+::selection {
+  background: rgba(43, 255, 138, 0.28);
+  color: var(--fg);
+}
+
+html {
+  scrollbar-color: var(--bd2) var(--bg);
+}
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb {
+  background: var(--panel-raised);
+  border: 2px solid var(--bg);
+}
+::-webkit-scrollbar-thumb:hover { background: var(--bd2); }
+
+a:focus-visible,
+summary:focus-visible,
+select:focus-visible,
+.rolepill:focus-visible,
+.copy:focus-visible {
+  outline: 2px solid var(--acc-border);
+  outline-offset: 2px;
+}
+
+input,
+select,
+textarea { caret-color: var(--acc); }
+
+* { -webkit-tap-highlight-color: transparent; }
+
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+}
+
+@media print {
+  nav,
+  .toolbelt,
+  .split-pane,
+  .nav-watch,
+  #navBookRail,
+  aside,
+  .doc-page-foot { display: none !important; }
+
+  * {
+    color: #111 !important;
+    background: transparent !important;
+    border-color: #bbb !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  body { background: #fff !important; }
+  .layout { display: block; padding: 0; }
+  a { text-decoration: underline; }
+}
+
+/* ---- Your audits — watchlist cards (advisory interpretation organ) ---- */
+.ya-list {
+  list-style: none;
+  margin: 0 0 8px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ya-card {
+  border: 1px solid var(--bd);
+  border-left: 3px solid var(--mut-faint);
+  background: var(--panel);
+  padding: 10px 12px;
+}
+
+.ya-card--ok { border-left-color: var(--acc); }
+.ya-card--win { border-left-color: #6cb0f5; }
+.ya-card--warn { border-left-color: var(--warn); }
+.ya-card--bad { border-left-color: var(--bad); }
+
+.ya-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.ya-id {
+  font-family: var(--mono);
+  font-weight: 600;
+  color: var(--fg);
+  font-size: var(--fs-small);
+}
+
+.ya-changed {
+  margin-left: 0;
+  color: var(--warn);
+  border-left-color: var(--warn);
+  font-family: var(--mono);
+  font-size: 12px;
+  padding: 0 6px;
+}
+
+.ya-remove { margin-left: auto; margin-right: 0; }
+
+.ya-rail {
+  display: flex;
+  gap: 4px;
+  margin: 8px 0 6px;
+}
+
+.ya-seg {
+  flex: 1 1 0;
+  height: 5px;
+  background: var(--panel-raised);
+  border: 1px solid var(--bd);
+}
+
+.ya-seg.done { background: var(--acc-muted); border-color: var(--acc-border); }
+.ya-seg.on { background: var(--acc); border-color: var(--acc); }
+.ya-seg.warn.on { background: var(--warn); border-color: var(--warn); }
+.ya-seg.bad.on { background: var(--bad); border-color: var(--bad); }
+.ya-seg.mut.on { background: var(--mut-faint); border-color: var(--mut-faint); }
+
+.ya-gloss {
+  font-size: var(--fs-xs);
+  color: var(--mut);
+  line-height: 1.4;
+}
+
+.ya-verified {
+  font-size: var(--fs-xs);
+  color: var(--acc);
+  margin-top: 4px;
+}
+
+/* morning check — state diff since your last look */
+.ya-diff {
+  font-size: var(--fs-xs);
+  font-family: var(--mono);
+  color: var(--warn);
+  margin-top: 4px;
+}
+.ya-seen {
+  margin-left: 6px;
+  padding: 0 6px;
+  font-size: 11px;
+  font-family: var(--mono);
+  color: var(--mut);
+  background: transparent;
+  border: 1px solid var(--bd);
+  border-radius: 4px;
+  cursor: pointer;
+}
+.ya-seen:hover { color: var(--fg); border-color: var(--mut); }
+
+/* morning check — batch Level-A re-verify */
+.ya-batchrow { margin-top: 8px; }
+.ya-batch {
+  padding: 3px 10px;
+  font-size: var(--fs-xs);
+  font-family: var(--mono);
+  color: var(--acc);
+  background: transparent;
+  border: 1px solid var(--acc);
+  border-radius: 4px;
+  cursor: pointer;
+}
+.ya-batch:hover { background: var(--acc-muted); }
+.ya-batch:disabled { opacity: 0.5; cursor: default; }
+.ya-batchout { display: block; margin-top: 5px; font-family: var(--mono); }
+.ya-batchbad, .ya-batchbad a { color: var(--bad); }
+
+/* in-tab reproduce panel */
+.repro-out {
+  border: 1px solid var(--bd);
+  border-left: 3px solid var(--acc-border);
+  background: var(--well);
+  padding: 12px 14px;
+  margin: 0 0 12px;
+  font-size: var(--fs-small);
+}
+
+.repro-you { color: var(--acc); }
+
+.ya-links {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+  font-size: var(--fs-xs);
+}
+
+.ya-empty {
+  color: var(--mut);
+  margin: 0 0 8px;
+}
+
+/* left-nav watch chip — something moved; the right rail shows what */
+.nav-watch {
+  display: block;
+  margin-top: 18px;
+  padding: 6px 12px;
+  border-top: 1px solid var(--bd);
+  font-size: var(--fs-small);
+  color: var(--mut);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.nav-watch:hover { color: var(--fg); text-decoration: none; }
+
+.nav-watch--changed { color: var(--warn); }
+
+/* ── Decentralized Audit Network organism strip (organ-bar.js) ───────── */
+.organ-bar{
+  display:flex; align-items:center; gap:18px;
+  padding:8px 46px 8px 18px;   /* right pad clears the fixed 34px toolbelt strip */
+  background:var(--panel); border-bottom:1px solid var(--bd);
+  font-family:var(--mono); font-size:12px;
+  white-space:nowrap;
+  position:sticky; top:0; z-index:95;   /* above the toolbelt (z-index:90) */
+}
+/* only the organs row scrolls — the brand stays fully visible on the right */
+.organ-bar .ob-organs{display:flex; align-items:center; gap:4px; flex:1 1 auto; min-width:0; overflow-x:auto; overflow-y:hidden}
+.organ-bar .ob-organs::-webkit-scrollbar{height:0}
+.ob-organ{
+  display:inline-flex; align-items:center; gap:6px;
+  padding:3px 8px; border:0; background:none; border-radius:var(--radius-sm);
+  color:var(--mut-faint); text-decoration:none; transition:color .15s var(--ease-out); position:relative;
+}
+.ob-organ .d{width:6px; height:6px; border-radius:50%; background:var(--mut-faint); opacity:.35; flex:0 0 auto}
+.ob-organ.live{color:var(--mut)}
+.ob-organ.live .d{background:var(--acc); opacity:1; box-shadow:0 0 6px var(--acc-glow)}
+.ob-organ.anchor.live{color:var(--fg-secondary)}
+.ob-organ.live:hover{color:var(--acc)}
+.ob-organ.dim{color:var(--mut-faint)}
+/* the organ we're currently viewing — lit like an active tab (inset underline, no overflow) */
+.ob-organ.current{color:var(--fg); box-shadow:inset 0 -2px 0 var(--acc)}
+.ob-organ.current .d{background:var(--acc); opacity:1; box-shadow:0 0 8px var(--acc-glow)}
+/* brand on the right — never scrolls, never clipped */
+.organ-bar .ob-right{display:inline-flex; align-items:center; gap:14px; flex:0 0 auto}
+.organ-bar .ob-count{color:var(--mut-faint)}
+.organ-bar .ob-brand{
+  display:inline-flex; align-items:center; gap:8px;
+  color:var(--fg-secondary); font-weight:600; letter-spacing:.04em;
+}
+.organ-bar .ob-brand .pulse{
+  width:8px; height:8px; border-radius:50%;
+  background:var(--acc); box-shadow:0 0 10px var(--acc-glow);
+  animation:ob-pulse 2.4s ease-in-out infinite;
+}
+@keyframes ob-pulse{0%,100%{opacity:1}50%{opacity:.45}}
+@media (max-width:720px){ .organ-bar .ob-count{display:none} }
+/* when the strip is present, drop the fixed right-edge toolbelt below it so its
+   "Tools" / "Your links" / "Your audits" labels aren't hidden under the bar */
+body.has-organ-bar{ --ob-h:40px; }
+body.has-organ-bar .toolbelt-strip{ top:var(--ob-h); height:calc(100vh - var(--ob-h)); }
+body.has-organ-bar .toolbelt-dock{ top:var(--ob-h); height:calc(100vh - var(--ob-h)); }
+/* SITE-CSS:END */
+</style>
+<style>
+/* The page's own rules, on top of the site's. The site's fonts are not loaded (the page loads nothing), so text
+   falls back to the system fonts site.css names after them. */
+:root {
+  --bad-muted: rgba(255, 107, 99, 0.1);
+  --warn-muted: rgba(230, 180, 34, 0.1);
+}
+p { margin: 0 0 12px; }
+h2 { font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: 0.08em; color: var(--mut); margin: 26px 0 10px; }
+.not { color: var(--mut); font-size: var(--fs-small); max-width: 60ch; }
+.badge { margin: 6px 0 0; }
+
+/* The site's tabs, lit by aria-selected; the site's button hover is turned off on them. */
+.tabs { margin: 28px 0 14px; }
+.tab { font-size: var(--fs-ui); font-weight: 500; padding: 8px 14px; }
+.tab:hover:not(:disabled) { background: none; }
+.tab:not([aria-selected="true"]):hover:not(:disabled) { box-shadow: none; }
+.tab[aria-selected="true"] { color: var(--acc); font-weight: 600; border-bottom-color: var(--acc); box-shadow: 0 2px 12px var(--acc-glow); }
+
+.examples { display: flex; gap: 8px; flex-wrap: wrap; margin: 0 0 10px; }
+.example {
+  font: 500 var(--fs-small) var(--sans);
+  color: var(--fg);
+  background: var(--panel-raised);
+  border: 1px solid var(--bd2);
+  border-radius: 999px;
+  padding: 6px 14px;
+}
+.example:hover:not(:disabled) { background: var(--panel-hover); border-color: var(--acc-border); box-shadow: none; }
+.example[aria-pressed="true"] { border-color: var(--acc-border); color: var(--acc); }
+.note { color: var(--mut); font-size: var(--fs-small); min-height: 1.6em; }
+
+textarea {
+  display: block;
+  min-height: 260px;
+  resize: vertical;
+  padding: 12px;
+  font-size: var(--fs-xs);
+  line-height: 1.5;
+  tab-size: 2;
+}
+.controls { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin: 12px 0 0; }
+.controls label { font-size: var(--fs-small); display: inline-flex; gap: 6px; align-items: center; margin: 0; }
+.controls input { width: 5.5em; padding: 5px 8px; font-size: var(--fs-small); }
+button.quiet {
+  background: var(--panel-raised);
+  border: 1px solid var(--bd2);
+  color: var(--fg);
+  font-size: var(--fs-small);
+  padding: 7px 14px;
+}
+button.quiet:hover:not(:disabled) { background: var(--panel-hover); border-color: var(--acc-border); color: var(--fg); box-shadow: 0 0 16px var(--acc-glow); }
+
+.result {
+  margin: 26px 0 0;
+  background: var(--panel);
+  border: 1px solid var(--bd);
+  border-radius: var(--radius);
+  padding: 20px;
+  overflow-wrap: anywhere;
+}
+.result[hidden] { display: none; }
+.result > *, .rows li > * { min-width: 0; }
+.grade {
+  display: inline-block;
+  font: 700 22px var(--mono);
+  letter-spacing: 0.02em;
+  border-radius: var(--radius-sm);
+  padding: 4px 12px;
+  border: 1px solid;
+}
+.g-pass { color: var(--ok); border-color: var(--acc-border); background: var(--acc-muted); }
+.g-none { color: var(--warn); border-color: rgba(230, 180, 34, 0.45); background: var(--warn-muted); }
+.g-bad { color: var(--bad); border-color: rgba(255, 107, 99, 0.45); background: var(--bad-muted); }
+.summary { color: var(--mut); margin: 10px 0 0; }
+.error { color: var(--bad); font-family: var(--mono); font-size: var(--fs-xs); white-space: pre-wrap; }
+
+.rows { list-style: none; margin: 0; padding: 0; }
+.rows li {
+  display: grid;
+  grid-template-columns: 4.5em 4em 1fr;
+  gap: 4px 12px;
+  padding: 9px 0;
+  border-top: 1px solid var(--bd);
+  font-size: var(--fs-small);
+}
+.rows li:first-child { border-top: 0; }
+.rows .k { font-family: var(--mono); color: var(--mut); font-size: inherit; }
+.rows .cls { grid-column: 3; font: 600 13px var(--mono); }
+.rows .msg { grid-column: 3; color: var(--fg); font-size: inherit; }
+.rows li.wide { grid-template-columns: 1fr; }
+.empty { color: var(--mut-faint); font-size: var(--fs-small); }
+pre.cmd {
+  border-color: var(--bd);
+  padding: 10px 12px;
+  font-size: 13px;
+  overflow-x: auto;
+  white-space: pre;
+  word-break: normal;
+  overflow-wrap: normal;
+  max-width: 100%;
+  margin: 0 0 10px;
+}
+.meta { color: var(--mut-faint); font-size: var(--fs-xs); }
+footer { margin: 40px 0 0; color: var(--mut-faint); font-size: var(--fs-xs); }
+
+@media (max-width: 560px) {
+  body.page-tool h1 { font-size: 27px; }
+  .rows li { grid-template-columns: 1fr; }
+  .rows .cls, .rows .msg { grid-column: 1; }
+}
+</style>
+</head>
+<body class="page-tool">
+<!-- The site's chrome as a tool page has it (VD-482): the four nav links with none lit, the testnet badge and line.
+     No organ bar: it fetches the deployment file and links out, and this page loads nothing. -->
+<div class="layout layout-tool">
+  <nav class="side">
+    <div class="brand"><span class="dot"></span> Audit Cell</div>
+    <a class="navlink" href="index.html">Welcome</a>
+    <a class="navlink" href="quickstart.html">Quickstart</a>
+    <a class="navlink" href="resources.html">Resources</a>
+    <a class="navlink" href="help.html">Help</a>
+  </nav>
+  <main>
+<div class="wrap">
+  <!-- COPY (the operator's): the name, and the two statements from the proposal's section 1, as drafted there. -->
+  <h1>Checkable</h1>
+  <p class="lede">Paste a claim, about a smart contract or about a trading strategy, and it tells you whether anyone
+  could ever check that claim, before you pay someone to check it.</p>
+  <p class="not">It does not say a contract is safe. It does not say a strategy makes money. It grades whether a
+  claim is checkable.</p>
+
+  <span class="badge"><span class="live"></span> Testnet · Base Sepolia</span>
+  <p class="testnote">Running on testnet. Test funds only.</p>
+
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" id="tab-spec" data-family="spec" aria-selected="true">Contract spec</button>
+    <button class="tab" role="tab" id="tab-strategy" data-family="strategy" aria-selected="false">Strategy claims</button>
+  </div>
+
+  <div class="examples" id="examples" aria-label="Examples"></div>
+  <p class="note" id="note"></p>
+
+  <label for="input" class="meta">Input, JSON</label>
+  <textarea id="input" spellcheck="false" autocomplete="off" autocapitalize="off"></textarea>
+
+  <div class="controls">
+    <button class="go" id="run">Check</button>
+    <span id="strategy-options">
+      <label>t hurdle <input id="opt-t" inputmode="decimal"></label>
+      <label>horizon, years <input id="opt-horizon" inputmode="decimal"></label>
+    </span>
+  </div>
+
+  <section class="result" id="result" hidden aria-live="polite">
+    <div id="grade-line"></div>
+    <p class="summary" id="summary"></p>
+    <div id="body"></div>
+  </section>
+
+  <footer>
+    Runs in this page only: nothing you paste leaves the browser. The linter's source is
+    <code>cell/indexer/</code>; the command under every result writes the same findings file.
+  </footer>
+</div>
+  </main>
+</div>
+
+<script>
+/* BUNDLE:BEGIN, written by cell/indexer/buildCheckPage.mjs; do not edit by hand */
+(function (root) {
+"use strict";
+const __m = Object.create(null);
+__m["keccak"] = (function () {
+"use strict";
+// keccak256.mjs — Keccak-256 (the Ethereum one), vendored, zero dependencies.
+//
+// WHY VENDORED. dan-check's whole job is refusing, and a refusal tool that drags in a
+// dependency tree to compute one hash has a supply chain — the exact shape FC-14 exists to
+// stand against (the Lisbon lesson was NpmGuard standing in the path of the action; shipping
+// an npm-install-shaped hole in the thing that guards npm installs would be absurd).
+// Node has no built-in Keccak: `crypto.createHash('sha3-256')` is NIST SHA3, which uses a
+// DIFFERENT PADDING BYTE (0x06 vs 0x01) and returns a different digest for the same input.
+// That substitution is silent — it produces a plausible 32-byte hash that never matches a
+// codehash — so it is exactly the kind of wrong answer this repo keeps paying for.
+//
+// VERIFICATION. This is asserted against published Keccak-256 vectors in
+// dan-check.test.mjs before any dan-check test runs. If those fail, nothing else is trusted.
+// Correctness here is not a matter of reading the code and nodding: it is a matter of the
+// empty-string vector being c5d24601… and nothing else.
+
+const RC = [
+  0x0000000000000001n, 0x0000000000008082n, 0x800000000000808an, 0x8000000080008000n,
+  0x000000000000808bn, 0x0000000080000001n, 0x8000000080008081n, 0x8000000000008009n,
+  0x000000000000008an, 0x0000000000000088n, 0x0000000080008009n, 0x000000008000000an,
+  0x000000008000808bn, 0x800000000000008bn, 0x8000000000008089n, 0x8000000000008003n,
+  0x8000000000008002n, 0x8000000000000080n, 0x000000000000800an, 0x800000008000000an,
+  0x8000000080008081n, 0x8000000000008080n, 0x0000000080000001n, 0x8000000080008008n,
+];
+
+// r[x][y] — rotation offsets for the rho step.
+const R = [
+  [0n, 36n, 3n, 41n, 18n],
+  [1n, 44n, 10n, 45n, 2n],
+  [62n, 6n, 43n, 15n, 61n],
+  [28n, 55n, 25n, 21n, 56n],
+  [27n, 20n, 39n, 8n, 14n],
+];
+
+const M = (1n << 64n) - 1n;
+const rotl = (v, n) => n === 0n ? v : (((v << n) | (v >> (64n - n))) & M);
+
+function keccakF(A) {
+  for (let round = 0; round < 24; round++) {
+    // theta
+    const C = [];
+    for (let x = 0; x < 5; x++) C[x] = A[x][0] ^ A[x][1] ^ A[x][2] ^ A[x][3] ^ A[x][4];
+    for (let x = 0; x < 5; x++) {
+      const D = C[(x + 4) % 5] ^ rotl(C[(x + 1) % 5], 1n);
+      for (let y = 0; y < 5; y++) A[x][y] ^= D;
+    }
+    // rho + pi
+    const B = [[], [], [], [], []];
+    for (let x = 0; x < 5; x++) {
+      for (let y = 0; y < 5; y++) {
+        B[y][(2 * x + 3 * y) % 5] = rotl(A[x][y], R[x][y]);
+      }
+    }
+    // chi
+    for (let x = 0; x < 5; x++) {
+      for (let y = 0; y < 5; y++) {
+        A[x][y] = B[x][y] ^ ((~B[(x + 1) % 5][y] & M) & B[(x + 2) % 5][y]);
+      }
+    }
+    // iota
+    A[0][0] ^= RC[round];
+  }
+  return A;
+}
+
+/** Keccak-256 over a byte array. Returns a lowercase 0x-prefixed hex string. */
+function keccak256Bytes(bytes) {
+  const RATE = 136;                                   // 1088 bits
+  const A = [[], [], [], [], []];
+  for (let x = 0; x < 5; x++) for (let y = 0; y < 5; y++) A[x][y] = 0n;
+
+  // pad10*1 with Keccak's 0x01 domain byte (NOT SHA3's 0x06 — see header)
+  const padded = new Uint8Array(Math.ceil((bytes.length + 1) / RATE) * RATE);
+  padded.set(bytes);
+  padded[bytes.length] = 0x01;
+  padded[padded.length - 1] |= 0x80;
+
+  for (let off = 0; off < padded.length; off += RATE) {
+    for (let i = 0; i < RATE / 8; i++) {
+      let lane = 0n;
+      for (let b = 7; b >= 0; b--) lane = (lane << 8n) | BigInt(padded[off + i * 8 + b]);
+      A[i % 5][(i / 5) | 0] ^= lane;
+    }
+    keccakF(A);
+  }
+
+  let out = "";
+  for (let i = 0; i < 4; i++) {                       // 4 lanes = 32 bytes
+    let lane = A[i % 5][(i / 5) | 0];
+    for (let b = 0; b < 8; b++) {
+      out += ((lane >> BigInt(8 * b)) & 0xffn).toString(16).padStart(2, "0");
+    }
+  }
+  return "0x" + out;
+}
+
+/** Keccak-256 over a 0x-prefixed hex string (e.g. contract runtime code). */
+function keccak256Hex(hex) {
+  const h = (hex || "").replace(/^0x/, "");
+  if (h.length % 2) throw new Error("odd-length hex");
+  const b = new Uint8Array(h.length / 2);
+  for (let i = 0; i < b.length; i++) b[i] = parseInt(h.slice(i * 2, i * 2 + 2), 16);
+  return keccak256Bytes(b);
+}
+
+/** Keccak-256 over a UTF-8 string — used for ABI selectors. */
+function keccak256Utf8(s) {
+  return keccak256Bytes(new TextEncoder().encode(s));
+}
+
+/** First 4 bytes of keccak256(signature), the ABI function selector. */
+function selector(sig) {
+  return keccak256Utf8(sig).slice(0, 10);
+}
+
+return { keccak256Bytes, keccak256Hex, keccak256Utf8, selector };
+})();
+__m["ethers"] = (function () {
+"use strict";
+const { keccak256Bytes, keccak256Hex } = __m["keccak"];
+function keccak256(data) {
+  if (typeof data === "string") return keccak256Hex(data);
+  if (ArrayBuffer.isView(data)) return keccak256Bytes(new Uint8Array(data.buffer, data.byteOffset, data.byteLength));
+  throw new TypeError("keccak256 shim: hex string or Uint8Array only");
+}
+function concat(list) {
+  return "0x" + list.map((h) => {
+    if (typeof h !== "string" || !/^0x([0-9a-fA-F]{2})*$/.test(h)) throw new TypeError("concat shim: hex strings only");
+    return h.slice(2).toLowerCase();
+  }).join("");
+}
+function toUtf8Bytes(s) {
+  return new TextEncoder().encode(s);
+}
+return { keccak256, concat, toUtf8Bytes };
+})();
+__m["./danIdV0.mjs"] = (function () {
+"use strict";
+/**
+ * v0 DAN identifier hashing — proposals/applied/id-hashing-convention-v0-proposal.txt
+ *
+ * Grammar: DAN:<DOMAIN>:<version>:<SYMBOL>
+ *   DAN: uppercase · DOMAIN uppercase · version lowercase · SYMBOL as registered
+ */
+
+const { keccak256, toUtf8Bytes } = __m["ethers"];
+
+const DAN_ID_VERSION = "v0";
+
+/** Registered domains (mint new namespaces here + spec-scope.md § Identifier conventions). */
+const DAN_ID_DOMAIN = {
+  SCOPE: "SCOPE",
+  FMEA_SCOPE: "FMEA-SCOPE",
+};
+
+/**
+ * @param {string} domain — e.g. SCOPE, FMEA-SCOPE
+ * @param {string} symbol
+ * @param {string} [version]
+ */
+function danIdUtf8(domain, symbol, version = DAN_ID_VERSION) {
+  return `DAN:${domain}:${version}:${symbol}`;
+}
+
+/**
+ * @param {string} domain
+ * @param {string} symbol
+ * @param {string} [version]
+ */
+function danId(domain, symbol, version = DAN_ID_VERSION) {
+  return keccak256(toUtf8Bytes(danIdUtf8(domain, symbol, version)));
+}
+
+return { DAN_ID_VERSION, DAN_ID_DOMAIN, danIdUtf8, danId };
+})();
+__m["./scopeTaxonomyV0.mjs"] = (function () {
+"use strict";
+/**
+ * v0 seed scope taxonomy — mirrors Scope, spec-quality & fleet § scope (RealDeal/notebook/8-integration/book/04-spec-scope-and-quality.md#taxonomy)
+ * categoryId = danId("SCOPE", symbol) → DAN:SCOPE:v0:{SYMBOL}
+ */
+
+const { DAN_ID_DOMAIN, DAN_ID_VERSION, danId } = __m["./danIdV0.mjs"];
+
+const SCOPE_TAXONOMY_VERSION = DAN_ID_VERSION;
+
+const SCOPE_DISCLAIMER =
+  "Covered = this category was checked at least once — NOT a depth or rigor guarantee. " +
+  "Categories outside this published taxonomy are not represented at all. " +
+  "Depth is a separate question (tool canonicity, tier, dispute history).";
+
+/** @param {string} symbol */
+function categoryIdForSymbol(symbol) {
+  return danId(DAN_ID_DOMAIN.SCOPE, symbol);
+}
+
+/** Short user-facing prompts from the v0 taxonomy draft. */
+const USER_ASKS = {
+  "SWAP-RATE": "If I put in X, do I really get the Y I expect — and can't someone game the price path?",
+  "SUPPLY-CONSERVATION": "Can they secretly print more of this token?",
+  "BALANCE-ACCOUNTING":
+    "Can the contract lose track of my money, or can value appear/vanish in a transfer?",
+  "ACCESS-CONTROL": "Can a random address call the powerful functions?",
+  "GOVERNANCE-DRAIN-PATH": "Even the owner — can they take my money?",
+  "PRIVILEGED-PARAMETER": "Can the owner crank the rate or fee and make my next trade terrible?",
+  "STATE-LIFECYCLE":
+    "Can someone release and refund the same escrow, or act after it's already done?",
+  REENTRANCY: "Can a malicious contract call back in and double-spend / drain?",
+  "ARITHMETIC-SAFETY":
+    "Can the math be broken to mint dust into a fortune, or zero out my balance?",
+  "ORACLE-DEPENDENCE": "If someone fakes or skews the price feed, am I exposed?",
+  "UPGRADE-PROXY": "Is the code I'm trusting today still going to be the code tomorrow?",
+  "PAUSE-EMERGENCY": "Can they freeze the contract and lock my funds in forever?",
+  "TOKEN-INTERFACE": "Will this break or get exploited with weird tokens?",
+  "TIME-LOGIC":
+    "Can a deadline or release schedule be gamed so my order fills wrong or my claim expires unfairly?",
+  "INPUT-VALIDATION": "Will a bad input brick it or be exploitable?",
+};
+
+const V0_SCOPE_SYMBOLS = [
+  "SWAP-RATE",
+  "SUPPLY-CONSERVATION",
+  "BALANCE-ACCOUNTING",
+  "ACCESS-CONTROL",
+  "GOVERNANCE-DRAIN-PATH",
+  "PRIVILEGED-PARAMETER",
+  "STATE-LIFECYCLE",
+  "REENTRANCY",
+  "ARITHMETIC-SAFETY",
+  "ORACLE-DEPENDENCE",
+  "UPGRADE-PROXY",
+  "PAUSE-EMERGENCY",
+  "TOKEN-INTERFACE",
+  "TIME-LOGIC",
+  "INPUT-VALIDATION",
+];
+
+/** @type {Map<string, { symbol: string, categoryId: string, userAsks: string }>} */
+const BY_SYMBOL = new Map(
+  V0_SCOPE_SYMBOLS.map((symbol) => [
+    symbol,
+    {
+      symbol,
+      categoryId: categoryIdForSymbol(symbol),
+      userAsks: USER_ASKS[symbol] ?? "",
+    },
+  ])
+);
+
+/** @type {Map<string, { symbol: string, categoryId: string, userAsks: string }>} */
+const BY_ID = new Map([...BY_SYMBOL.values()].map((c) => [c.categoryId, c]));
+
+function getScopeCategory(symbol) {
+  return BY_SYMBOL.get(symbol) ?? null;
+}
+
+function getScopeCategoryById(categoryId) {
+  return BY_ID.get(categoryId) ?? null;
+}
+
+function allV0ScopeCategories() {
+  return V0_SCOPE_SYMBOLS.map((s) => BY_SYMBOL.get(s));
+}
+
+return { SCOPE_TAXONOMY_VERSION, SCOPE_DISCLAIMER, categoryIdForSymbol, V0_SCOPE_SYMBOLS, getScopeCategory, getScopeCategoryById, allV0ScopeCategories };
+})();
+__m["./deriveScope.mjs"] = (function () {
+"use strict";
+/**
+ * Spec-scope manifest derivation (v1 off-chain) — proposals/applied/spec-scope-taxonomy-proposal.txt
+ *
+ * Re-run artifact: parse spec invariants → sorted category id set → scopeRoot.
+ * Render: covered / not-checked lists + honesty disclaimer (no score, no %).
+ *
+ * Usage:
+ *   node deriveScope.test.mjs
+ */
+
+const { keccak256, concat } = __m["ethers"];
+const { SCOPE_DISCLAIMER, SCOPE_TAXONOMY_VERSION, allV0ScopeCategories, categoryIdForSymbol, getScopeCategory, getScopeCategoryById } = __m["./scopeTaxonomyV0.mjs"];
+
+
+
+const ScopeRenderStatus = {
+  HasCategories: "has-categories",
+  DeclaredEmpty: "declared-empty",
+  Unavailable: "unavailable",
+};
+
+/**
+ * @param {string[]} categoryIds — bytes32 hex strings
+ */
+function scopeRootFromCategoryIds(categoryIds) {
+  const unique = [...new Set(categoryIds.filter(Boolean))];
+  unique.sort((a, b) => {
+    const ba = BigInt(a);
+    const bb = BigInt(b);
+    if (ba < bb) return -1;
+    if (ba > bb) return 1;
+    return 0;
+  });
+  if (unique.length === 0) {
+    return keccak256("0x");
+  }
+  const packed = concat(unique.map((id) => id));
+  return keccak256(packed);
+}
+
+/**
+ * @typedef {{ id?: string, statement?: string, scope?: string[] }} SpecInvariant
+ */
+
+/**
+ * Extract scope manifest from spec `invariants[]` (Gate A convention).
+ * @param {SpecInvariant[] | null | undefined} invariants
+ * @param {{ registry?: typeof allV0ScopeCategories }} [opts]
+ */
+function deriveScopeManifestFromInvariants(invariants, opts = {}) {
+  const registry = opts.registry ?? allV0ScopeCategories();
+  const knownSymbols = new Set(registry.map((c) => c.symbol));
+  const warnings = [];
+
+  if (!Array.isArray(invariants)) {
+    return {
+      ok: false,
+      status: ScopeRenderStatus.Unavailable,
+      categoryIds: [],
+      symbols: [],
+      scopeRoot: scopeRootFromCategoryIds([]),
+      warnings: ["SCOPE_MANIFEST_UNAVAILABLE"],
+      unknownSymbols: [],
+    };
+  }
+
+  if (invariants.length === 0) {
+    return {
+      ok: true,
+      status: ScopeRenderStatus.DeclaredEmpty,
+      categoryIds: [],
+      symbols: [],
+      scopeRoot: scopeRootFromCategoryIds([]),
+      warnings: [],
+      unknownSymbols: [],
+    };
+  }
+
+  const symbolSet = new Set();
+  const unknownSymbols = [];
+
+  for (const inv of invariants) {
+    const tags = inv?.scope;
+    if (!Array.isArray(tags)) continue;
+    for (const raw of tags) {
+      const sym = String(raw).trim();
+      if (!sym) continue;
+      if (!knownSymbols.has(sym)) {
+        unknownSymbols.push(sym);
+        continue;
+      }
+      symbolSet.add(sym);
+    }
+  }
+
+  if (unknownSymbols.length > 0) {
+    warnings.push("SCOPE_UNKNOWN_SYMBOL");
+  }
+
+  const symbols = [...symbolSet].sort();
+  const categoryIds = symbols.map((s) => categoryIdForSymbol(s));
+
+  if (symbols.length === 0) {
+    return {
+      ok: true,
+      status: ScopeRenderStatus.DeclaredEmpty,
+      categoryIds: [],
+      symbols: [],
+      scopeRoot: scopeRootFromCategoryIds([]),
+      warnings,
+      unknownSymbols: [...new Set(unknownSymbols)],
+    };
+  }
+
+  return {
+    ok: true,
+    status: ScopeRenderStatus.HasCategories,
+    categoryIds,
+    symbols,
+    scopeRoot: scopeRootFromCategoryIds(categoryIds),
+    warnings,
+    unknownSymbols: [...new Set(unknownSymbols)],
+  };
+}
+
+/**
+ * @param {ReturnType<typeof deriveScopeManifestFromInvariants>} manifest
+ * @param {{ registry?: ReturnType<typeof allV0ScopeCategories> }} [opts]
+ */
+function renderScopeLists(manifest, opts = {}) {
+  const registry = opts.registry ?? allV0ScopeCategories();
+  const coveredSet = new Set(manifest.categoryIds ?? []);
+
+  const covered = [];
+  for (const id of manifest.categoryIds ?? []) {
+    const cat = getScopeCategoryById(id);
+    if (cat) covered.push({ ...cat });
+  }
+
+  const notChecked = registry
+    .filter((c) => !coveredSet.has(c.categoryId))
+    .map((c) => ({ ...c }));
+
+  sortNotCheckedForDisplay(notChecked);
+
+  return {
+    status: manifest.status,
+    scopeRoot: manifest.scopeRoot,
+    scopeCovered: covered,
+    scopeNotChecked: notChecked,
+    scopeDisclaimer: SCOPE_DISCLAIMER,
+    scopeKnownCategoryCount: registry.length,
+    warnings: manifest.warnings ?? [],
+    unknownSymbols: manifest.unknownSymbols ?? [],
+  };
+}
+
+/** @param {{ symbol: string }[]} rows */
+function sortNotCheckedForDisplay(rows) {
+  rows.sort((a, b) => {
+    if (a.symbol === "GOVERNANCE-DRAIN-PATH") return -1;
+    if (b.symbol === "GOVERNANCE-DRAIN-PATH") return 1;
+    return a.symbol.localeCompare(b.symbol);
+  });
+}
+
+/**
+ * Full pipeline: spec invariants → manifest → render triple.
+ * @param {SpecInvariant[] | null | undefined} invariants
+ */
+function deriveScopeFromSpec(invariants, opts = {}) {
+  const manifest = deriveScopeManifestFromInvariants(invariants, opts);
+  const render = renderScopeLists(manifest, opts);
+  return { manifest, render };
+}
+
+/**
+ * Attach scope fields to a Bob card (audit lines only).
+ * Accepts `spec.invariants`, `specInvariants`, or precomputed `scopeRender`.
+ * @param {object} card
+ * @param {object} input — audit card input
+ */
+function attachScopeToBobCard(card, input = {}) {
+  if (input.kind === "gap") return card;
+
+  let render = input.scopeRender;
+  if (!render) {
+    const invariants =
+      input.specInvariants ?? input.spec?.invariants ?? input.invariants ?? null;
+    render = deriveScopeFromSpec(invariants).render;
+  }
+
+  const next = {
+    ...card,
+    scopeStatus: render.status,
+    scopeRoot: render.scopeRoot,
+    scopeCovered: render.scopeCovered,
+    scopeNotChecked: render.scopeNotChecked,
+    scopeDisclaimer: render.scopeDisclaimer,
+    scopeKnownCategoryCount: render.scopeKnownCategoryCount,
+  };
+
+  const warnings = [...(card.integratorWarnings ?? [])];
+  if (render.warnings?.includes("SCOPE_UNKNOWN_SYMBOL")) {
+    warnings.push("SCOPE_UNKNOWN_SYMBOL");
+  }
+  if (render.status === ScopeRenderStatus.Unavailable) {
+    warnings.push("SCOPE_MANIFEST_UNAVAILABLE");
+  }
+  if (warnings.length > 0) {
+    next.integratorWarnings = [...new Set(warnings)];
+  }
+
+  if (render.unknownSymbols?.length > 0) {
+    next.scopeUnknownSymbols = render.unknownSymbols;
+  }
+
+  return next;
+}
+
+return { SCOPE_DISCLAIMER: __m["./scopeTaxonomyV0.mjs"].SCOPE_DISCLAIMER, SCOPE_TAXONOMY_VERSION: __m["./scopeTaxonomyV0.mjs"].SCOPE_TAXONOMY_VERSION, allV0ScopeCategories: __m["./scopeTaxonomyV0.mjs"].allV0ScopeCategories, categoryIdForSymbol: __m["./scopeTaxonomyV0.mjs"].categoryIdForSymbol, getScopeCategory: __m["./scopeTaxonomyV0.mjs"].getScopeCategory, getScopeCategoryById: __m["./scopeTaxonomyV0.mjs"].getScopeCategoryById, ScopeRenderStatus, scopeRootFromCategoryIds, deriveScopeManifestFromInvariants, renderScopeLists, deriveScopeFromSpec, attachScopeToBobCard };
+})();
+__m["./specQualityCore.mjs"] = (function () {
+"use strict";
+/**
+ * Spec-quality linter v1, the pure core (no Node imports, so it bundles for a browser).
+ * Scope, spec-quality & fleet § quality (RealDeal/notebook/8-integration/book/04-spec-scope-and-quality.md#quality)
+ *
+ * Moved verbatim out of validateSpecQuality.mjs on 2026-10-10 (claim linter step A, VD-225 / VD-275);
+ * validateSpecQuality.mjs re-exports everything here and keeps the command line.
+ *
+ *   import { validateSpecQuality } from "./specQualityCore.mjs";
+ */
+
+const { deriveScopeFromSpec } = __m["./deriveScope.mjs"];
+const { V0_SCOPE_SYMBOLS } = __m["./scopeTaxonomyV0.mjs"];
+
+const SpecQualityClass = {
+  Invalid: "SPEC-INVALID",
+  Inauditable: "SPEC-INAUDITABLE",
+  Vacuous: "SPEC-VACUOUS",
+  MisScoped: "SPEC-MIS-SCOPED",
+  Thin: "SPEC-THIN",
+  MarketingSkew: "SPEC-MARKETING-SKEW",
+  Stale: "SPEC-STALE",
+};
+
+/** Versioned linter artifact — fleet false-negative notices record this. */
+const SPEC_QUALITY_LINTER_VERSION = "v1";
+
+/** @type {Record<string, RegExp[]>} — tag supported if statement matches any pattern */
+const SCOPE_TAG_PATTERNS = {
+  "SWAP-RATE": [
+    /\bswap\b/i,
+    /\bexchange\b/i,
+    /\brate\b/i,
+    /\bamountOut\b/i,
+    /\bamountIn\b/i,
+    /\bcurve\b/i,
+    /\bconvert\b/i,
+  ],
+  "SUPPLY-CONSERVATION": [
+    /\bmint\b/i,
+    /\bburn\b/i,
+    /\btotalSupply\b/i,
+    /\bsupply\b/i,
+    /\bmaxSupply\b/i,
+  ],
+  "BALANCE-ACCOUNTING": [
+    /\bbalance\b/i,
+    /\btransfer\b/i,
+    /\baccounting\b/i,
+    /\bcredit\b/i,
+    /\bdebit\b/i,
+    /\bheld\b/i,
+    /\bmint\b/i,
+    /\bburn\b/i,
+    /\bexchange path\b/i,
+  ],
+  "ACCESS-CONTROL": [
+    /\bonlyOwner\b/i,
+    /\bonlyRole\b/i,
+    /\bmodifier\b/i,
+    /\bpermission\b/i,
+    /\bauthorized\b/i,
+    /\bmay only\b/i,
+    /\brestricted\b/i,
+    /\brole\b/i,
+  ],
+  "GOVERNANCE-DRAIN-PATH": [
+    /\bdrain\b/i,
+    /\bseize\b/i,
+    /\bconfiscat\b/i,
+    /\buser\b.*\btransfer\b/i,
+    /\btransfer\b.*\buser\b/i,
+    /\barbitrary\b.*\bbalance\b/i,
+    /\bwithdraw\b.*\b(user|holder|depositor)\b/i,
+    /\btake\b.*\bfund\b/i,
+    /\bmove\b.*\b(user|holder)\b.*\bfund\b/i,
+  ],
+  "PRIVILEGED-PARAMETER": [
+    /\bfee\b/i,
+    /\brate\b/i,
+    /\bsetRate\b/i,
+    /\bset[A-Z][a-zA-Z]*\b/,
+    /\bparameter\b/i,
+    /\blimit\b/i,
+    /\bcap\b/i,
+    /\bfactor\b/i,
+    /\bincentive\b/i,
+    /\bcollateral\b/i,
+    /\bltv\b/i,
+    /\bcloseFactor\b/i,
+  ],
+  "STATE-LIFECYCLE": [
+    /\bstate\b/i,
+    /\bterminal\b/i,
+    /\bescrow\b/i,
+    /\brelease\b/i,
+    /\brefund\b/i,
+    /\bphase\b/i,
+    /\blifecycle\b/i,
+  ],
+  REENTRANCY: [
+    /\breentr/i,
+    /\bCEI\b/,
+    /\bchecks-effects\b/i,
+    /\bexternal call\b/i,
+    /\bcallback\b/i,
+    /\bnonReentrant\b/i,
+    /\bbefore.*transfer\b/i,
+  ],
+  "ARITHMETIC-SAFETY": [
+    /\boverflow\b/i,
+    /\bunderflow\b/i,
+    /\brounding\b/i,
+    /\bprecision\b/i,
+    /\bsafemath\b/i,
+    /\bmulDiv\b/i,
+  ],
+  "ORACLE-DEPENDENCE": [
+    /\boracle\b/i,
+    /\bfeed\b/i,
+    /\bprice\b/i,
+    /\bTWAP\b/i,
+    /\bchainlink\b/i,
+    /\baggregator\b/i,
+    /\bstale\b.*\bprice\b/i,
+  ],
+  "UPGRADE-PROXY": [
+    /\bupgrade\b/i,
+    /\bproxy\b/i,
+    /\bimplementation\b/i,
+    /\bUUPS\b/i,
+    /\btransparent\b/i,
+    /\bdelegatecall\b/i,
+  ],
+  "PAUSE-EMERGENCY": [
+    /\bpause\b/i,
+    /\bemergency\b/i,
+    /\bfreeze\b/i,
+    /\bunpause\b/i,
+  ],
+  "TOKEN-INTERFACE": [
+    /\bERC-?20\b/i,
+    /\bERC-?721\b/i,
+    /\bfee-on-transfer\b/i,
+    /\brebase\b/i,
+    /\bapprove\b/i,
+    /\btransferFrom\b/i,
+  ],
+  "TIME-LOGIC": [
+    /\bdeadline\b/i,
+    /\bvesting\b/i,
+    /\bschedule\b/i,
+    /\btimestamp\b/i,
+    /\bexpir\b/i,
+    /\btime\b/i,
+  ],
+  "INPUT-VALIDATION": [
+    /\bzero\b/i,
+    /\bbounds\b/i,
+    /\brequire\b/i,
+    /\bvalidat\b/i,
+    /\breject\b/i,
+    /\bsanity\b/i,
+  ],
+};
+
+const VACUOUS_PATTERNS = [
+  /\btotalSupply\b.*\b(never negative|non-?negative|>=\s*0)\b/i,
+  /\b(is|are)\s+never\s+negative\b/i,
+  /\balways\s+true\b/i,
+  /\btautolog/i,
+];
+
+function isVacuousSupplyNonnegativeOnly(text) {
+  return (
+    /\b(totalSupply|supply)\b/i.test(text) &&
+    /\b(never negative|non-?negative|>=\s*0)\b/i.test(text) &&
+    !/\b(mint|burn)\b/i.test(text)
+  );
+}
+
+function isVacuousStatement(statement) {
+  const text = String(statement ?? "");
+  if (!text.trim()) return false;
+  for (const re of VACUOUS_PATTERNS) {
+    if (re.test(text)) return true;
+  }
+  if (isVacuousSupplyNonnegativeOnly(text)) return true;
+  return false;
+}
+
+function tagSupportedByStatement(symbol, statement) {
+  const patterns = SCOPE_TAG_PATTERNS[symbol];
+  if (!patterns) return false;
+  const text = String(statement ?? "");
+  return patterns.some((re) => re.test(text));
+}
+
+/**
+ * @typedef {{ class: string, invariantId?: string, scopeSymbol?: string, evidence: string }} SpecQualityFinding
+ */
+
+/**
+ * @param {{ invariants?: Array<{ id?: string, statement?: string, scope?: string[] }> }} spec
+ * @param {{ marketingClaims?: string[], thinCoveredMax?: number, thinInvariantMax?: number }} [opts]
+ * @returns {{ findings: SpecQualityFinding[], coveredCount: number, knownCategoryCount: number }}
+ */
+function validateSpecQuality(spec, opts = {}) {
+  const findings = [];
+  const thinCoveredMax = opts.thinCoveredMax ?? 4;
+  const thinInvariantMax = opts.thinInvariantMax ?? 3;
+  const invariants = Array.isArray(spec?.invariants) ? spec.invariants : [];
+
+  if (invariants.length === 0) {
+    findings.push({
+      class: SpecQualityClass.Inauditable,
+      evidence: "spec has no invariants[]",
+    });
+    return { findings, coveredCount: 0, knownCategoryCount: V0_SCOPE_SYMBOLS.length };
+  }
+
+  const { render } = deriveScopeFromSpec(invariants);
+  const coveredCount = render.scopeCovered?.length ?? 0;
+
+  for (const inv of invariants) {
+    const id = inv?.id ?? "(no-id)";
+    const statement = inv?.statement ?? "";
+    const scope = Array.isArray(inv?.scope) ? inv.scope : [];
+
+    if (isVacuousStatement(statement)) {
+      findings.push({
+        class: SpecQualityClass.Vacuous,
+        invariantId: id,
+        evidence: `statement looks tautological or non-constraining: ${statement.slice(0, 120)}`,
+      });
+    }
+
+    if (scope.length === 0) {
+      findings.push({
+        class: SpecQualityClass.MisScoped,
+        invariantId: id,
+        evidence: "invariant has no scope[] tags — scope manifest cannot represent what was checked",
+      });
+      continue;
+    }
+
+    for (const sym of scope) {
+      const symbol = String(sym).trim();
+      if (!V0_SCOPE_SYMBOLS.includes(symbol)) continue;
+      if (!tagSupportedByStatement(symbol, statement)) {
+        findings.push({
+          class: SpecQualityClass.MisScoped,
+          invariantId: id,
+          scopeSymbol: symbol,
+          evidence: `scope tag ${symbol} not reflected in statement keywords`,
+        });
+      }
+    }
+  }
+
+  if (
+    coveredCount > 0 &&
+    coveredCount <= thinCoveredMax &&
+    invariants.length <= thinInvariantMax
+  ) {
+    findings.push({
+      class: SpecQualityClass.Thin,
+      evidence: `only ${coveredCount}/${V0_SCOPE_SYMBOLS.length} scope categories covered with ${invariants.length} invariant(s) — honest narrow spec; disclose in copy`,
+    });
+  }
+
+  const marketing = opts.marketingClaims ?? spec?.marketingClaims ?? [];
+  if (Array.isArray(marketing) && marketing.length > 0) {
+    for (const claim of marketing) {
+      const text = String(claim);
+      const implied = inferImpliedScopeSymbols(text);
+      for (const sym of implied) {
+        const covered = invariants.some(
+          (inv) =>
+            Array.isArray(inv.scope) &&
+            inv.scope.includes(sym) &&
+            tagSupportedByStatement(sym, inv.statement ?? ""),
+        );
+        if (!covered) {
+          findings.push({
+            class: SpecQualityClass.MarketingSkew,
+            scopeSymbol: sym,
+            evidence: `marketing claim implies ${sym} but no matching invariant+statement`,
+          });
+        }
+      }
+    }
+  }
+
+  return {
+    findings,
+    coveredCount,
+    knownCategoryCount: V0_SCOPE_SYMBOLS.length,
+  };
+}
+
+/** Rough map from marketing prose to scope symbols (v0). */
+function inferImpliedScopeSymbols(text) {
+  const found = new Set();
+  const rules = [
+    [/oracle|price feed|TWAP|manipulation/i, "ORACLE-DEPENDENCE"],
+    [/reentr/i, "REENTRANCY"],
+    [/admin.*drain|rug|take.*fund|seize/i, "GOVERNANCE-DRAIN-PATH"],
+    [/hidden mint|print token|mint/i, "SUPPLY-CONSERVATION"],
+    [/swap|exchange rate/i, "SWAP-RATE"],
+    [/access control|only owner|privileged/i, "ACCESS-CONTROL"],
+    [/upgrade|proxy/i, "UPGRADE-PROXY"],
+    [/pause|emergency stop/i, "PAUSE-EMERGENCY"],
+  ];
+  for (const [re, sym] of rules) {
+    if (re.test(text)) found.add(sym);
+  }
+  return [...found];
+}
+
+/**
+ * Dedupe findings by class+invariantId+scopeSymbol+evidence prefix.
+ * @param {SpecQualityFinding[]} findings
+ */
+function dedupeFindings(findings) {
+  const seen = new Set();
+  const out = [];
+  for (const f of findings) {
+    const key = `${f.class}|${f.invariantId ?? ""}|${f.scopeSymbol ?? ""}|${f.evidence.slice(0, 80)}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(f);
+  }
+  return out;
+}
+
+return { SpecQualityClass, SPEC_QUALITY_LINTER_VERSION, validateSpecQuality, dedupeFindings };
+})();
+__m["./strategyClaimsCore.mjs"] = (function () {
+"use strict";
+/**
+ * Claim linter, strategy-claims family (VD-225, seated by VD-275): schema v0 and rules S1 to S10, the table in
+ * section 4.2 of SecondBrain/deliverables/colosseum-claim-linter-proposal-2026-09-18.md. S8 is advice, not a grade.
+ * The grades say whether a claim could ever be checked, never whether it is true, safe or profitable.
+ *
+ * Pure: no imports at all, so the page can bundle it and the mutant runner can copy it anywhere.
+ * Same input, same output; nothing reads the clock.
+ *
+ * S1 asks one question of an effect claim: how many trades does it take to tell this edge from zero at the
+ * stated t hurdle, and does that fit inside the horizon at the stated trade rate?
+ *
+ *   N = ceil( (t * sigmaR / effectR)^2 * clusterRatio^2 )      years = N / tradesPerYear
+ *
+ * N is computed in integers on the decimals as typed, so a whole-number N is not pushed one over by floating point.
+ *
+ * It is the inverse of FvgCatcher's idea_lib.mde(n, sd, tc_over_t, t_hurdle) with tc_over_t = 1 / clusterRatio.
+ * N and the years are always printed. The claim is VACUOUS when the years exceed the horizon. A missing input is
+ * NOT EVALUATED with its reason, never a pass (VD-228).
+ */
+
+const STRATEGY_CLAIMS_LINTER_VERSION = "v0";
+
+const StrategyClaimClass = Object.freeze({
+  Invalid: "INVALID",
+  Vacuous: "VACUOUS",
+  Inauditable: "INAUDITABLE",
+  MisScoped: "MIS-SCOPED",
+  Stale: "STALE",
+  MarketingSkew: "MARKETING-SKEW",
+  Thin: "THIN",
+  Checkable: "CHECKABLE",
+  NotEvaluated: "NOT EVALUATED",
+});
+
+/** Defect grades, most severe first. The overall grade is the first of these any finding carries. Both tabs read
+ * this one list (specQualityGrade.mjs imports it), so a grade ranks the same on the page and in the receipt. */
+const CLAIM_GRADE_ORDER = Object.freeze([
+  StrategyClaimClass.Invalid,
+  StrategyClaimClass.Vacuous,
+  StrategyClaimClass.Inauditable,
+  StrategyClaimClass.MisScoped,
+  StrategyClaimClass.Stale,
+  StrategyClaimClass.MarketingSkew,
+  StrategyClaimClass.Thin,
+]);
+const SEVERITY = CLAIM_GRADE_ORDER;
+
+const STRATEGY_CLAIM_LAYERS = Object.freeze(["effect", "application", "behaviour"]);
+
+const S1_DEFAULTS = Object.freeze({ tHurdle: 2.5, horizonYears: 5 });
+
+const STRATEGY_CLAIM_RULES = Object.freeze(["S1", "S2", "S3", "S4", "S5", "S6", "S7", "S8", "S9", "S10"]);
+
+/**
+ * A claim counts as evaluated when its layer's own rule reached a verdict on it, clean or not. Other rules add
+ * findings to it but do not, alone, put it in the coverage: an effect claim S1 could not size is not checkable
+ * because S10 liked its search.
+ */
+const PRIMARY_RULE = Object.freeze({ effect: "S1", application: "S2", behaviour: "S3" });
+
+function isPlainObject(v) {
+  return v !== null && typeof v === "object" && !Array.isArray(v);
+}
+
+function isFiniteNumber(v) {
+  return typeof v === "number" && Number.isFinite(v);
+}
+
+/** 1407 -> "1,407", without the host's locale. */
+function groupThousands(n) {
+  return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
+/** The value before the ceiling, in floating point, exactly as S1 states it. Printed beside N; never ceilinged. */
+function edgePowerRaw(effectR, sigmaR, clusterRatio, tHurdle) {
+  return (tHurdle * sigmaR / effectR) ** 2 * clusterRatio ** 2;
+}
+
+/** A finite number as the exact decimal it prints as: 0.16 -> [16n, 100n], 1e-7 -> [1n, 10000000n]. */
+function exactDecimal(x) {
+  const m = /^(-?)(\d+)(?:\.(\d+))?(?:e([+-]\d+))?$/.exec(String(x));
+  if (!m) throw new TypeError(`not a finite decimal: ${x}`);
+  const frac = m[3] ?? "";
+  let num = BigInt(m[2] + frac);
+  let den = 10n ** BigInt(frac.length);
+  const exp = Number(m[4] ?? 0);
+  if (exp > 0) num *= 10n ** BigInt(exp);
+  else den *= 10n ** BigInt(-exp);
+  return [m[1] === "-" ? -num : num, den];
+}
+
+/**
+ * N for S1, exact for the decimals as typed: ceil((t * sigma * cluster)^2 / effect^2) in integers. Floating point
+ * put the ceiling one over at whole-number N (0.16 R, sigma 0.32 R, t 3.5 is 49, and the float said 50).
+ */
+function edgePowerTrades(effectR, sigmaR, clusterRatio, tHurdle) {
+  const [en, ed] = exactDecimal(effectR);
+  const [sn, sd] = exactDecimal(sigmaR);
+  const [cn, cd] = exactDecimal(clusterRatio);
+  const [tn, td] = exactDecimal(tHurdle);
+  const num = (tn * sn * cn * ed) ** 2n;
+  const den = (td * sd * cd * en) ** 2n;
+  return Number((num + den - 1n) / den);
+}
+
+/** Upper tail of the standard normal, P(Z > x). erfc after Numerical Recipes' erfcc, fractional error under 1.2e-7. */
+function normalUpperTail(x) {
+  const z = Math.abs(x) / Math.SQRT2;
+  const t = 1 / (1 + 0.5 * z);
+  const poly =
+    -1.26551223 +
+    t * (1.00002368 + t * (0.37409196 + t * (0.09678418 + t * (-0.18628806 + t * (0.27886807 +
+    t * (-1.13520398 + t * (1.48851587 + t * (-0.82215223 + t * 0.17087277))))))));
+  const erfc = t * Math.exp(-z * z + poly);
+  return x >= 0 ? erfc / 2 : 1 - erfc / 2;
+}
+
+/**
+ * S10: the hurdle a claim needs when it is the best of `candidatesTried`, by Bonferroni on the tail S1's hurdle
+ * stands for. 2.5 becomes 3.47 at 24 tried, which needs (3.47 / 2.5)^2 = 1.93 times the trades.
+ */
+function bonferroniT(tHurdle, candidatesTried) {
+  if (candidatesTried <= 1) return tHurdle;
+  const target = normalUpperTail(tHurdle) / candidatesTried;
+  let lo = tHurdle;
+  let hi = tHurdle + 40;
+  for (let i = 0; i < 200; i += 1) {
+    const mid = (lo + hi) / 2;
+    if (normalUpperTail(mid) > target) lo = mid;
+    else hi = mid;
+  }
+  return (lo + hi) / 2;
+}
+
+// --- the text patterns S5, S6, S7 and S9 read. Plain English only; a miss is a rule that did not fire, and the
+// coverage on the page says which rules ran. ---
+
+const FUTURE_TENSE =
+  /\b(?:will|won't|shall|going to|expects? to|forecasts?|predicts?|in the future|from now on|next (?:day|week|month|quarter|year))\b/i;
+
+const RETURN_PROMISE =
+  /(\d+(?:\.\d+)?)\s*%\s*(?:(?:a|an|per|\/|each|every)\s*)?(?:day|daily|week|weekly|month|monthly|quarter|quarterly|year|yearly|annual(?:ly)?|annum|apy|apr)\b/gi;
+
+const WORD_PROMISES = [
+  /\bguarantee(?:d|s)?\b/i,
+  /\bpassive(?:ly)?\b/i,
+  /\brisk[- ]?free\b|\bno[- ]risk\b|\bzero[- ]risk\b/i,
+];
+
+const SHORT_PREMIUM =
+  /\bshort[- ](?:premium|vol(?:atility)?|puts?|calls?|options?|straddles?|strangles?|gamma)\b|\bsell(?:s|ing)?\s+(?:puts?|calls?|options?|premium|vol(?:atility)?|straddles?|strangles?)\b|\bcovered calls?\b|\biron condors?\b|\bcredit spreads?\b|\bcash[- ]secured puts?\b/i;
+
+const RUIN_WORDS = /\b(?:loss|losses|lose|ruin|drawdown|tail|worst)\b/i;
+
+const VERDICT =
+  /\b(?:safe|safer|safest|secure|low[- ]risk|high[- ]risk|no[- ]risk|risk[- ]?free|bulletproof|battle[- ]tested)\b|\b\d{1,3}\s*\/\s*100\b|\bscored?\s+(?:of\s+)?\d+|\b(?:rated|graded?)\s+[A-F][+-]?(?![A-Za-z])/i;
+
+// --- schema v0 ---
+
+function checkPositive(errors, value, path, { allowZero = false } = {}) {
+  if (value === undefined) return;
+  if (!isFiniteNumber(value) || value < 0 || (!allowZero && value === 0)) {
+    errors.push({ path, message: `${path} must be a ${allowZero ? "non-negative" : "positive"} number` });
+  }
+}
+
+function checkString(errors, value, path) {
+  if (value === undefined) return;
+  if (typeof value !== "string" || value.trim() === "") errors.push({ path, message: `${path} must be a non-empty string` });
+}
+
+/** Returns a list of { path, message, claimId? }. Empty means the document is schema v0. */
+function validateStrategyClaimsSchema(doc) {
+  const errors = [];
+  if (!isPlainObject(doc)) {
+    errors.push({ path: "$", message: "the document must be a JSON object" });
+    return errors;
+  }
+  checkString(errors, doc.headline, "headline");
+  checkPositive(errors, doc.tradesPerYear, "tradesPerYear");
+  if (doc.perTrade !== undefined) {
+    if (!isPlainObject(doc.perTrade)) errors.push({ path: "perTrade", message: "perTrade must be an object" });
+    else {
+      checkPositive(errors, doc.perTrade.sigmaR, "perTrade.sigmaR");
+      checkPositive(errors, doc.perTrade.clusterRatio, "perTrade.clusterRatio");
+    }
+  }
+  if (!Array.isArray(doc.claims) || doc.claims.length === 0) {
+    errors.push({ path: "claims", message: "claims must be a non-empty array" });
+    return errors;
+  }
+  const seen = new Set();
+  doc.claims.forEach((c, i) => {
+    const at = `claims[${i}]`;
+    if (!isPlainObject(c)) {
+      errors.push({ path: at, message: `${at} must be an object` });
+      return;
+    }
+    const claimId = typeof c.id === "string" && c.id.trim() !== "" ? c.id : undefined;
+    const push = (path, message) => errors.push(claimId ? { path, message, claimId } : { path, message });
+    if (!claimId) push(`${at}.id`, `${at}.id must be a non-empty string`);
+    else if (seen.has(claimId)) push(`${at}.id`, `claim id "${claimId}" appears more than once`);
+    else seen.add(claimId);
+    if (!STRATEGY_CLAIM_LAYERS.includes(c.layer)) {
+      push(`${at}.layer`, `${at}.layer must be one of ${STRATEGY_CLAIM_LAYERS.join(", ")}`);
+    }
+    if (typeof c.statement !== "string" || c.statement.trim() === "") {
+      push(`${at}.statement`, `${at}.statement must be a non-empty string`);
+    }
+    const before = errors.length;
+    if (c.effectR !== undefined && !isFiniteNumber(c.effectR)) push(`${at}.effectR`, `${at}.effectR must be a number`);
+    checkPositive(errors, c.sigmaR, `${at}.sigmaR`);
+    checkPositive(errors, c.clusterRatio, `${at}.clusterRatio`);
+    if (c.candidatesTried !== undefined && !(Number.isInteger(c.candidatesTried) && c.candidatesTried >= 1)) {
+      push(`${at}.candidatesTried`, `${at}.candidatesTried must be a whole number, 1 or more`);
+    }
+    if (c.holdout !== undefined) {
+      if (!isPlainObject(c.holdout)) push(`${at}.holdout`, `${at}.holdout must be an object`);
+      else {
+        if (c.holdout.sealedUntilChoice !== undefined && typeof c.holdout.sealedUntilChoice !== "boolean") {
+          push(`${at}.holdout.sealedUntilChoice`, `${at}.holdout.sealedUntilChoice must be true or false`);
+        }
+        checkPositive(errors, c.holdout.trades, `${at}.holdout.trades`);
+      }
+    }
+    if (c.limit !== undefined && !isFiniteNumber(c.limit)) push(`${at}.limit`, `${at}.limit must be a number`);
+    checkPositive(errors, c.sizing, `${at}.sizing`);
+    checkPositive(errors, c.forwardWindowDays, `${at}.forwardWindowDays`);
+    checkString(errors, c.checkedAt, `${at}.checkedAt`);
+    checkString(errors, c.test, `${at}.test`);
+    checkPositive(errors, c.dataWindowDays, `${at}.dataWindowDays`);
+    checkPositive(errors, c.maxDataAgeDays, `${at}.maxDataAgeDays`);
+    if (claimId) for (let k = before; k < errors.length; k += 1) errors[k].claimId ??= claimId;
+  });
+  return errors;
+}
+
+// --- S1, edge power ---
+
+function ruleS1(doc, claim, opts, out) {
+  if (claim.layer !== "effect") return false;
+  const notEvaluated = (reason) => out.notEvaluated.push({ rule: "S1", claimId: claim.id, reason });
+
+  if (claim.effectR === undefined) {
+    notEvaluated("the claim states no effectR, so there is no edge to size");
+    return false;
+  }
+  if (claim.effectR <= 0) {
+    notEvaluated(`effectR is ${claim.effectR}; S1 sizes a positive edge only`);
+    return false;
+  }
+  const sigmaR = claim.sigmaR ?? doc.perTrade?.sigmaR;
+  if (sigmaR === undefined) {
+    notEvaluated("no per-trade sigmaR (on the claim or in perTrade), so the noise is unknown");
+    return false;
+  }
+  const sigmaSource = claim.sigmaR !== undefined ? "claim" : "perTrade";
+  const declaredCluster = claim.clusterRatio ?? doc.perTrade?.clusterRatio;
+  const clusterRatio = declaredCluster ?? 1;
+  const tradesPerYear = doc.tradesPerYear;
+
+  const rawTrades = edgePowerRaw(claim.effectR, sigmaR, clusterRatio, opts.tHurdle);
+  const requiredTrades = edgePowerTrades(claim.effectR, sigmaR, clusterRatio, opts.tHurdle);
+  const years = tradesPerYear === undefined ? null : requiredTrades / tradesPerYear;
+  const decidable = years === null ? null : years <= opts.horizonYears;
+
+  const row = {
+    rule: "S1",
+    claimId: claim.id,
+    requiredTrades,
+    rawTrades,
+    years,
+    yearsDisplay: years === null ? null : years.toFixed(1),
+    horizonYears: opts.horizonYears,
+    decidable,
+    inputs: {
+      effectR: claim.effectR,
+      sigmaR,
+      sigmaSource,
+      clusterRatio,
+      clusterRatioAssumed: declaredCluster === undefined,
+      tHurdle: opts.tHurdle,
+      tradesPerYear: tradesPerYear ?? null,
+    },
+  };
+  out.power.push(row);
+
+  if (years === null) {
+    notEvaluated(
+      `needs ${groupThousands(requiredTrades)} trades, but the document states no tradesPerYear, ` +
+        `so the ${opts.horizonYears}-year horizon cannot be checked`,
+    );
+    return false;
+  }
+  if (!decidable) {
+    out.findings.push({
+      rule: "S1",
+      claimId: claim.id,
+      class: StrategyClaimClass.Vacuous,
+      message:
+        `${claim.effectR} R per trade at sigma ${sigmaR} R` +
+        (row.inputs.clusterRatioAssumed ? "" : `, cluster ratio ${clusterRatio}`) +
+        ` needs ${groupThousands(requiredTrades)} trades to clear t ${opts.tHurdle}: ` +
+        `${row.yearsDisplay} years at ${tradesPerYear} a year, past the ${opts.horizonYears}-year horizon`,
+    });
+  }
+  return true;
+}
+
+// --- S2 to S7, S9, S10: each returns true when it reached a verdict on the claim, clean or not ---
+
+/** S2, the limit without a test: INAUDITABLE. The application layer's own rule. */
+function ruleS2(doc, claim, opts, out) {
+  if (claim.layer !== "application") return false;
+  if (claim.limit === undefined) {
+    out.notEvaluated.push({ rule: "S2", claimId: claim.id, reason: "the claim states no limit, so there is nothing for a test to check" });
+    return false;
+  }
+  const missing = ["test", "checkedAt"].filter((k) => claim[k] === undefined);
+  if (missing.length > 0) {
+    out.findings.push({
+      rule: "S2",
+      claimId: claim.id,
+      class: StrategyClaimClass.Inauditable,
+      message: `the limit ${claim.limit} names no ${missing.join(" and no ")}: nobody can re-run the check that holds it`,
+    });
+  }
+  return true;
+}
+
+/** S3, the stale input: STALE. The behaviour layer's own rule. */
+function ruleS3(doc, claim, opts, out) {
+  if (claim.layer !== "behaviour") return false;
+  if (claim.dataWindowDays === undefined) {
+    out.notEvaluated.push({ rule: "S3", claimId: claim.id, reason: "the claim reads no stated data window (dataWindowDays)" });
+    return false;
+  }
+  if (claim.maxDataAgeDays === undefined) {
+    out.findings.push({
+      rule: "S3",
+      claimId: claim.id,
+      class: StrategyClaimClass.Stale,
+      message: `it reads ${claim.dataWindowDays} days of data and says nothing of how old that data may be (maxDataAgeDays)`,
+    });
+  }
+  return true;
+}
+
+/** S4, the limit that cannot fail: MIS-SCOPED when the limit is at or above the sizing it bounds. */
+function ruleS4(doc, claim, opts, out) {
+  if (claim.layer !== "application" || claim.limit === undefined) return false;
+  if (claim.sizing === undefined) {
+    out.notEvaluated.push({ rule: "S4", claimId: claim.id, reason: "no sizing stated, so whether the limit can ever bind is unknown" });
+    return false;
+  }
+  if (claim.limit >= claim.sizing) {
+    out.findings.push({
+      rule: "S4",
+      claimId: claim.id,
+      class: StrategyClaimClass.MisScoped,
+      message: `the limit ${claim.limit} is at or above the sizing ${claim.sizing} it bounds, so it can never fail`,
+    });
+  }
+  return true;
+}
+
+/** S5, the future stated as past: MIS-SCOPED when a forecast rests on a dataset alone (no forwardWindowDays). */
+function ruleS5(doc, claim, opts, out) {
+  const m = FUTURE_TENSE.exec(claim.statement);
+  if (m && claim.forwardWindowDays === undefined) {
+    out.findings.push({
+      rule: "S5",
+      claimId: claim.id,
+      class: StrategyClaimClass.MisScoped,
+      message: `"${m[0]}" states what will happen, and the claim declares no forward window: a dataset says what did happen`,
+    });
+  }
+  return true;
+}
+
+/** S6, the headline skew: MARKETING-SKEW for each promise in the headline that no claim's statement carries. */
+function ruleS6(doc, opts, out) {
+  if (doc.headline === undefined) {
+    out.notEvaluated.push({ rule: "S6", claimId: null, reason: "the document has no headline to compare with its claims" });
+    return;
+  }
+  const statements = doc.claims.map((c) => c.statement);
+  const skew = (promise) =>
+    out.findings.push({
+      rule: "S6",
+      claimId: null,
+      class: StrategyClaimClass.MarketingSkew,
+      message: `the headline promises "${promise}" and no declared claim carries it`,
+    });
+  for (const m of doc.headline.matchAll(RETURN_PROMISE)) {
+    const figure = new RegExp(`(?:^|[^\\d.])${m[1].replace(".", "\\.")}\\s*%`);
+    if (!statements.some((s) => figure.test(s))) skew(m[0]);
+  }
+  for (const re of WORD_PROMISES) {
+    const m = re.exec(doc.headline);
+    if (m && !statements.some((s) => re.test(s))) skew(m[0]);
+  }
+}
+
+/** S7, thin: fewer than three claims, or a short-premium structure with no claim bounding its loss. */
+function ruleS7(doc, opts, out) {
+  const thin = (message) => out.findings.push({ rule: "S7", claimId: null, class: StrategyClaimClass.Thin, message });
+  if (doc.claims.length < 3) thin(`${doc.claims.length} claim${doc.claims.length === 1 ? "" : "s"}; a strategy needs at least an effect, an application and a behaviour claim`);
+  const text = [doc.headline ?? "", ...doc.claims.map((c) => c.statement)].join("\n");
+  const m = SHORT_PREMIUM.exec(text);
+  if (m) {
+    const ruin = doc.claims.some((c) => c.layer === "application" && c.limit !== undefined && RUIN_WORDS.test(c.statement));
+    if (!ruin) thin(`"${m[0]}" sells a tail, and no application claim with a limit bounds the loss`);
+  }
+}
+
+/** S9, a verdict with no test: INAUDITABLE. On a claim with no test; on the headline when no claim names one. */
+function ruleS9(doc, claim, opts, out) {
+  const m = VERDICT.exec(claim.statement);
+  if (m && claim.test === undefined) {
+    out.findings.push({
+      rule: "S9",
+      claimId: claim.id,
+      class: StrategyClaimClass.Inauditable,
+      message: `"${m[0]}" is a verdict, and the claim names no test that produced it or would re-run it`,
+    });
+  }
+  return true;
+}
+
+function ruleS9Headline(doc, opts, out) {
+  const m = doc.headline === undefined ? null : VERDICT.exec(doc.headline);
+  if (m && !doc.claims.some((c) => c.test !== undefined)) {
+    out.findings.push({
+      rule: "S9",
+      claimId: null,
+      class: StrategyClaimClass.Inauditable,
+      message: `the headline's "${m[0]}" is a verdict, and no claim names a test`,
+    });
+  }
+}
+
+/**
+ * S10, selection without a holdout. INAUDITABLE with no candidatesTried: a test whose search is hidden cannot be
+ * priced. MIS-SCOPED when more than one was tried and no holdout was sealed until the choice. S1's own number is
+ * not changed: it prints the power of one pre-declared test.
+ */
+function ruleS10(doc, claim, opts, out) {
+  if (claim.layer !== "effect") return false;
+  const k = claim.candidatesTried;
+  if (k === undefined) {
+    out.findings.push({
+      rule: "S10",
+      claimId: claim.id,
+      class: StrategyClaimClass.Inauditable,
+      message: "the claim does not say how many candidates were tried, so the search behind it cannot be priced",
+    });
+    return true;
+  }
+  const h = claim.holdout;
+  const sealed = isPlainObject(h) && h.sealedUntilChoice === true && isFiniteNumber(h.trades) && h.trades > 0;
+  if (k > 1 && !sealed) {
+    const tk = bonferroniT(opts.tHurdle, k);
+    const row = out.power.find((p) => p.claimId === claim.id);
+    const more = row
+      ? ` (${groupThousands(edgePowerTrades(row.inputs.effectR, row.inputs.sigmaR, row.inputs.clusterRatio, tk))} ` +
+        `instead of ${groupThousands(row.requiredTrades)})`
+      : "";
+    out.findings.push({
+      rule: "S10",
+      claimId: claim.id,
+      class: StrategyClaimClass.MisScoped,
+      message:
+        `the best of ${k} tried, with no holdout sealed until the choice: the claim is about the winner on the data ` +
+        `that picked it. Picked that way, t ${opts.tHurdle} becomes t ${tk.toFixed(2)}, about ` +
+        `${((tk / opts.tHurdle) ** 2).toFixed(2)} times the trades${more}`,
+    });
+  }
+  return true;
+}
+
+/** S8, the way out: for every VACUOUS effect claim, the claims the author could declare instead. Advice, no grade. */
+function ruleS8(doc, opts, out) {
+  for (const row of out.power) {
+    if (row.decidable !== false) continue;
+    const { sigmaR, clusterRatio, tradesPerYear } = row.inputs;
+    // The smallest edge, in hundredths of an R, that S1 itself calls decidable inside the horizon: start under the
+    // float estimate and climb, so S1's exact N decides, not the float.
+    let cents = Math.max(1, Math.floor((100 * opts.tHurdle * sigmaR * clusterRatio) / Math.sqrt(opts.horizonYears * tradesPerYear)) - 1);
+    while (edgePowerTrades(cents / 100, sigmaR, clusterRatio, opts.tHurdle) / tradesPerYear > opts.horizonYears) cents += 1;
+    const minDecidableEffectR = cents / 100;
+    const suggestions = [
+      {
+        layer: "effect",
+        statement:
+          `an edge of ${minDecidableEffectR} R per trade or more: the smallest that ${opts.horizonYears} years at ` +
+          `${tradesPerYear} a year could tell from zero at t ${opts.tHurdle}`,
+      },
+      {
+        layer: "application",
+        statement: "what it does on every trade, with the check that holds it: a loss limit, where it is checked, and the test (limit, checkedAt, test)",
+      },
+      {
+        layer: "behaviour",
+        statement: "when it trades: the gate, the data window it reads, and how old that data may be (dataWindowDays, maxDataAgeDays)",
+      },
+    ];
+    if (out.findings.some((f) => f.rule === "S10" && f.claimId === row.claimId)) {
+      suggestions.push({
+        layer: "effect",
+        statement: "how many candidates were tried, and one test of the winner on data it never saw (candidatesTried, holdout)",
+      });
+    }
+    out.advice.push({ rule: "S8", claimId: row.claimId, minDecidableEffectR, suggestions });
+  }
+}
+
+// --- the linter ---
+
+function resolveOptions(opts = {}) {
+  const o = { ...S1_DEFAULTS };
+  for (const key of ["tHurdle", "horizonYears"]) {
+    if (opts[key] === undefined) continue;
+    if (!isFiniteNumber(opts[key]) || opts[key] <= 0) throw new TypeError(`option ${key} must be a positive number`);
+    o[key] = opts[key];
+  }
+  const rules = opts.rules ?? STRATEGY_CLAIM_RULES;
+  if (!Array.isArray(rules) || rules.some((r) => !STRATEGY_CLAIM_RULES.includes(r))) {
+    throw new TypeError(`option rules must list names from ${STRATEGY_CLAIM_RULES.join(", ")}`);
+  }
+  o.rules = STRATEGY_CLAIM_RULES.filter((r) => rules.includes(r));
+  return o;
+}
+
+const CLAIM_RULES = [
+  ["S1", ruleS1],
+  ["S2", ruleS2],
+  ["S3", ruleS3],
+  ["S4", ruleS4],
+  ["S5", ruleS5],
+  ["S9", ruleS9],
+  ["S10", ruleS10],
+];
+
+/**
+ * @param {unknown} doc  a strategy-claims document, schema v0
+ * @param {{ tHurdle?: number, horizonYears?: number, rules?: string[] }} [opts]
+ */
+function lintStrategyClaims(doc, opts) {
+  const o = resolveOptions(opts);
+  const out = { findings: [], power: [], notEvaluated: [], advice: [] };
+  const result = {
+    linterVersion: STRATEGY_CLAIMS_LINTER_VERSION,
+    family: "strategy-claims",
+    options: o,
+    ...out,
+  };
+
+  const schemaErrors = validateStrategyClaimsSchema(doc);
+  if (schemaErrors.length > 0) {
+    result.findings = schemaErrors.map((e) => ({ rule: "SCHEMA", class: StrategyClaimClass.Invalid, ...e }));
+    result.overall = {
+      grade: StrategyClaimClass.Invalid,
+      grades: [StrategyClaimClass.Invalid],
+      claimsTotal: Array.isArray(doc?.claims) ? doc.claims.length : 0,
+      claimsEvaluated: 0,
+      rulesRun: [],
+    };
+    return result;
+  }
+
+  const runs = (name) => o.rules.includes(name);
+  const evaluated = new Set();
+  for (const [name, rule] of CLAIM_RULES) {
+    if (!runs(name)) continue;
+    for (const claim of doc.claims) {
+      if (rule(doc, claim, o, out) && PRIMARY_RULE[claim.layer] === name) evaluated.add(claim.id);
+    }
+  }
+  if (runs("S6")) ruleS6(doc, o, out);
+  if (runs("S7")) ruleS7(doc, o, out);
+  if (runs("S9")) ruleS9Headline(doc, o, out);
+  if (runs("S8")) ruleS8(doc, o, out);
+  const claimsEvaluated = evaluated.size;
+
+  const grades = SEVERITY.filter((g) => out.findings.some((f) => f.class === g));
+  let grade;
+  if (grades.length > 0) grade = grades[0];
+  else if (claimsEvaluated === 0) grade = StrategyClaimClass.NotEvaluated;
+  else grade = StrategyClaimClass.Checkable;
+
+  result.findings = out.findings;
+  result.power = out.power;
+  result.notEvaluated = out.notEvaluated;
+  result.advice = out.advice;
+  result.overall = { grade, grades, claimsTotal: doc.claims.length, claimsEvaluated, rulesRun: [...o.rules] };
+  return result;
+}
+
+return { STRATEGY_CLAIMS_LINTER_VERSION, StrategyClaimClass, CLAIM_GRADE_ORDER, STRATEGY_CLAIM_LAYERS, S1_DEFAULTS, STRATEGY_CLAIM_RULES, edgePowerRaw, edgePowerTrades, bonferroniT, validateStrategyClaimsSchema, lintStrategyClaims };
+})();
+__m["./specQualityGrade.mjs"] = (function () {
+"use strict";
+/**
+ * The contract-spec tab's grade, over the prior linter (specQualityCore.mjs, unchanged). Pure, no Node imports.
+ * Claim linter, VD-225 proposal section 4.2 point 3: the pass means "no defect found by these rules", it names the
+ * rules and the coverage, and anything a rule could not evaluate reads NOT EVALUATED with its reason (VD-228).
+ * The grades read the same as the strategy tab's: one engine, one grade set.
+ */
+
+const { dedupeFindings, SPEC_QUALITY_LINTER_VERSION, validateSpecQuality } = __m["./specQualityCore.mjs"];
+const { CLAIM_GRADE_ORDER } = __m["./strategyClaimsCore.mjs"];
+
+/** The prior linter's rules, by the grade each one gives. */
+const SPEC_GRADE_RULES = ["INAUDITABLE", "VACUOUS", "MIS-SCOPED", "THIN", "MARKETING-SKEW"];
+
+/** The strategy family's order, one list for both tabs. */
+const SPEC_GRADE_ORDER = CLAIM_GRADE_ORDER;
+
+const gradeOf = (cls) => cls.replace(/^SPEC-/, "");
+
+/**
+ * @param {unknown} spec  a contract spec, { invariants: [{ id, statement, scope[] }], marketingClaims? }
+ * @param {{ marketingClaims?: string[] }} [opts]
+ */
+function gradeSpecQuality(spec, opts = {}) {
+  const { findings: raw, coveredCount, knownCategoryCount } = validateSpecQuality(spec, opts);
+  const findings = dedupeFindings(raw);
+  const notEvaluated = [];
+  const reached = coveredCount > 0;
+  if (!reached && Array.isArray(spec?.invariants) && spec.invariants.length > 0) {
+    notEvaluated.push({
+      rule: "scope",
+      reason:
+        `coverage ${coveredCount} of ${knownCategoryCount}: the taxonomy places none of the spec's scopes, so no ` +
+        "scope rule read it, and no finding here is not a pass",
+    });
+  }
+  const marketing = opts.marketingClaims ?? spec?.marketingClaims ?? [];
+  if (!Array.isArray(marketing) || marketing.length === 0) {
+    notEvaluated.push({ rule: "MARKETING-SKEW", reason: "no marketing claims were given to compare with the invariants" });
+  }
+
+  const grades = SPEC_GRADE_ORDER.filter((g) => findings.some((f) => gradeOf(f.class) === g));
+  let grade;
+  if (grades.length > 0) grade = grades[0];
+  else if (!reached) grade = "NOT EVALUATED";
+  else grade = "CHECKABLE";
+
+  return {
+    linterVersion: SPEC_QUALITY_LINTER_VERSION,
+    family: "contract-spec",
+    findings,
+    coverage: { covered: coveredCount, known: knownCategoryCount },
+    notEvaluated,
+    overall: { grade, grades, rulesRun: [...SPEC_GRADE_RULES] },
+  };
+}
+
+return { SPEC_GRADE_RULES, SPEC_GRADE_ORDER, gradeSpecQuality };
+})();
+__m["./claimLinterFindings.mjs"] = (function () {
+"use strict";
+/**
+ * The claim linter's findings file, shared by the command line (claimLinter.mjs) and the page (check.html), so a
+ * file saved from the page is the file the command writes. Pure, no Node imports: the caller hashes the input.
+ */
+
+const { gradeSpecQuality } = __m["./specQualityGrade.mjs"];
+const { lintStrategyClaims } = __m["./strategyClaimsCore.mjs"];
+
+/** The command that regenerates this findings file, with every option the result depended on spelled out. */
+function reproduceCommand(args, options) {
+  const parts = ["node", "indexer/claimLinter.mjs", args.family, args.input];
+  if (args.family === "strategy") parts.push("--t", String(options.tHurdle), "--horizon", String(options.horizonYears));
+  if (args.out) parts.push("--out", args.out);
+  return parts.map((p) => (/^[\w./:=-]+$/.test(p) ? p : `"${p.replace(/(["\\$`])/g, "\\$1")}"`)).join(" ");
+}
+
+/**
+ * @param {{ family: "strategy"|"spec", input: string, out?: string, t?: number, horizon?: number }} args
+ * @param {string} text    the input file's text; JSON.parse throws a SyntaxError when it is not JSON
+ * @param {string} sha256  the input file's bytes, hashed by the caller, lowercase hex
+ */
+function findingsFile(args, text, sha256) {
+  const doc = JSON.parse(text);
+  let result;
+  let options = {};
+  if (args.family === "strategy") {
+    result = lintStrategyClaims(doc, { tHurdle: args.t, horizonYears: args.horizon });
+    options = { tHurdle: result.options.tHurdle, horizonYears: result.options.horizonYears };
+  } else {
+    result = gradeSpecQuality(doc);
+  }
+  return {
+    tool: "claim-linter",
+    family: result.family,
+    linterVersion: result.linterVersion,
+    input: { file: args.input, sha256 },
+    reproduce: reproduceCommand(args, options),
+    result,
+  };
+}
+
+/** The bytes the command writes: two-space JSON and one newline. */
+function findingsText(file) {
+  return `${JSON.stringify(file, null, 2)}\n`;
+}
+
+return { reproduceCommand, findingsFile, findingsText };
+})();
+__m["./lintReceiptFields.mjs"] = (function () {
+"use strict";
+/**
+ * The four arguments of LintReceipt.record (body/tools/lint-receipt/), read from a findings file (VD-225 proposal
+ * section 4.2 E). Pure, no Node imports: the page and the command line build the same fields from the same bytes.
+ *
+ *   subjectHash    the input file's SHA-256, as the findings file carries it
+ *   linterVersion  "<family>/<version>", UTF-8, right-padded to 32 bytes (ethers' encodeBytes32String)
+ *   findingsRoot   the findings file's own SHA-256
+ *   worstGrade     the overall grade's code, below
+ *
+ * Both hashes are SHA-256, not keccak: anyone holding the two files checks a receipt with sha256sum, no chain tool.
+ */
+
+/** One byte per grade, as the receipt writes it. Frozen: a code once on chain means that grade forever, so a new
+ * grade takes a new number and no number is reused. 0 is no grade, so a zeroed field never reads as a pass. */
+const RECEIPT_GRADE_CODES = Object.freeze({
+  CHECKABLE: 1,
+  "NOT EVALUATED": 2,
+  INVALID: 3,
+  VACUOUS: 4,
+  INAUDITABLE: 5,
+  "MIS-SCOPED": 6,
+  STALE: 7,
+  "MARKETING-SKEW": 8,
+  THIN: 9,
+});
+
+const RECEIPT_SIGNATURE = "record(bytes32,bytes32,bytes32,uint8)";
+const RECEIPT_EVENT = "Linted(bytes32 indexed,bytes32,bytes32,uint8,address indexed)";
+
+/** Base Sepolia. Address and block are null until the operator deploys and they are read back from the chain. */
+const LINT_RECEIPT_DEPLOYMENT = Object.freeze({ chainId: 84532, address: null, deployBlock: null });
+
+const HEX64 = /^[0-9a-f]{64}$/;
+
+function bytes32String(s) {
+  const bytes = new TextEncoder().encode(s);
+  if (bytes.length > 31) throw new Error(`lint receipt: "${s}" is ${bytes.length} bytes; a bytes32 string holds 31`);
+  let hex = "";
+  for (const b of bytes) hex += b.toString(16).padStart(2, "0");
+  return `0x${hex.padEnd(64, "0")}`;
+}
+
+/**
+ * @param {object} file            a findings file (claimLinterFindings.mjs)
+ * @param {string} findingsSha256  the findings file's bytes, hashed by the caller, lowercase hex
+ */
+function receiptFields(file, findingsSha256) {
+  const input = file?.input?.sha256;
+  if (typeof input !== "string" || !HEX64.test(input)) throw new Error("lint receipt: the findings file carries no input SHA-256");
+  if (typeof findingsSha256 !== "string" || !HEX64.test(findingsSha256)) {
+    throw new Error("lint receipt: the findings file's SHA-256 is not 64 lowercase hex");
+  }
+  const grade = file?.result?.overall?.grade;
+  const code = Object.hasOwn(RECEIPT_GRADE_CODES, grade) ? RECEIPT_GRADE_CODES[grade] : undefined;
+  if (code === undefined) throw new Error(`lint receipt: the grade ${JSON.stringify(grade)} has no code`);
+  return {
+    subjectHash: `0x${input}`,
+    linterVersion: bytes32String(`${file.family}/${file.linterVersion}`),
+    findingsRoot: `0x${findingsSha256}`,
+    worstGrade: code,
+    grade,
+  };
+}
+
+/** The transaction, for whoever wants the grade on chain. It asks for the key; it never carries one. */
+function receiptCommand(fields, deployment = LINT_RECEIPT_DEPLOYMENT) {
+  const to = deployment.address ?? "<LintReceipt address>";
+  return [
+    "cast send",
+    to,
+    `"${RECEIPT_SIGNATURE}"`,
+    fields.subjectHash,
+    fields.linterVersion,
+    fields.findingsRoot,
+    String(fields.worstGrade),
+    "--rpc-url <BASE_SEPOLIA_RPC_URL> --interactive",
+  ].join(" ");
+}
+
+/** Every receipt ever written for this subject, read from the chain: the check that needs no page. */
+function receiptLookupCommand(fields, deployment = LINT_RECEIPT_DEPLOYMENT) {
+  return [
+    "cast logs --address",
+    deployment.address ?? "<LintReceipt address>",
+    "--from-block",
+    deployment.deployBlock === null ? "<its deploy block>" : String(deployment.deployBlock),
+    `"${RECEIPT_EVENT}"`,
+    fields.subjectHash,
+    "--rpc-url <BASE_SEPOLIA_RPC_URL>",
+  ].join(" ");
+}
+
+/** What `claimLinter.mjs receipt` prints: the fields and both commands, two-space JSON and one newline. */
+function receiptText(fields, deployment = LINT_RECEIPT_DEPLOYMENT) {
+  const out = {
+    ...fields,
+    chainId: deployment.chainId,
+    contract: deployment.address,
+    send: receiptCommand(fields, deployment),
+    lookup: receiptLookupCommand(fields, deployment),
+  };
+  return `${JSON.stringify(out, null, 2)}\n`;
+}
+
+return { RECEIPT_GRADE_CODES, RECEIPT_SIGNATURE, RECEIPT_EVENT, LINT_RECEIPT_DEPLOYMENT, receiptFields, receiptCommand, receiptLookupCommand, receiptText };
+})();
+__m["./danSpecMatch.mjs"] = (function () {
+"use strict";
+/**
+ * The link back to DAN (VD-225 proposal section 4.2 F), read only. A spec on the claim linter's page is pinned by
+ * keccak256 of the file's exact bytes, the form the reference fixture (`specReferenceFixture.mjs`) and the replay
+ * seat use (VD-387, VD-390), and looked up in a snapshot of the live cell's audits (`snapshotDanAudits.mjs`, read
+ * from the getters at one block). That is one form, not every audit's: the cell stores any nonzero 32 bytes as
+ * `specHash` and the registered spec tool fixes the form, and the one registered spec, withdraw-credits v1, is
+ * pinned by its structured identity (`verify-core.mjs` `specHash`), which this pin does not find (VD-480).
+ *
+ * The code half is dan-check's (VD-480): the page prints the dan-check line for a matched row's deployed address
+ * and runs nothing.
+ *
+ * Pure, no Node imports: the page and the tests run the same code. No write and no new cell code. The page fetches
+ * nothing, so the snapshot is built into it, and an audit filed after the snapshot's block is not in it.
+ */
+
+const { keccak256, toUtf8Bytes } = __m["ethers"];
+
+const HEX64 = /^0x[0-9a-f]{64}$/;
+const ADDRESS = /^0x[0-9a-fA-F]{40}$/;
+const ZERO_ADDRESS = /^0x0{40}$/;
+
+/** The form `specPin` uses, named on the page beside the pin. */
+const PIN_FORM = "keccak256 of the file's exact bytes";
+
+/** The spec's pin: keccak256 of its UTF-8 bytes, the bytes as typed. A reformatted file is another spec. */
+function specPin(text) {
+  if (typeof text !== "string") throw new TypeError("specPin: the spec text is not a string");
+  return keccak256(toUtf8Bytes(text));
+}
+
+/** Throws unless the snapshot is whole (one row per audit, ids 0..n-1 in order) and in one spelling (lowercase). */
+function checkSnapshot(snap) {
+  if (!snap || typeof snap !== "object") throw new Error("DAN snapshot: not an object");
+  if (!Number.isInteger(snap.chainId)) throw new Error("DAN snapshot: no chainId");
+  if (typeof snap.cell !== "string" || !ADDRESS.test(snap.cell)) throw new Error("DAN snapshot: the cell is not an address");
+  if (!Number.isInteger(snap.block) || snap.block < 0) throw new Error("DAN snapshot: no block");
+  if (!Array.isArray(snap.audits)) throw new Error("DAN snapshot: no audits");
+  if (snap.audits.length !== snap.nextAuditId) {
+    throw new Error(`DAN snapshot: ${snap.audits.length} rows for nextAuditId ${snap.nextAuditId}`);
+  }
+  snap.audits.forEach((a, i) => {
+    if (a?.id !== i) throw new Error(`DAN snapshot: row ${i} is audit ${a?.id}`);
+    if (typeof a.specHash !== "string" || !HEX64.test(a.specHash)) {
+      throw new Error(`DAN snapshot: audit #${i} spec hash is not 0x and 64 lowercase hex`);
+    }
+  });
+  return snap;
+}
+
+/** The spec's pin and every audit in the snapshot that pins the same bytes. */
+function danMatches(text, snap) {
+  checkSnapshot(snap);
+  const pin = specPin(text);
+  return { pin, matches: snap.audits.filter((a) => a.specHash === pin) };
+}
+
+/** One audit's row from the cell itself, at the snapshot's block: the check that needs no page. Word 6 is specHash. */
+function auditReadCommand(snap, id) {
+  return `cast call ${snap.cell} "audits(uint256)" ${id} --block ${snap.block} --rpc-url <BASE_SEPOLIA_RPC_URL>`;
+}
+
+/**
+ * The code half of the same question, for a row that names a deployed address: dan-check hashes that address's
+ * live code and asks this cell for the settled verdict. A row without an address certifies bytes and names no
+ * deployment (VD-255), so it gets no line. `target` is the third word of `audits()`, `deployedAddress`.
+ */
+function danCheckCommand(snap, audit) {
+  if (typeof audit?.target !== "string" || !ADDRESS.test(audit.target) || ZERO_ADDRESS.test(audit.target)) return null;
+  return `node body/tools/dan-check.mjs --target ${audit.target} --cell ${snap.cell} --home-rpc <BASE_SEPOLIA_RPC_URL>`;
+}
+
+return { PIN_FORM, specPin, checkSnapshot, danMatches, auditReadCommand, danCheckCommand };
+})();
+const spec = __m["./specQualityGrade.mjs"];
+const strategy = __m["./strategyClaimsCore.mjs"];
+const file = __m["./claimLinterFindings.mjs"];
+const scope = __m["./deriveScope.mjs"];
+const receipt = __m["./lintReceiptFields.mjs"];
+const dan = __m["./danSpecMatch.mjs"];
+root.ClaimLinter = Object.freeze({
+  gradeSpecQuality: spec.gradeSpecQuality,
+  lintStrategyClaims: strategy.lintStrategyClaims,
+  gradeOrder: strategy.CLAIM_GRADE_ORDER,
+  defaults: strategy.S1_DEFAULTS,
+  findingsFile: file.findingsFile,
+  findingsText: file.findingsText,
+  receiptFields: receipt.receiptFields,
+  receiptText: receipt.receiptText,
+  receiptCommand: receipt.receiptCommand,
+  receiptLookupCommand: receipt.receiptLookupCommand,
+  receiptDeployment: receipt.LINT_RECEIPT_DEPLOYMENT,
+  specPin: dan.specPin,
+  danMatches: dan.danMatches,
+  auditReadCommand: dan.auditReadCommand,
+  danCheckCommand: dan.danCheckCommand,
+  pinForm: dan.PIN_FORM,
+  danId: __m["./danIdV0.mjs"].danId,
+  categoryIdForSymbol: scope.categoryIdForSymbol,
+  scopeRootFromCategoryIds: scope.scopeRootFromCategoryIds,
+  examples: {"strategy":[{"key":"checkable","label":"A claim set that can be checked","note":"An illustrative strategy, not a real one. It scopes its edge, says how many candidates it tried and keeps a sealed holdout, and puts a test on its loss limit and an age limit on its data.","input":{"headline":"A gated short-premium strategy, sized so one cycle cannot lose more than 9% of the stake","tradesPerYear":150,"perTrade":{"sigmaR":1.5,"clusterRatio":1.3},"claims":[{"id":"E1","layer":"effect","statement":"edge of 0.25 R per trade","effectR":0.25,"candidatesTried":24,"holdout":{"sealedUntilChoice":true,"trades":120}},{"id":"A1","layer":"application","statement":"max loss per cycle at or under 9% of the stake","limit":0.09,"sizing":0.25,"checkedAt":"entry","test":"entry-check"},{"id":"B1","layer":"behaviour","statement":"trades only while DVOL is at or above its trailing 365-day median","dataWindowDays":365,"maxDataAgeDays":2}]}},{"key":"cycle1","label":"My own trade, cycle 1, as declared on 2026-09-17","note":"The BTC put spread I registered on 2026-09-07, with the claims as they stood before the two fixes. The sizing floor is the corrected one (USD 1.48, VD-224). It declares no per-cycle spread in R, so the edge cannot be sized and reads NOT EVALUATED.","input":{"headline":"A BTC put spread into the monthly expiry, gated by DVOL at or above its trailing 365-day median, on a USD 100 stake","tradesPerYear":6,"claims":[{"id":"E1","layer":"effect","statement":"the fee-inclusive expectation is +0.2 to +0.4 USD per traded cycle"},{"id":"A1","layer":"application","statement":"max loss per cycle at or under 0.09 of the stake; at the modelled fee of USD 0.48 a gross credit below USD 1.48 breaches it","limit":0.09},{"id":"A2","layer":"application","statement":"the tail limit, CVaR 0.06 of capital, sits strictly below the sizing 0.09","limit":0.06,"sizing":0.09,"checkedAt":"registration","test":"the grader refuses a limit at or above the sizing"},{"id":"B1","layer":"behaviour","statement":"trades only while DVOL is at or above its trailing 365-day median","dataWindowDays":365}]}},{"key":"promise","label":"A promise with nothing under it","note":"An illustrative pitch, not anyone's real one: a monthly return in the headline and one edge claim too small for its own trade count to ever decide.","input":{"headline":"Passive income: 3% a month from an automated grid bot","tradesPerYear":40,"perTrade":{"sigmaR":1.5},"claims":[{"id":"E1","layer":"effect","statement":"an edge of 0.1 R per trade","effectR":0.1}]}}],"spec":[{"key":"checkable","label":"A spec that can be checked","note":"An illustrative token spec, not a real one. Each invariant says what it constrains and tags the scope it belongs to.","input":{"invariants":[{"id":"I1","statement":"a transfer moves balance between holders and changes no other balance","scope":["BALANCE-ACCOUNTING"]},{"id":"I2","statement":"only the owner role may set the fee, and the fee is capped","scope":["ACCESS-CONTROL","PRIVILEGED-PARAMETER"]},{"id":"I3","statement":"pause stops every transfer and unpause restores them","scope":["PAUSE-EMERGENCY"]},{"id":"I4","statement":"the price feed is rejected when stale","scope":["ORACLE-DEPENDENCE"]}],"marketingClaims":["the price feed cannot be manipulated"]}},{"key":"unplaced","label":"A spec the rules cannot reach","note":"Two reasonable invariants whose scopes the taxonomy does not know. No finding comes back, and that is not a pass: the page says NOT EVALUATED and why.","input":{"invariants":[{"id":"I1","statement":"a liquidation never leaves bad debt behind","scope":["LIQUIDATION-SOLVENCY"]},{"id":"I2","statement":"the keeper is paid from the penalty, not the pool","scope":["KEEPER-INCENTIVE"]}]}},{"key":"verdict","label":"A scanner's verdict pasted as a spec","note":"A score with no statement of what was tested. The figure is illustrative and comes from no real scanner.","input":{"invariants":[{"id":"I1","statement":"Risk score 23/100, low risk"}]}}]},
+  danSnapshot: {"chainId":84532,"cell":"0xb034F198869726c36965B95879eCB65Bdb1076c9","block":47915326,"blockTime":"2026-10-10T02:22:20.000Z","source":"AuditCell nextAuditId() and audits(i) at this block, by cell/indexer/snapshotDanAudits.mjs","nextAuditId":1,"audits":[{"id":0,"state":"InBlock","specHash":"0xecfe3195122da49b2997ea87b7c16f12b20815c96637188611a7619acd325c17","specLabel":"genesis.bootstrap.spec.v1","protocol":"0xc9da07eC949261bAD9ffE51f11177A7a011D5708","auditor":"0xDC4d0BBBF1Da2B54326B804FcF95A3B2F55c8fB3","target":"0xE546193fc52faa37413ab74d72092005115F4691","bountyWei":"5000000000000000000000"}]},
+});
+})(typeof globalThis !== "undefined" ? globalThis : this);
+/* BUNDLE:END */
+</script>
+<script>
+(function () {
+  "use strict";
+  var L = window.ClaimLinter;
+  var $ = function (id) { return document.getElementById(id); };
+  var FILES = {
+    strategy: { input: "claims.json", out: "claims.findings.json" },
+    spec: { input: "spec.json", out: "spec.findings.json" },
+  };
+  var state = { family: "spec", example: null };
+
+  function el(tag, cls, text) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text !== undefined && text !== null) n.textContent = String(text);
+    return n;
+  }
+
+  function gradeClass(g) {
+    if (g === "CHECKABLE") return "g-pass";
+    if (g === "NOT EVALUATED") return "g-none";
+    return "g-bad";
+  }
+
+  function showExamples() {
+    var box = $("examples");
+    box.textContent = "";
+    L.examples[state.family].forEach(function (ex) {
+      var b = el("button", "example", ex.label);
+      b.type = "button";
+      b.setAttribute("aria-pressed", String(state.example === ex.key));
+      b.addEventListener("click", function () { loadExample(ex.key); });
+      box.appendChild(b);
+    });
+  }
+
+  function loadExample(key) {
+    var ex = L.examples[state.family].filter(function (e) { return e.key === key; })[0];
+    state.example = key;
+    $("input").value = JSON.stringify(ex.input, null, 2) + "\n";
+    $("note").textContent = ex.note;
+    showExamples();
+    run();
+  }
+
+  function setFamily(family) {
+    state.family = family;
+    document.querySelectorAll(".tab").forEach(function (t) {
+      t.setAttribute("aria-selected", String(t.getAttribute("data-family") === family));
+    });
+    $("strategy-options").hidden = family !== "strategy";
+    loadExample(L.examples[family][0].key);
+  }
+
+  function section(title, node) {
+    var frag = document.createDocumentFragment();
+    frag.appendChild(el("h2", null, title));
+    frag.appendChild(node);
+    return frag;
+  }
+
+  function rowList(items, render, emptyText) {
+    var ul = el("ul", "rows");
+    if (items.length === 0) {
+      var li = el("li", "wide");
+      li.appendChild(el("span", "empty", emptyText));
+      ul.appendChild(li);
+    }
+    items.forEach(function (it) { ul.appendChild(render(it)); });
+    return ul;
+  }
+
+  function findingRow(f) {
+    var li = el("li");
+    li.appendChild(el("span", "k", f.rule || f.class.replace(/^SPEC-/, "")));
+    li.appendChild(el("span", "k", f.claimId || f.invariantId || "all"));
+    var c = el("span", "cls", f.class.replace(/^SPEC-/, ""));
+    c.style.color = "var(--bad)";
+    li.appendChild(c);
+    var msg = f.message || f.evidence || "";
+    li.appendChild(el("span", "msg", f.path && f.rule === "SCHEMA" ? f.path + ": " + msg : msg));
+    return li;
+  }
+
+  function notEvaluatedRow(n) {
+    var li = el("li");
+    li.appendChild(el("span", "k", n.rule));
+    li.appendChild(el("span", "k", n.claimId || "all"));
+    var c = el("span", "cls", "NOT EVALUATED");
+    c.style.color = "var(--warn)";
+    li.appendChild(c);
+    li.appendChild(el("span", "msg", n.reason));
+    return li;
+  }
+
+  function powerRow(p) {
+    var li = el("li");
+    li.appendChild(el("span", "k", p.rule));
+    li.appendChild(el("span", "k", p.claimId));
+    var verdict = p.decidable === true ? "decidable" : p.decidable === false ? "not decidable" : "unknown";
+    var c = el("span", "cls", verdict);
+    c.style.color = p.decidable === true ? "var(--ok)" : p.decidable === false ? "var(--bad)" : "var(--warn)";
+    li.appendChild(c);
+    var text = p.requiredTrades.toLocaleString("en-US") + " trades to clear t " + p.inputs.tHurdle;
+    if (p.years !== null && p.years !== undefined) {
+      text += ": " + p.yearsDisplay + " years at " + p.inputs.tradesPerYear + " a year, against a " +
+        p.horizonYears + "-year horizon";
+    } else {
+      text += "; no trades a year stated, so the years cannot be counted";
+    }
+    if (p.inputs.clusterRatioAssumed) text += " (cluster ratio assumed 1)";
+    li.appendChild(el("span", "msg", text));
+    return li;
+  }
+
+  function adviceList(advice) {
+    var ul = el("ul", "rows");
+    advice.forEach(function (a) {
+      a.suggestions.forEach(function (s) {
+        var li = el("li");
+        li.appendChild(el("span", "k", a.rule));
+        li.appendChild(el("span", "k", a.claimId));
+        li.appendChild(el("span", "cls", s.layer));
+        li.appendChild(el("span", "msg", s.statement));
+        ul.appendChild(li);
+      });
+    });
+    return ul;
+  }
+
+  function numberOrUndefined(v) {
+    var s = String(v).trim();
+    if (s === "") return undefined;
+    var n = Number(s);
+    return Number.isFinite(n) && n > 0 ? n : NaN;
+  }
+
+  function sha256Hex(text) {
+    if (!window.crypto || !window.crypto.subtle || !window.TextEncoder) return Promise.resolve(null);
+    return window.crypto.subtle.digest("SHA-256", new TextEncoder().encode(text)).then(function (buf) {
+      return Array.prototype.map.call(new Uint8Array(buf), function (b) {
+        return ("0" + b.toString(16)).slice(-2);
+      }).join("");
+    }, function () { return null; });
+  }
+
+  function save(name, text) {
+    var url = URL.createObjectURL(new Blob([text], { type: "application/json" }));
+    var a = el("a");
+    a.href = url;
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+  }
+
+  var runId = 0;
+  function run() {
+    var id = ++runId;
+    var text = $("input").value;
+    var args = { family: state.family, input: FILES[state.family].input, out: FILES[state.family].out };
+    if (state.family === "strategy") {
+      var t = numberOrUndefined($("opt-t").value);
+      var h = numberOrUndefined($("opt-horizon").value);
+      if (Number.isNaN(t) || Number.isNaN(h)) return showError("the t hurdle and the horizon must be positive numbers");
+      args.t = t;
+      args.horizon = h;
+    }
+    var file;
+    try {
+      file = L.findingsFile(args, text, "");
+    } catch (e) {
+      return showError(e instanceof SyntaxError ? "not JSON: " + e.message : String(e && e.message || e));
+    }
+    render(file, text);
+    sha256Hex(text).then(function (hex) {
+      if (id !== runId) return;
+      renderFile(args, text, hex);
+    });
+  }
+
+  function showError(message) {
+    $("result").hidden = false;
+    $("grade-line").textContent = "";
+    $("summary").textContent = "";
+    var body = $("body");
+    body.textContent = "";
+    body.appendChild(el("p", "error", message));
+  }
+
+  function render(file, text) {
+    var r = file.result;
+    $("result").hidden = false;
+    var line = $("grade-line");
+    line.textContent = "";
+    line.appendChild(el("span", "grade " + gradeClass(r.overall.grade), r.overall.grade));
+
+    var bits = [];
+    if (r.overall.grades && r.overall.grades.length > 1) bits.push("also " + r.overall.grades.slice(1).join(", "));
+    if (r.family === "strategy-claims" && r.overall.claimsTotal !== undefined) {
+      bits.push(r.overall.claimsEvaluated + " of " + r.overall.claimsTotal + " claims evaluated");
+    }
+    if (r.coverage) bits.push("scope coverage " + r.coverage.covered + " of " + r.coverage.known);
+    if (r.overall.grade === "CHECKABLE") bits.push("no defect found by the rules that ran");
+    $("summary").textContent = bits.join(" · ");
+
+    var body = $("body");
+    body.textContent = "";
+    if (r.overall.grade === "INVALID") {
+      body.appendChild(section("Not a valid document", rowList(r.findings, findingRow, "no detail")));
+      body.appendChild(el("p", "meta", "No rule ran: the document is not strategy claims schema v0, so nothing in it is graded."));
+    } else {
+      body.appendChild(section("Findings", rowList(r.findings, findingRow, "none")));
+      body.appendChild(section("Not evaluated", rowList(r.notEvaluated, notEvaluatedRow, "nothing: every rule that ran reached its input")));
+      if (r.power) body.appendChild(section("Edge power", rowList(r.power, powerRow, "no effect claim sized")));
+      if (r.advice && r.advice.length) body.appendChild(section("What could be claimed instead", adviceList(r.advice)));
+    }
+    var rules = r.overall.rulesRun || [];
+    body.appendChild(section("Rules run", el("p", "meta mono", (rules.length ? rules.join(" ") : "none") + "  ·  " + file.family + " " + file.linterVersion)));
+    if (state.family === "spec") body.appendChild(section("In DAN, read only", danBox(text)));
+    var slot = el("div");
+    slot.id = "file-slot";
+    body.appendChild(section("The findings file", slot));
+  }
+
+  function kvRows(pairs) {
+    var ul = el("ul", "rows");
+    pairs.forEach(function (kv) {
+      var li = el("li", "wide");
+      li.appendChild(el("span", "k", kv[0]));
+      li.appendChild(el("span", "mono", kv[1]));
+      ul.appendChild(li);
+    });
+    return ul;
+  }
+
+  function danBox(text) {
+    var snap = L.danSnapshot;
+    var box = el("div");
+    var m = L.danMatches(text, snap);
+    box.appendChild(el("p", "meta", "This page pins a spec by keccak256 of its exact bytes, the way the reference spec " +
+      "file and the replay cases are pinned. That is one form. The cell takes any 32 bytes as a spec hash and the " +
+      "registered spec tool decides the form. The one registered spec today, withdraw-credits v1, is pinned by a hash " +
+      "of its invariants, so this pin will not find it."));
+    box.appendChild(kvRows([["form", L.pinForm], ["pin", m.pin]]));
+    var held = "This page holds the " + snap.nextAuditId + (snap.nextAuditId === 1 ? " audit" : " audits") +
+      " on the live cell " + snap.cell + " as read at block " + snap.block + " (" + snap.blockTime + ").";
+    if (m.matches.length === 0) {
+      box.appendChild(el("p", "meta", "No audit on the cell pins these bytes. " + held +
+        " An audit filed after that block is not here, and a spec reformatted after it was filed pins to another hash."));
+      snap.audits.forEach(function (a) {
+        if (a.specLabel) {
+          box.appendChild(el("p", "meta", "Audit #" + a.id + " pins the label " + a.specLabel +
+            ", not a file, so no spec matches it."));
+        }
+      });
+    } else {
+      box.appendChild(el("p", "meta", (m.matches.length === 1 ? "One audit pins" : m.matches.length + " audits pin") +
+        " these exact bytes. " + held + " A match says the cell holds an audit of this spec; it does not say the audit passed."));
+      m.matches.forEach(function (a) {
+        box.appendChild(kvRows([["audit", "#" + a.id], ["state", a.state], ["protocol", a.protocol], ["target", a.target],
+          ["auditor", a.auditor], ["bounty (wei)", a.bountyWei], ["specHash", a.specHash]]));
+        box.appendChild(el("pre", "cmd", L.auditReadCommand(snap, a.id)));
+        var dc = L.danCheckCommand(snap, a);
+        if (dc) {
+          box.appendChild(el("p", "meta", "That checks the spec half. For the code half, dan-check hashes the live code " +
+            "at " + a.target + " and asks this cell for its settled verdict:"));
+          box.appendChild(el("pre", "cmd", dc));
+        } else {
+          box.appendChild(el("p", "meta", "Audit #" + a.id + " names no deployed address. It certifies bytes and links " +
+            "to no deployment, so there is no code here for dan-check to check."));
+        }
+      });
+      box.appendChild(el("p", "meta", "The cast line reads the row from the cell itself at the same block; its seventh word is specHash."));
+    }
+    return box;
+  }
+
+  function renderFile(args, text, hex) {
+    var slot = $("file-slot");
+    if (!slot) return;
+    slot.textContent = "";
+    if (hex === null) {
+      slot.appendChild(el("p", "meta", "This browser gives the page no SHA-256, so the page cannot write the findings " +
+        "file. Save the input as " + args.input + " and run the command below; it writes the file."));
+      slot.appendChild(el("pre", "cmd", L.findingsFile(args, text, "").reproduce));
+      return;
+    }
+    var file = L.findingsFile(args, text, hex);
+    slot.appendChild(el("pre", "cmd", file.reproduce));
+    slot.appendChild(el("p", "meta", "Run from cell/ with the input saved as " + args.input +
+      ". It writes " + args.out + " with the same bytes as the button below. Input sha256 " + hex + "."));
+    var row = el("div", "controls");
+    var a = el("button", "quiet", "Save " + args.input);
+    a.type = "button";
+    a.addEventListener("click", function () { save(args.input, text); });
+    var b = el("button", "quiet", "Save " + args.out);
+    b.type = "button";
+    b.addEventListener("click", function () { save(args.out, L.findingsText(file)); });
+    row.appendChild(a);
+    row.appendChild(b);
+    slot.appendChild(row);
+    var fText = L.findingsText(file);
+    sha256Hex(fText).then(function (fHex) {
+      if (fHex === null || $("file-slot") !== slot) return;
+      renderReceipt(L.receiptFields(file, fHex), args);
+    });
+  }
+
+  function renderReceipt(r, args) {
+    var dep = L.receiptDeployment;
+    var box = el("div");
+    box.appendChild(el("p", "meta", dep.address === null
+      ? "One transaction to LintReceipt on Base Sepolia records these four fields and who sent them. It is not deployed yet, so the address is a placeholder."
+      : "One transaction to LintReceipt on Base Sepolia (" + dep.address + ") records these four fields and who sent them."));
+    var ul = el("ul", "rows");
+    [["subjectHash", r.subjectHash], ["linterVersion", r.linterVersion], ["findingsRoot", r.findingsRoot],
+      ["worstGrade", r.worstGrade + " (" + r.grade + ")"]].forEach(function (kv) {
+      var li = el("li", "wide");
+      li.appendChild(el("span", "k", kv[0]));
+      li.appendChild(el("span", "mono", kv[1]));
+      ul.appendChild(li);
+    });
+    box.appendChild(ul);
+    box.appendChild(el("pre", "cmd", L.receiptCommand(r)));
+    box.appendChild(el("p", "meta", "Anyone can read every receipt for this input back from the chain:"));
+    box.appendChild(el("pre", "cmd", L.receiptLookupCommand(r)));
+    box.appendChild(el("p", "meta", "And check one without this page: sha256sum " + args.input + " prints subjectHash, and sha256sum " +
+      args.out + " prints findingsRoot. A receipt says who claimed which grade; it proves nothing until someone re-runs the linter."));
+    $("body").appendChild(section("The receipt on Base, optional", box));
+  }
+
+  if (!L) {
+    showError("The linter did not load. The bundle in this page is missing; rebuild it with node indexer/buildCheckPage.mjs.");
+    return;
+  }
+  $("opt-t").value = String(L.defaults.tHurdle);
+  $("opt-horizon").value = String(L.defaults.horizonYears);
+  document.querySelectorAll(".tab").forEach(function (t) {
+    t.addEventListener("click", function () { setFamily(t.getAttribute("data-family")); });
+  });
+  $("run").addEventListener("click", function () { state.example = null; showExamples(); $("note").textContent = ""; run(); });
+  setFamily("spec");
+})();
+</script>
+</body>
+</html>
