@@ -3299,6 +3299,8 @@ button.quiet:hover:not(:disabled) { background: var(--panel-hover); border-color
 .rows .k { font-family: var(--mono); color: var(--mut); font-size: inherit; }
 .rows .cls { grid-column: 3; font: 600 13px var(--mono); }
 .rows .msg { grid-column: 3; color: var(--fg); font-size: inherit; }
+.spec-rows .rows li:not(.wide) { grid-template-columns: max-content 1fr; }
+.spec-rows .rows li:not(.wide) .cls, .spec-rows .rows li:not(.wide) .msg { grid-column: 1 / -1; }
 .rows li.wide { grid-template-columns: 1fr; }
 .empty { color: var(--mut-faint); font-size: var(--fs-small); }
 pre.cmd {
@@ -4824,13 +4826,28 @@ __m["./specQualityGrade.mjs"] = (function () {
  * Claim linter, VD-225 proposal section 4.2 point 3: the pass means "no defect found by these rules", it names the
  * rules and the coverage, and anything a rule could not evaluate reads NOT EVALUATED with its reason (VD-228).
  * The grades read the same as the strategy tab's: one engine, one grade set.
+ *
+ * One rule is a note here, not a grade (v2, 2026-10-10, on the operator's word). The prior linter's MIS-SCOPED has
+ * two halves. An invariant with no scope tags at all is a fact about the spec and still grades MIS-SCOPED. A tag
+ * whose keywords are missing from its statement is a guess from a word list: run on Beanstalk's governance spec
+ * (museum-wip, exhibits/beanstalk-2022-04/spec/governance-v0.json), a careful spec read off the whitepaper and the
+ * sources, it gave 17 such findings and every one was the word list missing the spec's wording ("24 hours" is not
+ * "time", "pauseOrUnpause" is not "pause"). A check that fails good work teaches people to ignore it, so those 17
+ * now come back as notes: shown, never graded, and never a pass or a fail on their own.
  */
 
-const { dedupeFindings, SPEC_QUALITY_LINTER_VERSION, validateSpecQuality } = __m["./specQualityCore.mjs"];
+const { dedupeFindings, validateSpecQuality } = __m["./specQualityCore.mjs"];
 const { CLAIM_GRADE_ORDER } = __m["./strategyClaimsCore.mjs"];
 
 /** The prior linter's rules, by the grade each one gives. */
 const SPEC_GRADE_RULES = ["INAUDITABLE", "VACUOUS", "MIS-SCOPED", "THIN", "MARKETING-SKEW"];
+
+/** The contract-spec grade's version. v1 graded every MIS-SCOPED finding; v2 grades only the untagged invariant.
+ * The rules themselves are specQualityCore.mjs's, at SPEC_QUALITY_LINTER_VERSION, unchanged. */
+const SPEC_GRADE_VERSION = "v2";
+
+/** A tag the statement's keywords do not confirm: the word-list half of MIS-SCOPED, a note in v2. */
+const isTagWordingNote = (f) => f.class === "SPEC-MIS-SCOPED" && f.scopeSymbol !== undefined;
 
 /** The strategy family's order, one list for both tabs. */
 const SPEC_GRADE_ORDER = CLAIM_GRADE_ORDER;
@@ -4843,7 +4860,9 @@ const gradeOf = (cls) => cls.replace(/^SPEC-/, "");
  */
 function gradeSpecQuality(spec, opts = {}) {
   const { findings: raw, coveredCount, knownCategoryCount } = validateSpecQuality(spec, opts);
-  const findings = dedupeFindings(raw);
+  const all = dedupeFindings(raw);
+  const findings = all.filter((f) => !isTagWordingNote(f));
+  const notes = all.filter(isTagWordingNote);
   const notEvaluated = [];
   const reached = coveredCount > 0;
   if (!reached && Array.isArray(spec?.invariants) && spec.invariants.length > 0) {
@@ -4866,16 +4885,17 @@ function gradeSpecQuality(spec, opts = {}) {
   else grade = "CHECKABLE";
 
   return {
-    linterVersion: SPEC_QUALITY_LINTER_VERSION,
+    linterVersion: SPEC_GRADE_VERSION,
     family: "contract-spec",
     findings,
+    notes,
     coverage: { covered: coveredCount, known: knownCategoryCount },
     notEvaluated,
     overall: { grade, grades, rulesRun: [...SPEC_GRADE_RULES] },
   };
 }
 
-return { SPEC_GRADE_RULES, SPEC_GRADE_ORDER, gradeSpecQuality };
+return { SPEC_GRADE_RULES, SPEC_GRADE_VERSION, isTagWordingNote, SPEC_GRADE_ORDER, gradeSpecQuality };
 })();
 __m["./claimLinterFindings.mjs"] = (function () {
 "use strict";
@@ -5237,6 +5257,17 @@ root.ClaimLinter = Object.freeze({
     return li;
   }
 
+  function noteRow(n) {
+    var li = el("li");
+    li.appendChild(el("span", "k", n.scopeSymbol));
+    li.appendChild(el("span", "k", n.invariantId || "all"));
+    var c = el("span", "cls", "NOTE");
+    c.style.color = "var(--mut)";
+    li.appendChild(c);
+    li.appendChild(el("span", "msg", n.evidence));
+    return li;
+  }
+
   function powerRow(p) {
     var li = el("li");
     li.appendChild(el("span", "k", p.rule));
@@ -5347,15 +5378,24 @@ root.ClaimLinter = Object.freeze({
     }
     if (r.coverage) bits.push("scope coverage " + r.coverage.covered + " of " + r.coverage.known);
     if (r.overall.grade === "CHECKABLE") bits.push("no defect found by the rules that ran");
+    if (r.notes && r.notes.length) bits.push(r.notes.length + (r.notes.length === 1 ? " note" : " notes") + ", not graded");
     $("summary").textContent = bits.join(" · ");
 
     var body = $("body");
     body.textContent = "";
+    body.classList.toggle("spec-rows", r.family === "contract-spec");
     if (r.overall.grade === "INVALID") {
       body.appendChild(section("Not a valid document", rowList(r.findings, findingRow, "no detail")));
       body.appendChild(el("p", "meta", "No rule ran: the document is not strategy claims schema v0, so nothing in it is graded."));
     } else {
       body.appendChild(section("Findings", rowList(r.findings, findingRow, "none")));
+      if (r.notes && r.notes.length) {
+        var notes = section("Notes, not graded", el("p", "meta", "Each note is a scope tag whose invariant uses no word " +
+          "from that tag's short word list. A careful spec written in its own words lands here often: “24 hours” " +
+          "is not on the list for time. Read them as a question about the tag. They do not change the grade."));
+        notes.appendChild(rowList(r.notes, noteRow, ""));
+        body.appendChild(notes);
+      }
       body.appendChild(section("Not evaluated", rowList(r.notEvaluated, notEvaluatedRow, "nothing: every rule that ran reached its input")));
       if (r.power) body.appendChild(section("Edge power", rowList(r.power, powerRow, "no effect claim sized")));
       if (r.advice && r.advice.length) body.appendChild(section("What could be claimed instead", adviceList(r.advice)));
